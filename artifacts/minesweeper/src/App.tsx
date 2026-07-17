@@ -323,7 +323,14 @@ export default function App() {
       {/* Top bar */}
       <div className="topbar">
         <div className="trophy-counter" title="Wins">
-          🏆 <span className="trophy-num">{stats.wins}</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9H3V4h3"/>
+            <path d="M18 9h3V4h-3"/>
+            <path d="M6 4h12v8a6 6 0 0 1-12 0V4z"/>
+            <path d="M12 18v3"/>
+            <path d="M8 21h8"/>
+          </svg>
+          <span className="trophy-num">{stats.wins}</span>
         </div>
         <div className="top-counters">
           <div className="counter-box">
