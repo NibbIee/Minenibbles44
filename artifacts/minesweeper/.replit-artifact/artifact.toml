@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Minesweeper"
+version = "1.0.0"
+id = "artifacts/minesweeper"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18718
+
+[services.development]
+run = "pnpm --filter @workspace/minesweeper run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/minesweeper", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/minesweeper/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18718"
+BASE_PATH = "/"
