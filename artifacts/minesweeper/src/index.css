@@ -125,7 +125,7 @@ body {
 /* ── Board ── */
 .board {
   display: grid;
-  grid-template-columns: repeat(14, 34px);
+  grid-template-columns: repeat(9, 32px);
   gap: 3px;
   flex-shrink: 0;
   touch-action: manipulation;
@@ -133,8 +133,8 @@ body {
 
 /* ── Cell ── */
 .cell {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;

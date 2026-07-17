@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
-const ROWS = 9;
-const COLS = 14;
+const ROWS = 16;
+const COLS = 9;
 const MINES = 27;
 
 type CellState = {
@@ -24,7 +24,7 @@ function createEmptyBoard(): CellState[][] {
   );
 }
 
-function placeMines(board: CellState[][], safeRow: number, safeCol: number): CellState[][] {
+function buildBoard(board: CellState[][], safeRow: number, safeCol: number): CellState[][] {
   const next = board.map((r) => r.map((c) => ({ ...c })));
   let placed = 0;
   while (placed < MINES) {
@@ -35,15 +35,13 @@ function placeMines(board: CellState[][], safeRow: number, safeCol: number): Cel
       placed++;
     }
   }
-  // compute adjacency
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       if (next[r][c].mine) continue;
       let count = 0;
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
-          const nr = r + dr;
-          const nc = c + dc;
+          const nr = r + dr, nc = c + dc;
           if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && next[nr][nc].mine) count++;
         }
       }
@@ -51,6 +49,57 @@ function placeMines(board: CellState[][], safeRow: number, safeCol: number): Cel
     }
   }
   return next;
+}
+
+// Constraint solver: returns true if the board can be completed without guessing.
+function isSolvable(board: CellState[][], startRow: number, startCol: number): boolean {
+  let current = floodReveal(board, startRow, startCol);
+  let progress = true;
+  while (progress) {
+    progress = false;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const cell = current[r][c];
+        if (!cell.revealed || cell.mine || cell.adjacent === 0) continue;
+        const unrevealed: [number, number][] = [];
+        let flagged = 0;
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            const nr = r + dr, nc = c + dc;
+            if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+            const n = current[nr][nc];
+            if (n.flagged) flagged++;
+            else if (!n.revealed) unrevealed.push([nr, nc]);
+          }
+        }
+        const remaining = cell.adjacent - flagged;
+        if (remaining === unrevealed.length && unrevealed.length > 0) {
+          // All unrevealed neighbours must be mines — flag them
+          const next = current.map(row => row.map(cell => ({ ...cell })));
+          for (const [nr, nc] of unrevealed) next[nr][nc].flagged = true;
+          current = next;
+          progress = true;
+        } else if (remaining === 0 && unrevealed.length > 0) {
+          // All mines accounted for — safe to reveal the rest
+          let next = current.map(row => row.map(cell => ({ ...cell })));
+          for (const [nr, nc] of unrevealed) next = floodReveal(next, nr, nc);
+          current = next;
+          progress = true;
+        }
+      }
+    }
+  }
+  return checkWin(current);
+}
+
+function placeMines(board: CellState[][], safeRow: number, safeCol: number): CellState[][] {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const candidate = buildBoard(board, safeRow, safeCol);
+    if (isSolvable(candidate, safeRow, safeCol)) return candidate;
+  }
+  // Fallback: return a random board if 200 attempts all require guessing
+  return buildBoard(board, safeRow, safeCol);
 }
 
 function floodReveal(board: CellState[][], startRow: number, startCol: number): CellState[][] {
