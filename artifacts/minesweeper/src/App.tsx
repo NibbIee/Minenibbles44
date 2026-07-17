@@ -142,11 +142,15 @@ export default function App() {
     setFirstClick(true);
     setElapsed(0);
     setFlagCount(0);
-    setStats((s: typeof stats) => ({
-      ...s,
-      games: s.games + 1,
-    }));
   }, []);
+
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "r" || e.key === "R") reset();
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [reset]);
 
   const handleReveal = useCallback(
     (r: number, c: number) => {
@@ -160,6 +164,10 @@ export default function App() {
         currentBoard = placeMines(board, r, c);
         setFirstClick(false);
         setStatus("playing");
+        setStats((s: typeof stats) => ({
+          ...s,
+          games: s.games + 1,
+        }));
       }
 
       if (currentBoard[r][c].mine) {
@@ -177,6 +185,13 @@ export default function App() {
       const revealed = floodReveal(currentBoard, r, c);
       setBoard(revealed);
       if (checkWin(revealed)) {
+        const finished = revealed.map(row =>
+          row.map(cell =>
+            cell.mine ? { ...cell, flagged: true } : cell
+          )
+        );
+        setBoard(finished);
+        setFlagCount(MINES);
         setStatus("won");
         setStats((s: typeof stats) => ({
           games: s.games,
@@ -288,6 +303,9 @@ export default function App() {
       {(status === "won" || status === "lost") && (
         <div className={`banner ${status}`}>
           {status === "won" ? "You win! 🎉" : "Boom! Game over 💥"}
+          <button onClick={reset} className="play-again">
+            Play Again
+          </button>
         </div>
       )}
 

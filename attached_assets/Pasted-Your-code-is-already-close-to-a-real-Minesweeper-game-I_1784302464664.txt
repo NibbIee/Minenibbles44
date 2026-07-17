@@ -1,0 +1,129 @@
+Your code is already close to a real Minesweeper game. If you mean “make it replayable like the real game” (new games, restart, same board replay, stats, etc.), you mainly need a few fixes:
+
+1. Your reset currently counts a new game immediately
+
+Real Minesweeper counts a game when you first click, not when you press restart.
+
+Change:
+
+const reset = useCallback(() => {
+  setBoard(createEmptyBoard());
+  setStatus("idle");
+  setFirstClick(true);
+  setElapsed(0);
+  setFlagCount(0);
+  setStats((s: typeof stats) => ({
+    ...s,
+    games: s.games + 1,
+  }));
+}, []);
+
+to:
+
+const reset = useCallback(() => {
+  setBoard(createEmptyBoard());
+  setStatus("idle");
+  setFirstClick(true);
+  setElapsed(0);
+  setFlagCount(0);
+}, []);
+
+⸻
+
+2. Count games when the first move happens
+
+Inside handleReveal, after:
+
+if (firstClick) {
+
+add:
+
+setStats((s: typeof stats) => ({
+  ...s,
+  games: s.games + 1,
+}));
+
+So it becomes:
+
+if (firstClick) {
+  currentBoard = placeMines(board, r, c);
+  setFirstClick(false);
+  setStatus("playing");
+  setStats((s: typeof stats) => ({
+    ...s,
+    games: s.games + 1,
+  }));
+}
+
+⸻
+
+3. Add a “Play Again” button after losing/winning
+
+Replace your banner:
+
+<div className={`banner ${status}`}>
+  {status === "won" ? "You win! 🎉" : "Boom! Game over 💥"}
+</div>
+
+with:
+
+<div className={`banner ${status}`}>
+  {status === "won" ? "You win! 🎉" : "Boom! Game over 💥"}
+  <button onClick={reset} className="play-again">
+    Play Again
+  </button>
+</div>
+
+⸻
+
+4. Add keyboard restart (like real games)
+
+Add:
+
+useEffect(() => {
+  const key = (e: KeyboardEvent) => {
+    if (e.key === "r" || e.key === "R") {
+      reset();
+    }
+  };
+  window.addEventListener("keydown", key);
+  return () => window.removeEventListener("keydown", key);
+}, [reset]);
+
+Now pressing R restarts.
+
+⸻
+
+5. Add win auto-flagging (real Minesweeper style)
+
+When winning:
+
+Replace:
+
+if (checkWin(revealed)) {
+  setStatus("won");
+
+with:
+
+if (checkWin(revealed)) {
+  const finished = revealed.map(row =>
+    row.map(cell =>
+      cell.mine ? {...cell, flagged:true} : cell
+    )
+  );
+  setBoard(finished);
+  setFlagCount(MINES);
+  setStatus("won");
+
+⸻
+
+After these changes it will behave much more like classic Minesweeper:
+✅ New games
+✅ Proper game counter
+✅ Replay button
+✅ Keyboard restart
+✅ Auto flags mines on win
+✅ Timer resets correctly
+✅ Stats work correctly
+
+Your base code is already pretty advanced; these are mostly game-loop fixes.
