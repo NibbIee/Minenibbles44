@@ -269,62 +269,30 @@ export default function App() {
   const minesLeft = MINES - flagCount;
 
   return (
-    <div className="game-root">
-      <h1 className="title">
-        💣 Minesweeper
-      </h1>
+    <div className="app">
 
-      <div className="hud">
-        <div className="hud-box">
-          <span className="hud-icon">💣</span>
-          <span className="hud-value">{minesLeft}</span>
-        </div>
-
-        <button
-          className={`reset-btn ${status === "lost" ? "sad" : status === "won" ? "cool" : ""}`}
-          onClick={reset}
-          title="New game"
-        >
-          {status === "lost" ? "😵" : status === "won" ? "😎" : "🙂"}
+      {/* Top bar */}
+      <div className="topbar">
+        <button className="icon-btn" title="Stats">
+          {stats.wins}/{stats.games}
         </button>
-
-        <div className="hud-box">
-          <span className="hud-icon">⏱</span>
-          <span className="hud-value">{String(elapsed).padStart(3, "0")}</span>
+        <div className="mine-display">
+          <span className="mine-num">{minesLeft}</span>
+          <span className="mine-label">MINES</span>
         </div>
-
-        <div className="hud-box">
-          <span className="hud-icon">🏆</span>
-          <span className="hud-value">
-            {bestTime === 999 ? "---" : bestTime}
-          </span>
-        </div>
+        <button className="icon-btn" onClick={reset} title="New game">↺</button>
       </div>
 
+      {/* Win / lose banner */}
       {(status === "won" || status === "lost") && (
         <div className={`banner ${status}`}>
-          {status === "won" ? "You win! 🎉" : "Boom! Game over 💥"}
-          <button onClick={reset} className="play-again">
-            Play Again
-          </button>
+          {status === "won" ? "YOU WIN!" : "GAME OVER"}
+          <button onClick={reset} className="play-again">Play Again</button>
         </div>
       )}
 
-      <div className="mode-buttons">
-        <button
-          className={mode === "reveal" ? "mode active" : "mode"}
-          onClick={() => setMode("reveal")}
-        >
-          🪏 Shovel
-        </button>
-        <button
-          className={mode === "flag" ? "mode active" : "mode"}
-          onClick={() => setMode("flag")}
-        >
-          🚩 Flag
-        </button>
-      </div>
-
+      {/* Board */}
+      <div className="board-wrap">
       <div className="board">
         {board.map((row, r) =>
           row.map((cell, c) => {
@@ -388,25 +356,25 @@ export default function App() {
           })
         )}
       </div>
+      </div>{/* end board-wrap */}
 
-      <div className="stats">
-        <h2>Statistics</h2>
-        <p>Games: {stats.games}</p>
-        <p>Wins: {stats.wins}</p>
-        <p>
-          Win rate:{" "}
-          {stats.games === 0
-            ? 0
-            : Math.round((stats.wins / stats.games) * 100)}
-          %
-        </p>
-        <p>
-          Best Time:{" "}
-          {stats.best === null ? "--" : stats.best + "s"}
-        </p>
+      {/* Bottom bar */}
+      <div className="bottombar">
+        <button
+          className={`mode-btn${mode === "reveal" ? " active" : ""}`}
+          onClick={() => setMode("reveal")}
+        >
+          DIG
+        </button>
+        <div className="timer-display">{String(elapsed).padStart(3, "0")}</div>
+        <button
+          className={`mode-btn${mode === "flag" ? " active" : ""}`}
+          onClick={() => setMode("flag")}
+        >
+          FLAG
+        </button>
       </div>
 
-      <p className="hint">Left-click to reveal · Right-click to flag · Click a number to chord</p>
     </div>
   );
 }
