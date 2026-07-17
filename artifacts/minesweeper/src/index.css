@@ -40,25 +40,38 @@ body {
   flex-shrink: 0;
 }
 
-.mine-display {
+.top-counters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.counter-box {
   display: flex;
   flex-direction: column;
   align-items: center;
   line-height: 1;
 }
 
-.mine-num {
-  font-size: 36px;
+.counter-num {
+  font-size: 30px;
   font-weight: bold;
   letter-spacing: -1px;
+  font-family: 'Courier New', monospace;
 }
 
-.mine-label {
-  font-size: 10px;
+.counter-label {
+  font-size: 9px;
   letter-spacing: 3px;
   color: #555;
   text-transform: uppercase;
-  margin-top: 2px;
+  margin-top: 3px;
+}
+
+.counter-divider {
+  width: 1px;
+  height: 36px;
+  background: #2a2a2a;
 }
 
 .icon-btn {
@@ -166,6 +179,15 @@ body {
 
 .cell.flagged { background: #2e2e2e; }
 
+.flag-dot {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e53935;
+  box-shadow: 0 0 4px rgba(229, 57, 53, 0.6);
+}
+
 /* ── Number colours ── */
 .n1 { color: #4fc3f7; }
 .n2 { color: #81c784; }
@@ -180,15 +202,16 @@ body {
 .bottombar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
   flex-shrink: 0;
 }
 
 .mode-btn {
   width: 120px;
-  height: 60px;
+  height: 58px;
   border: 2px solid #2a2a2a;
   border-radius: 16px;
   background: #1a1a1a;
@@ -208,11 +231,3 @@ body {
 }
 
 .mode-btn:active { transform: scale(0.94); }
-
-.timer-display {
-  font-size: 30px;
-  font-weight: bold;
-  font-family: 'Courier New', monospace;
-  color: #444;
-  letter-spacing: 4px;
-}

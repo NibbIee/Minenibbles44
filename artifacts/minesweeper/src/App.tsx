@@ -325,9 +325,16 @@ export default function App() {
         <button className="icon-btn" title="Stats">
           {stats.wins}/{stats.games}
         </button>
-        <div className="mine-display">
-          <span className="mine-num">{minesLeft}</span>
-          <span className="mine-label">MINES</span>
+        <div className="top-counters">
+          <div className="counter-box">
+            <span className="counter-num">{minesLeft}</span>
+            <span className="counter-label">MINES</span>
+          </div>
+          <div className="counter-divider" />
+          <div className="counter-box">
+            <span className="counter-num">{String(elapsed).padStart(3, "0")}</span>
+            <span className="counter-label">TIME</span>
+          </div>
         </div>
         <button className="icon-btn" onClick={reset} title="New game">↺</button>
       </div>
@@ -362,7 +369,7 @@ export default function App() {
               }
             } else if (cell.flagged) {
               cellClass += " flagged";
-              content = "🚩";
+              content = <span className="flag-dot" />;
             }
 
             return (
@@ -415,7 +422,6 @@ export default function App() {
         >
           DIG
         </button>
-        <div className="timer-display">{String(elapsed).padStart(3, "0")}</div>
         <button
           className={`mode-btn${mode === "flag" ? " active" : ""}`}
           onClick={() => setMode("flag")}
