@@ -93,6 +93,23 @@ body {
 
 .icon-btn:active { transform: scale(0.9); }
 
+.trophy-counter {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #1c1c1c;
+  border-radius: 24px;
+  padding: 0 14px;
+  height: 48px;
+  font-size: 18px;
+}
+
+.trophy-num {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+}
+
 /* ── Banner ── */
 .banner {
   display: flex;

@@ -322,9 +322,9 @@ export default function App() {
 
       {/* Top bar */}
       <div className="topbar">
-        <button className="icon-btn" title="Stats">
-          {stats.wins}/{stats.games}
-        </button>
+        <div className="trophy-counter" title="Wins">
+          🏆 <span className="trophy-num">{stats.wins}</span>
+        </div>
         <div className="top-counters">
           <div className="counter-box">
             <span className="counter-num">{minesLeft}</span>
