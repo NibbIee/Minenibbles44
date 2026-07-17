@@ -103,6 +103,16 @@ export default function App() {
   const [firstClick, setFirstClick] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const [flagCount, setFlagCount] = useState(0);
+  const [stats, setStats] = useState(() => {
+    const saved = localStorage.getItem("ms-stats");
+    return saved
+      ? JSON.parse(saved)
+      : {
+          games: 0,
+          wins: 0,
+          best: null,
+        };
+  });
   const [bestTime, setBestTime] = useState<number>(() => {
     const saved = localStorage.getItem("best-time");
     return saved ? Number(saved) : 999;
@@ -122,12 +132,20 @@ export default function App() {
     }
   }, [status, elapsed, bestTime]);
 
+  useEffect(() => {
+    localStorage.setItem("ms-stats", JSON.stringify(stats));
+  }, [stats]);
+
   const reset = useCallback(() => {
     setBoard(createEmptyBoard());
     setStatus("idle");
     setFirstClick(true);
     setElapsed(0);
     setFlagCount(0);
+    setStats((s: typeof stats) => ({
+      ...s,
+      games: s.games + 1,
+    }));
   }, []);
 
   const handleReveal = useCallback(
@@ -158,7 +176,17 @@ export default function App() {
 
       const revealed = floodReveal(currentBoard, r, c);
       setBoard(revealed);
-      if (checkWin(revealed)) setStatus("won");
+      if (checkWin(revealed)) {
+        setStatus("won");
+        setStats((s: typeof stats) => ({
+          games: s.games,
+          wins: s.wins + 1,
+          best:
+            s.best === null || elapsed < s.best
+              ? elapsed
+              : s.best,
+        }));
+      }
     },
     [board, status, firstClick]
   );
@@ -305,6 +333,23 @@ export default function App() {
             );
           })
         )}
+      </div>
+
+      <div className="stats">
+        <h2>Statistics</h2>
+        <p>Games: {stats.games}</p>
+        <p>Wins: {stats.wins}</p>
+        <p>
+          Win rate:{" "}
+          {stats.games === 0
+            ? 0
+            : Math.round((stats.wins / stats.games) * 100)}
+          %
+        </p>
+        <p>
+          Best Time:{" "}
+          {stats.best === null ? "--" : stats.best + "s"}
+        </p>
       </div>
 
       <p className="hint">Left-click to reveal · Right-click to flag · Click a number to chord</p>
