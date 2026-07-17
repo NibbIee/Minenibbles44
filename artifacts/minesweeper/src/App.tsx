@@ -98,6 +98,7 @@ const NUMBER_COLORS: Record<number, string> = {
 };
 
 export default function App() {
+  const [mode, setMode] = useState<"reveal" | "flag">("reveal");
   const [board, setBoard] = useState<CellState[][]>(createEmptyBoard);
   const [status, setStatus] = useState<GameStatus>("idle");
   const [firstClick, setFirstClick] = useState(true);
@@ -309,6 +310,21 @@ export default function App() {
         </div>
       )}
 
+      <div className="mode-buttons">
+        <button
+          className={mode === "reveal" ? "mode active" : "mode"}
+          onClick={() => setMode("reveal")}
+        >
+          🪏 Shovel
+        </button>
+        <button
+          className={mode === "flag" ? "mode active" : "mode"}
+          onClick={() => setMode("flag")}
+        >
+          🚩 Flag
+        </button>
+      </div>
+
       <div className="board">
         {board.map((row, r) =>
           row.map((cell, c) => {
@@ -337,6 +353,14 @@ export default function App() {
                 key={`${r}-${c}`}
                 className={cellClass}
                 onClick={() => {
+                  if (mode === "flag") {
+                    handleFlag(
+                      { preventDefault: () => {} } as React.MouseEvent,
+                      r,
+                      c
+                    );
+                    return;
+                  }
                   if (cell.revealed) {
                     handleChord(r, c);
                   } else {
