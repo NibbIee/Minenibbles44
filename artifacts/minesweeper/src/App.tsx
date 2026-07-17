@@ -398,7 +398,11 @@ export default function App() {
                     handleReveal(r, c);
                   }
                 }}
-                onContextMenu={(e) => handleFlag(e, r, c)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  // Only flag on right-click (desktop); on touch, FLAG mode handles it
+                  if (!('ontouchstart' in window)) handleFlag(e, r, c);
+                }}
               >
                 {content}
               </div>

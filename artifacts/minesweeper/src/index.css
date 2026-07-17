@@ -159,6 +159,8 @@ body {
   gap: 3px;
   flex-shrink: 0;
   touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
 }
 
 /* ── Cell ── */
