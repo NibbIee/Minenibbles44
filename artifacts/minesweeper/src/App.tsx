@@ -309,10 +309,7 @@ export default function App() {
         </div>
       )}
 
-      <div
-        className="board"
-        style={{ gridTemplateColumns: `repeat(${COLS}, 36px)` }}
-      >
+      <div className="board">
         {board.map((row, r) =>
           row.map((cell, c) => {
             let content: React.ReactNode = null;
@@ -325,7 +322,7 @@ export default function App() {
                 cellClass += " mine";
               } else if (cell.adjacent > 0) {
                 content = (
-                  <span style={{ color: NUMBER_COLORS[cell.adjacent] }}>
+                  <span className={`number n${cell.adjacent}`}>
                     {cell.adjacent}
                   </span>
                 );
@@ -347,7 +344,22 @@ export default function App() {
                   }
                 }}
                 onContextMenu={(e) => handleFlag(e, r, c)}
-              />
+                onTouchStart={() => {
+                  const timer = setTimeout(() => {
+                    handleFlag(
+                      { preventDefault: () => {} } as React.MouseEvent,
+                      r,
+                      c
+                    );
+                  }, 500);
+                  (window as any).flagTimer = timer;
+                }}
+                onTouchEnd={() => {
+                  clearTimeout((window as any).flagTimer);
+                }}
+              >
+                {content}
+              </div>
             );
           })
         )}

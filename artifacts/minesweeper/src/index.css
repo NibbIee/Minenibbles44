@@ -17,11 +17,15 @@ body {
 }
 
 .game-root {
+  min-height: 100vh;
+  padding: 20px 10px;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
   gap: 16px;
-  padding: 24px;
 }
 
 .title {
@@ -114,48 +118,43 @@ body {
 /* Board */
 .board {
   display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  width: calc(100vw - 20px);
+  max-width: 390px;
   gap: 2px;
-  background: #0d0d1a;
-  border: 3px solid #2a2a4a;
-  border-radius: 6px;
-  padding: 6px;
-  user-select: none;
+  touch-action: manipulation;
 }
 
 /* Cell */
 .cell {
-  width: 36px;
-  height: 36px;
-  background: #2a2a4a;
+  aspect-ratio: 1;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 16px;
+  justify-content: center;
+  background: #bdbdbd;
+  border-radius: 5px;
+  font-size: clamp(14px, 5vw, 22px);
   font-weight: bold;
+  box-shadow:
+    inset 2px 2px white,
+    inset -2px -2px #777;
+  user-select: none;
   cursor: pointer;
-  border-radius: 3px;
-  transition: background 0.08s;
-  border: 1px solid #3a3a6a;
 }
 
-.cell:hover:not(.revealed) {
-  background: #3a3a6a;
-}
-
-.cell:active:not(.revealed) {
-  background: #4a4a7a;
+.cell:active {
+  transform: scale(0.92);
 }
 
 .cell.revealed {
-  background: #131325;
-  border-color: #1e1e38;
+  background: #e0e0e0;
+  box-shadow: none;
   cursor: default;
 }
 
 .cell.revealed.mine {
-  background: #5a1010;
-  border-color: #8b2020;
-  font-size: 18px;
+  background: #ff5252;
+  box-shadow: none;
   animation: boom 0.2s ease-out;
 }
 
@@ -165,9 +164,18 @@ body {
 }
 
 .cell.flagged {
-  background: #1e1e38;
-  font-size: 18px;
+  background: #d6d6d6;
 }
+
+/* Number colours */
+.n1 { color: #1976d2; }
+.n2 { color: #388e3c; }
+.n3 { color: #d32f2f; }
+.n4 { color: #7b1fa2; }
+.n5 { color: #e65100; }
+.n6 { color: #00838f; }
+.n7 { color: #000; }
+.n8 { color: #616161; }
 
 /* Stats */
 .stats {

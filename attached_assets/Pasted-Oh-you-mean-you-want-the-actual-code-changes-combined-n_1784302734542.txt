@@ -1,0 +1,141 @@
+Oh, you mean you want the actual code changes combined, not a Replit prompt.
+
+I’ll combine the changes into your game. Since your file is already very long, the easiest way is to replace/add these parts:
+
+1. Replace your board JSX
+
+Replace:
+
+<div
+  className="board"
+  style={{ gridTemplateColumns: `repeat(${COLS}, 36px)` }}
+>
+
+with:
+
+<div className="board">
+
+⸻
+
+2. Replace your cell touch/click handlers
+
+Change your cell <div> to:
+
+<div
+  key={`${r}-${c}`}
+  className={cellClass}
+  onClick={() => {
+    if (cell.revealed) {
+      handleChord(r, c);
+    } else {
+      handleReveal(r, c);
+    }
+  }}
+  onContextMenu={(e) => handleFlag(e, r, c)}
+  onTouchStart={() => {
+    const timer = setTimeout(() => {
+      handleFlag(
+        { preventDefault: () => {} } as React.MouseEvent,
+        r,
+        c
+      );
+    }, 500);
+    (window as any).flagTimer = timer;
+  }}
+  onTouchEnd={() => {
+    clearTimeout((window as any).flagTimer);
+  }}
+>
+  {content}
+</div>
+
+Now:
+
+* Tap → reveal
+* Hold → flag 🚩
+* Right click → flag
+
+⸻
+
+3. Replace your board CSS with this
+
+.game-root {
+  min-height: 100vh;
+  padding: 20px 10px;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  width: calc(100vw - 20px);
+  max-width: 390px;
+  gap: 2px;
+  touch-action: manipulation;
+}
+.cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #bdbdbd;
+  border-radius: 5px;
+  font-size: clamp(14px, 5vw, 22px);
+  font-weight: bold;
+  box-shadow:
+    inset 2px 2px white,
+    inset -2px -2px #777;
+  user-select: none;
+}
+.cell:active {
+  transform: scale(0.92);
+}
+.revealed {
+  background:#e0e0e0;
+  box-shadow:none;
+}
+.flagged {
+  background:#d6d6d6;
+}
+.mine {
+  background:#ff5252;
+}
+
+⸻
+
+4. Replace number styling
+
+Change:
+
+<span style={{ color: NUMBER_COLORS[cell.adjacent] }}>
+
+to:
+
+<span className={`number n${cell.adjacent}`}>
+
+Add:
+
+.n1 {color:#1976d2;}
+.n2 {color:#388e3c;}
+.n3 {color:#d32f2f;}
+.n4 {color:#7b1fa2;}
+.n5 {color:#e65100;}
+.n6 {color:#00838f;}
+.n7 {color:#000;}
+.n8 {color:#616161;}
+
+⸻
+
+This will make your existing game:
+✅ iPhone 12 mini friendly
+✅ Touch playable
+✅ Flags work
+✅ Numbers look like Minesweeper
+✅ Board scales correctly
+✅ Looks like a mobile app
+
+Your current game logic can stay mostly unchanged.
