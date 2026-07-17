@@ -399,19 +399,6 @@ export default function App() {
                   }
                 }}
                 onContextMenu={(e) => handleFlag(e, r, c)}
-                onTouchStart={() => {
-                  const timer = setTimeout(() => {
-                    handleFlag(
-                      { preventDefault: () => {} } as React.MouseEvent,
-                      r,
-                      c
-                    );
-                  }, 500);
-                  (window as any).flagTimer = timer;
-                }}
-                onTouchEnd={() => {
-                  clearTimeout((window as any).flagTimer);
-                }}
               >
                 {content}
               </div>
