@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 
 const ROWS = 9;
 const COLS = 14;
-const MINES = 20;
+const MINES = 27;
 
 type CellState = {
   mine: boolean;
@@ -103,6 +103,10 @@ export default function App() {
   const [firstClick, setFirstClick] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const [flagCount, setFlagCount] = useState(0);
+  const [bestTime, setBestTime] = useState<number>(() => {
+    const saved = localStorage.getItem("best-time");
+    return saved ? Number(saved) : 999;
+  });
 
   // Timer
   useEffect(() => {
@@ -110,6 +114,13 @@ export default function App() {
     const id = setInterval(() => setElapsed((t) => Math.min(t + 1, 999)), 1000);
     return () => clearInterval(id);
   }, [status]);
+
+  useEffect(() => {
+    if (status === "won" && elapsed > 0 && elapsed < bestTime) {
+      setBestTime(elapsed);
+      localStorage.setItem("best-time", String(elapsed));
+    }
+  }, [status, elapsed, bestTime]);
 
   const reset = useCallback(() => {
     setBoard(createEmptyBoard());
@@ -215,7 +226,9 @@ export default function App() {
 
   return (
     <div className="game-root">
-      <h1 className="title">Minesweeper</h1>
+      <h1 className="title">
+        💣 Minesweeper
+      </h1>
 
       <div className="hud">
         <div className="hud-box">
@@ -234,6 +247,13 @@ export default function App() {
         <div className="hud-box">
           <span className="hud-icon">⏱</span>
           <span className="hud-value">{String(elapsed).padStart(3, "0")}</span>
+        </div>
+
+        <div className="hud-box">
+          <span className="hud-icon">🏆</span>
+          <span className="hud-value">
+            {bestTime === 999 ? "---" : bestTime}
+          </span>
         </div>
       </div>
 
