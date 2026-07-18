@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import confetti from "canvas-confetti";
 
 const ROWS = 16;
 const COLS = 9;
@@ -185,6 +186,31 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("ms-stats", JSON.stringify(stats));
   }, [stats]);
+
+  useEffect(() => {
+    if (status !== "won") return;
+    const duration = 3000;
+    const end = Date.now() + duration;
+    const colors = ["#4caf50", "#ffffff", "#aaaaaa", "#81c784"];
+    const frame = () => {
+      confetti({
+        particleCount: 6,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.7 },
+        colors,
+      });
+      confetti({
+        particleCount: 6,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.7 },
+        colors,
+      });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    };
+    frame();
+  }, [status]);
 
   const reset = useCallback(() => {
     setBoard(createEmptyBoard());
