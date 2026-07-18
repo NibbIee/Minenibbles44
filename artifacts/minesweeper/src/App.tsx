@@ -952,7 +952,7 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
   open: boolean; onClose: () => void; coins: number;
   ownedThemes: string[]; ownedFlags: string[];
   onBuyTheme: (id: string) => void; onBuyFlag: (id: string) => void;
-  onOpenCrate: () => void;
+  onOpenCrate: (qty: 1 | 3) => void;
 }) {
   const [tab, setTab] = useState<"themes" | "flags" | "crates">("themes");
   if (!open) return null;
@@ -1048,14 +1048,22 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
                   </div>
                 ))}
               </div>
-              <button
-                className={`crate-open-btn${coins >= CRATE_COST ? "" : " cant-afford"}`}
-                onClick={() => { onClose(); onOpenCrate(); }}
-                disabled={coins < CRATE_COST}
-                style={{ marginTop: 12 }}
-              >
-                <CoinIcon size={13} /> Open Crate — {CRATE_COST}
-              </button>
+              <div className="crate-shop-open-row" style={{ marginTop: 12 }}>
+                <button
+                  className={`crate-open-btn crate-open-qty${coins >= CRATE_COST ? "" : " cant-afford"}`}
+                  onClick={() => { onClose(); onOpenCrate(1); }}
+                  disabled={coins < CRATE_COST}
+                >
+                  <CoinIcon size={12} /> 1× — {CRATE_COST}
+                </button>
+                <button
+                  className={`crate-open-btn crate-open-qty crate-open-qty-3x${coins >= CRATE_COST * 3 ? "" : " cant-afford"}`}
+                  onClick={() => { onClose(); onOpenCrate(3); }}
+                  disabled={coins < CRATE_COST * 3}
+                >
+                  <CoinIcon size={12} /> 3× — {CRATE_COST * 3}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1198,7 +1206,8 @@ export default function App() {
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [dailyOpen, setDailyOpen] = useState(false);
-  const [crateOpen, setCrateOpen] = useState(false);
+  const [crateOpen,     setCrateOpen]     = useState(false);
+  const [crateAutoOpen, setCrateAutoOpen] = useState<1 | 3 | undefined>(undefined);
   const [shaking, setShaking] = useState(false);
   const everFlaggedRef = useRef(false);
 
@@ -1900,15 +1909,16 @@ export default function App() {
       <ShopModal open={shopOpen} onClose={() => setShopOpen(false)}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag}
-        onOpenCrate={() => setCrateOpen(true)} />
+        onOpenCrate={(qty) => { setCrateAutoOpen(qty); setCrateOpen(true); }} />
       <InventoryModal open={inventoryOpen} onClose={() => setInventoryOpen(false)}
         ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         activeTheme={theme} activeFlag={activeFlag}
         onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag}
         ownedCrateItems={ownedCrateItems} />
-      <CrateModal open={crateOpen} onClose={() => setCrateOpen(false)}
+      <CrateModal open={crateOpen} onClose={() => { setCrateOpen(false); setCrateAutoOpen(undefined); }}
         coins={coins} ownedCrateItems={ownedCrateItems}
-        onPay={handleCratePay} onClaim={handleCrateClaim} />
+        onPay={handleCratePay} onClaim={handleCrateClaim}
+        autoOpen={crateAutoOpen} />
       <AchievementsModal open={achievementsOpen} onClose={() => setAchievementsOpen(false)}
         claimed={claimedAchievements} pending={pendingAchievements}
         onClaim={handleClaimAchievement} />

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 // ── Local CoinIcon ─────────────────────────────────────────────────────────────
 function CoinIcon({ size = 14 }: { size?: number }) {
@@ -37,24 +37,31 @@ function RadiantStarSVG({ size = 48 }: { size?: number }) {
   );
 }
 
+// Fixed crescent moon using mask — clean proper crescent shape
 function NeonCrescentSVG({ size = 48 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
       <defs>
-        <linearGradient id="nc-fill" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#00ffee" />
-          <stop offset="50%" stopColor="#a855f7" />
+        <linearGradient id="nc-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#b8e8ff" />
+          <stop offset="45%" stopColor="#7c3aed" />
           <stop offset="100%" stopColor="#ec4899" />
         </linearGradient>
+        <mask id="nc-mask">
+          {/* Full circle defines the moon body */}
+          <circle cx="21" cy="26" r="18" fill="white" />
+          {/* Offset circle cuts out the crescent */}
+          <circle cx="29" cy="20" r="14" fill="black" />
+        </mask>
       </defs>
-      <path
-        d="M28 6 A16 16 0 1 0 28 42 A12 12 0 1 1 28 6"
-        fill="url(#nc-fill)"
-        opacity="0.95"
-      />
-      <circle cx="35" cy="12" r="2" fill="white" opacity="0.9" />
-      <circle cx="39" cy="22" r="1.2" fill="#00ffee" opacity="0.8" />
-      <circle cx="37" cy="32" r="1.5" fill="white" opacity="0.7" />
+      {/* Moon crescent body */}
+      <circle cx="21" cy="26" r="18" fill="url(#nc-grad)" mask="url(#nc-mask)" />
+      {/* Stars scattered in the cut-out region */}
+      <circle cx="36" cy="9"  r="1.6" fill="#b8e8ff" opacity="0.95" />
+      <circle cx="42" cy="19" r="1.0" fill="white"   opacity="0.85" />
+      <circle cx="39" cy="31" r="1.3" fill="#ec4899"  opacity="0.85" />
+      <circle cx="44" cy="13" r="0.9" fill="white"   opacity="0.70" />
+      <circle cx="41" cy="6"  r="1.1" fill="#7c3aed"  opacity="0.80" />
     </svg>
   );
 }
@@ -101,18 +108,8 @@ function CyberHackSVG({ size = 48 }: { size?: number }) {
       </rect>
       {cols.map((x, i) => (
         <text key={i} x={x} y="8" fontSize="7" fill="#00ff41" fontFamily="monospace" textAnchor="middle">
-          <animate
-            attributeName="y"
-            values={`${-8 + i * 4};56;${-8 + i * 4}`}
-            dur={`${1.1 + i * 0.25}s`}
-            repeatCount="indefinite"
-          />
-          <animate
-            attributeName="opacity"
-            values="0;1;0.8;1;0"
-            dur={`${1.1 + i * 0.25}s`}
-            repeatCount="indefinite"
-          />
+          <animate attributeName="y" values={`${-8 + i * 4};56;${-8 + i * 4}`} dur={`${1.1 + i * 0.25}s`} repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0;1;0.8;1;0" dur={`${1.1 + i * 0.25}s`} repeatCount="indefinite" />
           {i % 2 === 0 ? "0" : "1"}
         </text>
       ))}
@@ -136,28 +133,24 @@ export interface CrateItem {
   rarity: CrateRarity;
   type: "emoji" | "svg";
   emoji?: string;
-  flagId?: string; // for emoji items: the FLAGS id to equip; for svg items use item.id directly
+  flagId?: string;
 }
 
 export const CRATE_ITEMS: CrateItem[] = [
-  // Commons (65%)
   { id: "crate-carrot",    label: "Carrot",        rarity: "common",    type: "emoji", emoji: "🥕", flagId: "crate-carrot"    },
   { id: "crate-broccoli",  label: "Broccoli",      rarity: "common",    type: "emoji", emoji: "🥦", flagId: "crate-broccoli"  },
   { id: "crate-wheat",     label: "Wheat",         rarity: "common",    type: "emoji", emoji: "🌾", flagId: "crate-wheat"     },
   { id: "crate-clover",    label: "Four-Leaf",     rarity: "common",    type: "emoji", emoji: "🍀", flagId: "crate-clover"    },
-  // Rares (25%)
   { id: "crate-wave",      label: "Wave",          rarity: "rare",      type: "emoji", emoji: "🌊", flagId: "crate-wave"      },
   { id: "crate-cherry",    label: "Cherry",        rarity: "rare",      type: "emoji", emoji: "🍒", flagId: "crate-cherry"    },
   { id: "crate-target",    label: "Target",        rarity: "rare",      type: "emoji", emoji: "🎯", flagId: "crate-target"    },
-  // Epics (8%)
   { id: "crate-radiant",   label: "Radiant Star",  rarity: "epic",      type: "svg" },
   { id: "crate-crescent",  label: "Neon Crescent", rarity: "epic",      type: "svg" },
-  // Legendaries (2%)
   { id: "crate-volcano",   label: "Volcano Fury",  rarity: "legendary", type: "svg" },
   { id: "crate-cyberhack", label: "Cyber Hack",    rarity: "legendary", type: "svg" },
 ];
 
-const RARITY_RANK: Record<CrateRarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
+export const RARITY_RANK: Record<CrateRarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
 
 export function getRarityColor(rarity: CrateRarity): string {
   switch (rarity) {
@@ -198,14 +191,13 @@ function pickCrateItem(): CrateItem {
 }
 
 function buildStrip(winner: CrateItem): CrateItem[] {
-  const STRIP_COUNT = 80;
-  const strip: CrateItem[] = Array.from({ length: STRIP_COUNT }, () => pickCrateItem());
+  const strip: CrateItem[] = Array.from({ length: 80 }, () => pickCrateItem());
   strip[WINNER_IDX] = winner;
   return strip;
 }
 
 // ── CrateModal ─────────────────────────────────────────────────────────────────
-const ITEM_W = 80;
+const ITEM_W    = 80;
 const WINNER_IDX = 65;
 export const CRATE_COST = 50;
 
@@ -216,56 +208,77 @@ export interface CrateModalProps {
   ownedCrateItems: string[];
   onPay: (amount: number) => void;
   onClaim: (item: CrateItem) => void;
+  /** If set, spin immediately on open with this quantity — skips idle button press */
+  autoOpen?: 1 | 3;
 }
 
-export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onClaim }: CrateModalProps) {
-  const [phase, setPhase]       = useState<"idle" | "spinning" | "done">("idle");
+export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onClaim, autoOpen }: CrateModalProps) {
+  const [phase,    setPhase]    = useState<"idle" | "spinning" | "done">("idle");
   const [quantity, setQuantity] = useState<1 | 3>(1);
-  const [strip, setStrip]       = useState<CrateItem[]>([]);
-  const [winners, setWinners]   = useState<CrateItem[]>([]);
+  const [strip,    setStrip]    = useState<CrateItem[]>([]);
+  const [winners,  setWinners]  = useState<CrateItem[]>([]);
+
   const stripRef = useRef<HTMLDivElement>(null);
   const reelRef  = useRef<HTMLDivElement>(null);
 
-  const totalCost = CRATE_COST * quantity;
-  const canAfford = coins >= totalCost;
+  // Core spin logic — accepts explicit qty so it works from both button and autoOpen
+  const startSpin = useCallback((qty: 1 | 3) => {
+    const cost = CRATE_COST * qty;
+    if (coins < cost || phase !== "idle") return;
 
-  const handleOpen = useCallback(() => {
-    if (!canAfford || phase !== "idle") return;
-
-    // Pick all winners; animate reel to the highest-rarity one
-    const wonItems = Array.from({ length: quantity }, () => pickCrateItem());
+    const wonItems  = Array.from({ length: qty }, () => pickCrateItem());
     const reelWinner = wonItems.reduce((best, cur) =>
       RARITY_RANK[cur.rarity] > RARITY_RANK[best.rarity] ? cur : best
     );
     const newStrip = buildStrip(reelWinner);
 
+    setQuantity(qty);
     setWinners(wonItems);
     setStrip(newStrip);
     setPhase("spinning");
-    onPay(totalCost);
+    onPay(cost);
 
     requestAnimationFrame(() => {
       if (!stripRef.current || !reelRef.current) return;
-      const containerW = reelRef.current.offsetWidth || 320;
+      const containerW  = reelRef.current.offsetWidth || 320;
       const centerOffset = containerW / 2 - ITEM_W / 2;
-      const targetX = -(WINNER_IDX * ITEM_W - centerOffset);
+      const targetX      = -(WINNER_IDX * ITEM_W - centerOffset);
 
       stripRef.current.style.transition = "none";
-      stripRef.current.style.transform = "translateX(0px)";
-
+      stripRef.current.style.transform  = "translateX(0px)";
       requestAnimationFrame(() => {
         if (!stripRef.current) return;
         stripRef.current.style.transition = "transform 5.5s cubic-bezier(0.12, 0.8, 0.32, 1)";
-        stripRef.current.style.transform = `translateX(${targetX}px)`;
+        stripRef.current.style.transform  = `translateX(${targetX}px)`;
       });
     });
 
     setTimeout(() => setPhase("done"), 5700);
-  }, [canAfford, phase, quantity, totalCost, onPay]);
+  }, [coins, phase, onPay]);
+
+  // Keep a stable ref so the autoOpen effect always sees the latest startSpin
+  const startSpinRef = useRef(startSpin);
+  startSpinRef.current = startSpin;
+
+  // Auto-spin when opened via shop 1x / 3x button
+  const hasAutoSpun = useRef(false);
+  useEffect(() => {
+    if (!open) {
+      hasAutoSpun.current = false;
+      return;
+    }
+    if (autoOpen && !hasAutoSpun.current) {
+      hasAutoSpun.current = true;
+      // Small delay so the DOM (reel refs) is mounted
+      const t = setTimeout(() => startSpinRef.current(autoOpen), 60);
+      return () => clearTimeout(t);
+    }
+  }, [open, autoOpen]);
+
+  const handleOpen = useCallback(() => startSpin(quantity), [startSpin, quantity]);
 
   const handleClaimAll = useCallback(() => {
     winners.forEach((w) => onClaim(w));
-    // Stay on crate page — reset to idle
     setPhase("idle");
     setStrip([]);
     setWinners([]);
@@ -281,10 +294,11 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
 
   if (!open) return null;
 
-  const bestWinner = winners.length > 0
+  const bestWinner  = winners.length > 0
     ? winners.reduce((best, cur) => RARITY_RANK[cur.rarity] > RARITY_RANK[best.rarity] ? cur : best)
     : null;
   const winnerColor = bestWinner ? getRarityColor(bestWinner.rarity) : "#ffd700";
+  const multi       = winners.length > 1;
 
   const DROP_RATES = [
     { label: "Common",    pct: "65%", color: "#8a9bb0", preview: "🥕🥦🌾🍀" },
@@ -295,7 +309,7 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
 
   return (
     <div className="menu-overlay" onClick={handleClose}>
-      <div className="menu-sheet" onClick={(e) => e.stopPropagation()} style={{ overflowY: "auto" }}>
+      <div className="menu-sheet crate-modal-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="menu-handle" />
 
         {/* Header */}
@@ -356,11 +370,11 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
               return (
                 <div
                   key={idx}
-                  className="crate-winner-card"
-                  style={{ borderColor: color, boxShadow: `0 0 18px ${color}20` }}
+                  className={`crate-winner-card${multi ? " crate-winner-compact" : ""}`}
+                  style={{ borderColor: color, boxShadow: `0 0 14px ${color}18` }}
                 >
                   <div className="crate-winner-icon">
-                    <CrateItemDisplay item={winner} size={48} />
+                    <CrateItemDisplay item={winner} size={multi ? 36 : 48} />
                   </div>
                   <div className="crate-winner-info">
                     <span className="crate-winner-rarity" style={{ color }}>
@@ -375,40 +389,38 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
               );
             })}
             <button
-              className="crate-claim-btn crate-claim-all-btn"
+              className="crate-claim-all-btn"
               style={{ borderColor: winnerColor, color: winnerColor }}
               onClick={handleClaimAll}
             >
-              {winners.length > 1 ? "Claim All" : "Claim"}
+              {multi ? "Claim All" : "Claim"}
             </button>
           </div>
         )}
 
-        {/* Quantity toggle + open button */}
-        {phase === "idle" && (
+        {/* Quantity toggle + open button — only shown when no autoOpen (manual open mode) */}
+        {phase === "idle" && !autoOpen && (
           <div className="crate-open-area">
             <div className="crate-qty-toggle">
-              <button
-                className={`crate-qty-btn${quantity === 1 ? " active" : ""}`}
-                onClick={() => setQuantity(1)}
-              >1x</button>
-              <button
-                className={`crate-qty-btn${quantity === 3 ? " active" : ""}`}
-                onClick={() => setQuantity(3)}
-              >3x</button>
+              <button className={`crate-qty-btn${quantity === 1 ? " active" : ""}`} onClick={() => setQuantity(1)}>1x</button>
+              <button className={`crate-qty-btn${quantity === 3 ? " active" : ""}`} onClick={() => setQuantity(3)}>3x</button>
             </div>
             <button
-              className={`crate-open-btn${canAfford ? "" : " cant-afford"}`}
+              className={`crate-open-btn${coins >= CRATE_COST * quantity ? "" : " cant-afford"}`}
               onClick={handleOpen}
-              disabled={!canAfford}
+              disabled={coins < CRATE_COST * quantity}
             >
               <CoinIcon size={14} />
-              Open {quantity > 1 ? `${quantity}x` : ""} Crate{quantity > 1 ? "s" : ""} — {totalCost}
+              Open {quantity > 1 ? `${quantity}x ` : ""}Crate{quantity > 1 ? "s" : ""} — {CRATE_COST * quantity}
             </button>
           </div>
         )}
         {phase === "spinning" && (
           <div className="crate-rolling">Rolling…</div>
+        )}
+        {/* After auto-open claim: let user open again manually */}
+        {phase === "idle" && autoOpen && (
+          <div style={{ height: 8 }} />
         )}
       </div>
     </div>

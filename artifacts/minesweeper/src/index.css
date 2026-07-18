@@ -3430,7 +3430,36 @@ body {
   letter-spacing: 0;
 }
 
-/* ── Crate quantity toggle ── */
+/* ── Crate modal sheet — scrollable with safe bottom padding ── */
+.crate-modal-sheet {
+  overflow-y: auto !important;
+  max-height: 92dvh;
+  padding-bottom: 20px;
+}
+
+/* ── Shop: side-by-side 1x / 3x open buttons ── */
+.crate-shop-open-row {
+  display: flex;
+  gap: 8px;
+}
+
+.crate-open-qty {
+  flex: 1;
+  padding: 11px 8px;
+  font-size: 12px;
+}
+
+.crate-open-qty-3x {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.crate-open-qty-3x:hover:not(:disabled) {
+  background: rgba(255,255,255,0.06);
+}
+
+/* ── Crate quantity toggle (manual open mode) ── */
 .crate-open-area {
   display: flex;
   flex-direction: column;
@@ -3471,18 +3500,27 @@ body {
 .crate-winners-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   margin-bottom: 4px;
 }
 
-.crate-winner-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: var(--tab-bg);
-  border: 1px solid;
-  border-radius: 8px;
+/* Compact 3x winner card */
+.crate-winner-compact {
+  padding: 9px 12px !important;
+  gap: 10px !important;
+}
+
+.crate-winner-compact .crate-winner-icon {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.crate-winner-compact .crate-winner-name {
+  font-size: 13px !important;
+}
+
+.crate-winner-compact .crate-winner-hint {
+  font-size: 10px !important;
 }
 
 .crate-claim-all-btn {
@@ -3500,6 +3538,7 @@ body {
   letter-spacing: 1.5px;
   text-transform: uppercase;
   transition: background 0.15s;
+  flex-shrink: 0;
 }
 
 .crate-claim-all-btn:hover {
