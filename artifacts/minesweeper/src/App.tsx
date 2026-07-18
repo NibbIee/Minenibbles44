@@ -208,6 +208,15 @@ function BoardGrid({
 
 // ── Menu panel ────────────────────────────────────────────────────────────────
 
+const THEMES = [
+  { id: "dark",   label: "Dark",   bg: "#000000", cell: "#3a3a3a", accent: "#4caf50" },
+  { id: "light",  label: "Light",  bg: "#f0f0f0", cell: "#bdbdbd", accent: "#4caf50" },
+  { id: "blue",   label: "Blue",   bg: "#060d1f", cell: "#112244", accent: "#4d9fff" },
+  { id: "green",  label: "Green",  bg: "#000000", cell: "#0a1a0a", accent: "#00e676" },
+  { id: "red",    label: "Red",    bg: "#0d0000", cell: "#2a0808", accent: "#ff4444" },
+  { id: "pink",   label: "Pink",   bg: "#110010", cell: "#2a0a22", accent: "#ff69b4" },
+];
+
 function MenuPanel({
   open,
   onClose,
@@ -219,6 +228,8 @@ function MenuPanel({
   infiniteMode,
   onToggleInfinite,
   bestInfinite,
+  theme,
+  onSetTheme,
 }: {
   open: boolean;
   onClose: () => void;
@@ -230,9 +241,11 @@ function MenuPanel({
   infiniteMode: boolean;
   onToggleInfinite: () => void;
   bestInfinite: number;
+  theme: string;
+  onSetTheme: (t: string) => void;
 }) {
   const [nameInput, setNameInput] = useState(playerName);
-  const [tab, setTab] = useState<"stats" | "classic" | "infinite">("stats");
+  const [tab, setTab] = useState<"stats" | "classic" | "infinite" | "themes">("stats");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -293,6 +306,7 @@ function MenuPanel({
           <button className={`menu-tab${tab === "stats" ? " active" : ""}`} onClick={() => setTab("stats")}>STATS</button>
           <button className={`menu-tab${tab === "classic" ? " active" : ""}`} onClick={() => setTab("classic")}>CLASSIC</button>
           <button className={`menu-tab${tab === "infinite" ? " active" : ""}`} onClick={() => setTab("infinite")}>INFINITE</button>
+          <button className={`menu-tab${tab === "themes" ? " active" : ""}`} onClick={() => setTab("themes")}>THEMES</button>
         </div>
 
         {/* Stats tab */}
@@ -389,6 +403,27 @@ function MenuPanel({
             )}
           </div>
         )}
+
+        {/* Themes tab */}
+        {tab === "themes" && (
+          <div className="theme-grid">
+            {THEMES.map((t) => (
+              <button
+                key={t.id}
+                className={`theme-card${theme === t.id ? " selected" : ""}`}
+                onClick={() => onSetTheme(t.id)}
+              >
+                <div className="theme-swatch" style={{ background: t.bg }}>
+                  <div className="theme-swatch-cell" style={{ background: t.cell }} />
+                  <div className="theme-swatch-cell" style={{ background: t.cell }} />
+                  <div className="theme-swatch-accent" style={{ background: t.accent }} />
+                </div>
+                <span className="theme-card-label">{t.label}</span>
+                {theme === t.id && <span className="theme-card-check">✓</span>}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -406,18 +441,14 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Theme
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    return (localStorage.getItem("ms-theme") as "dark" | "light") || "dark";
+  const [theme, setTheme] = useState<string>(() => {
+    return localStorage.getItem("ms-theme") || "dark";
   });
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("ms-theme", theme);
   }, [theme]);
-
-  const toggleTheme = useCallback(() => {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
-  }, []);
 
   // Infinite mode
   const [infiniteMode, setInfiniteMode] = useState(() => localStorage.getItem("ms-infinite") === "true");
@@ -782,31 +813,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="topbar-right">
-          {/* Theme toggle */}
-          <button className="icon-btn" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle light/dark mode">
-            {theme === "dark" ? (
-              /* Sun icon for light mode */
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            ) : (
-              /* Moon icon for dark mode */
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            )}
-          </button>
-          <button className="icon-btn" onClick={reset} title="New game">↺</button>
-        </div>
+        <button className="icon-btn" onClick={reset} title="New game">↺</button>
       </div>
 
       {/* Classic win / lose banner (infinite mode has no banner) */}
@@ -866,6 +873,8 @@ export default function App() {
         infiniteMode={infiniteMode}
         onToggleInfinite={handleToggleInfinite}
         bestInfinite={bestInfinite}
+        theme={theme}
+        onSetTheme={setTheme}
       />
     </div>
   );
