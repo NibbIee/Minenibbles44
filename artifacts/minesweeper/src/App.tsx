@@ -186,20 +186,26 @@ function _lcg(seed: number) {
   let s = seed >>> 0;
   return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff; };
 }
-function _genStarShadow(count: number, seed: number): string {
+function _genStarShadow(count: number, seed: number, ri = 255, gi = 255, bi = 255): string {
   const r = _lcg(seed);
   const out: string[] = [];
   for (let i = 0; i < count; i++) {
     const x = ((r() * 440) | 0) - 20;
     const y = ((r() * 900) | 0) - 50;
     const a = (0.25 + r() * 0.75).toFixed(2);
-    out.push(`${x}px ${y}px rgba(255,255,255,${a})`);
+    out.push(`${x}px ${y}px rgba(${ri},${gi},${bi},${a})`);
   }
   return out.join(",");
 }
 const GX_SM = _genStarShadow(220, 0xdeadbeef);
 const GX_MD = _genStarShadow(80,  0x12345678);
 const GX_LG = _genStarShadow(28,  0xabcdef01);
+// Cyber particles — teal/cyan
+const CY_PART_SM = _genStarShadow(160, 0xc0debabe, 0,   255, 204);
+const CY_PART_LG = _genStarShadow(25,  0xfadedead, 140, 255, 230);
+// Void particles — violet/purple
+const VD_PART_SM = _genStarShadow(180, 0xdeadface, 157, 77,  250);
+const VD_PART_LG = _genStarShadow(30,  0xcafebabe, 210, 150, 255);
 
 function GalaxyBackground() {
   return (
@@ -212,6 +218,41 @@ function GalaxyBackground() {
       <div className="gx-arm gx-arm-1" />
       <div className="gx-arm gx-arm-2" />
       <div className="gx-arm gx-arm-3" />
+    </div>
+  );
+}
+
+function CyberBackground() {
+  return (
+    <div className="cyber-backdrop" aria-hidden="true">
+      <div className="cy-grid" />
+      <div className="cy-horizon" />
+      <div className="cy-scan" />
+      <div className="cy-scan cy-scan-2" />
+      <div className="cy-glow cy-glow-1" />
+      <div className="cy-glow cy-glow-2" />
+      <div className="cy-hline cy-hline-1" />
+      <div className="cy-hline cy-hline-2" />
+      <div className="cy-hline cy-hline-3" />
+      <div className="cy-particles" style={{ boxShadow: CY_PART_SM }} />
+      <div className="cy-particles cy-particles-lg" style={{ boxShadow: CY_PART_LG }} />
+    </div>
+  );
+}
+
+function VoidBackground() {
+  return (
+    <div className="void-backdrop" aria-hidden="true">
+      <div className="vd-swirl vd-swirl-1" />
+      <div className="vd-swirl vd-swirl-2" />
+      <div className="vd-swirl vd-swirl-3" />
+      <div className="vd-ring vd-ring-1" />
+      <div className="vd-ring vd-ring-2" />
+      <div className="vd-ring vd-ring-3" />
+      <div className="vd-rift" />
+      <div className="vd-core" />
+      <div className="vd-particles" style={{ boxShadow: VD_PART_SM }} />
+      <div className="vd-particles vd-particles-lg" style={{ boxShadow: VD_PART_LG }} />
     </div>
   );
 }
@@ -1551,6 +1592,8 @@ export default function App() {
   return (
     <div className="app">
       {theme === "galaxy" && <GalaxyBackground />}
+      {theme === "cyber"  && <CyberBackground  />}
+      {theme === "void"   && <VoidBackground   />}
       {/* Top bar */}
       <div className="topbar">
         <button className="icon-btn menu-btn-wrap" onClick={() => setMenuOpen(true)} title="Menu" aria-label="Open menu">

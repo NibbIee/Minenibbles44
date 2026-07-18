@@ -756,6 +756,280 @@ body {
   isolation: isolate; /* local stacking context so galaxy-backdrop z-index:-1 works */
 }
 
+/* ── Cyber backdrop ── */
+.cyber-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Perspective grid floor */
+.cy-grid {
+  position: absolute;
+  bottom: 0;
+  left: -40%;
+  right: -40%;
+  height: 55%;
+  background-image:
+    linear-gradient(rgba(0, 255, 204, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 204, 0.10) 1px, transparent 1px);
+  background-size: 44px 44px;
+  transform: perspective(260px) rotateX(55deg);
+  transform-origin: 50% 100%;
+  animation: cy-grid-pulse 4s ease-in-out infinite alternate;
+}
+@keyframes cy-grid-pulse {
+  from { opacity: 0.7; }
+  to   { opacity: 1.0; }
+}
+
+/* Horizon glow where grid meets sky */
+.cy-horizon {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 52%;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0, 255, 204, 0.55) 20%,
+    rgba(0, 255, 255, 0.9) 50%,
+    rgba(0, 255, 204, 0.55) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 22px 4px rgba(0, 255, 204, 0.45), 0 0 60px 10px rgba(0, 220, 180, 0.18);
+  animation: cy-horiz 6s ease-in-out infinite alternate;
+}
+@keyframes cy-horiz {
+  from { opacity: 0.65; }
+  to   { opacity: 1.0;  }
+}
+
+/* Sweeping scan line */
+.cy-scan {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.85), transparent);
+  box-shadow: 0 0 18px rgba(0, 255, 204, 0.6), 0 0 40px rgba(0, 255, 204, 0.3);
+  animation: cy-scan-move 5s linear infinite;
+}
+.cy-scan-2 {
+  height: 1px;
+  opacity: 0.45;
+  animation: cy-scan-move 5s linear infinite;
+  animation-delay: -2.5s;
+}
+@keyframes cy-scan-move {
+  from { top: -4px; }
+  to   { top: 100%; }
+}
+
+/* Ambient glows */
+.cy-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+}
+.cy-glow-1 {
+  left: -10%; top: 15%;
+  width: 200px; height: 130px;
+  background: radial-gradient(ellipse, rgba(0, 255, 204, 0.13), transparent 75%);
+  animation: cy-glow-pulse 7s ease-in-out infinite alternate;
+}
+.cy-glow-2 {
+  right: -10%; top: 35%;
+  width: 180px; height: 120px;
+  background: radial-gradient(ellipse, rgba(0, 200, 255, 0.10), transparent 75%);
+  animation: cy-glow-pulse 9s ease-in-out infinite alternate-reverse;
+}
+@keyframes cy-glow-pulse {
+  from { opacity: 0.5; transform: scale(1);    }
+  to   { opacity: 1.0; transform: scale(1.2);  }
+}
+
+/* Horizontal neon streaks */
+.cy-hline {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0, 255, 204, 0.25) 30%,
+    rgba(0, 255, 255, 0.45) 50%,
+    rgba(0, 255, 204, 0.25) 70%,
+    transparent 100%
+  );
+  animation: cy-hline-fade 3s ease-in-out infinite alternate;
+}
+.cy-hline-1 { top: 20%; animation-delay: 0s; }
+.cy-hline-2 { top: 45%; animation-delay: -1s; opacity: 0.6; }
+.cy-hline-3 { top: 70%; animation-delay: -2s; opacity: 0.4; }
+@keyframes cy-hline-fade {
+  from { opacity: 0.15; }
+  to   { opacity: 0.8;  }
+}
+
+/* Floating data particles */
+.cy-particles {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1px; height: 1px;
+  background: transparent;
+  animation: cy-float 12s ease-in-out infinite alternate;
+}
+.cy-particles-lg {
+  width: 2px; height: 2px;
+  animation: cy-float 18s ease-in-out infinite alternate-reverse;
+}
+@keyframes cy-float {
+  0%   { transform: translateY(0px);  opacity: 0.6; }
+  50%  { opacity: 1; }
+  100% { transform: translateY(-18px); opacity: 0.5; }
+}
+
+/* ── Void backdrop ── */
+.void-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Rotating dark-energy swirls */
+.vd-swirl {
+  position: absolute;
+  left: 50%; top: 44%;
+  width: 360px; height: 360px;
+  margin-left: -180px; margin-top: -180px;
+  border-radius: 50%;
+  opacity: 0.55;
+}
+.vd-swirl-1 {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(157, 77, 250, 0.18) 15%,
+    transparent 30%,
+    rgba(100, 40, 220, 0.12) 50%,
+    transparent 65%,
+    rgba(200, 100, 255, 0.10) 80%,
+    transparent 100%
+  );
+  animation: vd-spin 18s linear infinite;
+}
+.vd-swirl-2 {
+  width: 260px; height: 260px;
+  margin-left: -130px; margin-top: -130px;
+  background: conic-gradient(
+    from 180deg,
+    transparent 0%,
+    rgba(120, 50, 255, 0.20) 20%,
+    transparent 40%,
+    rgba(180, 80, 255, 0.12) 60%,
+    transparent 80%,
+    rgba(80, 20, 200, 0.15) 95%,
+    transparent 100%
+  );
+  animation: vd-spin 11s linear infinite reverse;
+}
+.vd-swirl-3 {
+  width: 480px; height: 480px;
+  margin-left: -240px; margin-top: -240px;
+  opacity: 0.28;
+  background: conic-gradient(
+    from 90deg,
+    transparent 0%,
+    rgba(80, 20, 180, 0.22) 10%,
+    transparent 25%,
+    rgba(157, 77, 250, 0.08) 50%,
+    transparent 70%,
+    rgba(100, 40, 200, 0.15) 90%,
+    transparent 100%
+  );
+  animation: vd-spin 28s linear infinite;
+}
+@keyframes vd-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Expanding void rings */
+.vd-ring {
+  position: absolute;
+  left: 50%; top: 44%;
+  border-radius: 50%;
+  border: 1px solid rgba(157, 77, 250, 0.35);
+  transform: translate(-50%, -50%) scale(0);
+  animation: vd-ring-expand 6s ease-out infinite;
+}
+.vd-ring-1 { width: 120px; height: 120px; animation-delay: 0s; }
+.vd-ring-2 { width: 200px; height: 200px; animation-delay: -2s; }
+.vd-ring-3 { width: 300px; height: 300px; animation-delay: -4s; border-color: rgba(120, 50, 220, 0.22); }
+@keyframes vd-ring-expand {
+  0%   { transform: translate(-50%, -50%) scale(0.1); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
+/* Dimensional rift — tear-shaped dark centre */
+.vd-rift {
+  position: absolute;
+  left: 50%; top: 44%;
+  transform: translate(-50%, -50%);
+  width: 70px; height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(20, 0, 60, 0.6) 50%,
+    transparent 85%
+  );
+  filter: blur(6px);
+  animation: vd-rift-pulse 5s ease-in-out infinite alternate;
+}
+@keyframes vd-rift-pulse {
+  from { transform: translate(-50%, -50%) scale(1);    opacity: 0.7; }
+  to   { transform: translate(-50%, -50%) scale(1.25); opacity: 1.0; }
+}
+
+/* Void core — violet energy source */
+.vd-core {
+  position: absolute;
+  left: 50%; top: 44%;
+  transform: translate(-50%, -50%);
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(220, 160, 255, 0.28) 0%,
+    rgba(157, 77, 250, 0.18) 40%,
+    transparent 80%
+  );
+  animation: vd-core-pulse 3.5s ease-in-out infinite alternate;
+}
+@keyframes vd-core-pulse {
+  from { opacity: 0.6; transform: translate(-50%, -50%) scale(1);    filter: blur(4px); }
+  to   { opacity: 1.0; transform: translate(-50%, -50%) scale(1.3);  filter: blur(8px); }
+}
+
+/* Void particles */
+.vd-particles {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1px; height: 1px;
+  background: transparent;
+  animation: vd-shimmer 7s ease-in-out infinite alternate;
+}
+.vd-particles-lg {
+  width: 2px; height: 2px;
+  animation: vd-shimmer 11s ease-in-out infinite alternate-reverse;
+}
+@keyframes vd-shimmer {
+  0%   { opacity: 0.35; }
+  50%  { opacity: 0.9;  }
+  100% { opacity: 0.4;  }
+}
+
 /* ── Galaxy backdrop ── */
 .galaxy-backdrop {
   position: absolute;
