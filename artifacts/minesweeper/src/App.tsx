@@ -172,6 +172,17 @@ function fmtTime(s: number | null): string {
   return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
+// ── Coin icon SVG ─────────────────────────────────────────────────────────────
+
+function CoinIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <circle cx="7" cy="7" r="6.5" fill="#c89a1a" stroke="#ffd700" strokeWidth="1"/>
+      <text x="7" y="10.5" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#ffd700" fontFamily="Arial, sans-serif">C</text>
+    </svg>
+  );
+}
+
 // ── BoardGrid ─────────────────────────────────────────────────────────────────
 
 function BoardGrid({
@@ -195,8 +206,10 @@ function BoardGrid({
           let cellClass = "cell";
           if (cell.revealed) {
             cellClass += " revealed";
-            if (cell.mine) { content = "💣"; cellClass += " mine"; }
-            else if (cell.adjacent > 0)
+            if (cell.mine) {
+              content = <span className="mine-marker">✕</span>;
+              cellClass += " mine";
+            } else if (cell.adjacent > 0)
               content = <span className={`number n${cell.adjacent}`}>{cell.adjacent}</span>;
           } else if (cell.flagged) {
             cellClass += " flagged";
@@ -218,17 +231,33 @@ function BoardGrid({
   );
 }
 
+// ── Rank label (no medals) ────────────────────────────────────────────────────
+
+function RankLabel({ index }: { index: number }) {
+  const rankColors = ["#ffd700", "#c0c0c0", "#cd7f32"];
+  if (index < 3) {
+    return (
+      <span className="lb-rank-num" style={{ color: rankColors[index] }}>
+        {index + 1}
+      </span>
+    );
+  }
+  return <span className="lb-rank-num lb-rank-plain">{index + 1}</span>;
+}
+
 // ── MenuPanel ─────────────────────────────────────────────────────────────────
 
 function MenuPanel({
   open, onClose, stats, leaderboard, infiniteLB, playerName, onSaveName,
   infiniteMode, onToggleInfinite, bestInfinite,
+  coins, onOpenShop, onOpenInventory,
 }: {
   open: boolean; onClose: () => void;
   stats: { wins: number; games: number; best: number | null };
   leaderboard: LeaderEntry[]; infiniteLB: InfiniteEntry[];
   playerName: string; onSaveName: (name: string) => void;
   infiniteMode: boolean; onToggleInfinite: () => void; bestInfinite: number;
+  coins: number; onOpenShop: () => void; onOpenInventory: () => void;
 }) {
   const [nameInput, setNameInput] = useState(playerName);
   const [tab, setTab] = useState<"stats" | "classic" | "infinite">("stats");
@@ -243,6 +272,36 @@ function MenuPanel({
     <div className="menu-overlay" onClick={onClose}>
       <div className="menu-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="menu-handle" />
+
+        {/* Shop & Inventory quick-access */}
+        <div className="menu-actions">
+          <button className="menu-action-btn" onClick={() => { onClose(); onOpenShop(); }}>
+            <span className="menu-action-icon">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 2h2l1.5 7.5h8l1.5-5H5.5"/>
+                <circle cx="8" cy="15" r="1"/>
+                <circle cx="13" cy="15" r="1"/>
+              </svg>
+            </span>
+            <span className="menu-action-label">SHOP</span>
+            <span className="menu-action-coins"><CoinIcon size={13} /><span>{coins}</span></span>
+            <span className="menu-action-arrow">›</span>
+          </button>
+          <button className="menu-action-btn" onClick={() => { onClose(); onOpenInventory(); }}>
+            <span className="menu-action-icon">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="14" height="10" rx="2"/>
+                <path d="M6 6V4a3 3 0 0 1 6 0v2"/>
+                <line x1="9" y1="10" x2="9" y2="13"/>
+                <line x1="7.5" y1="11.5" x2="10.5" y2="11.5"/>
+              </svg>
+            </span>
+            <span className="menu-action-label">INVENTORY</span>
+            <span className="menu-action-arrow">›</span>
+          </button>
+        </div>
+
+        <div className="menu-divider" />
 
         <div className="menu-name-row">
           <span className="menu-name-label">PLAYER</span>
@@ -259,7 +318,7 @@ function MenuPanel({
 
         <div className="infinite-toggle-row">
           <div>
-            <span className="infinite-toggle-label">∞ INFINITE MODE</span>
+            <span className="infinite-toggle-label">INFINITE MODE</span>
             <span className="infinite-toggle-sub">Clear board after board non-stop</span>
           </div>
           <button className={`toggle-switch${infiniteMode ? " on" : ""}`} onClick={onToggleInfinite} aria-label="Toggle infinite mode">
@@ -298,7 +357,7 @@ function MenuPanel({
                 <tbody>
                   {leaderboard.map((entry, i) => (
                     <tr key={entry.name} className={entry.name === playerName ? "lb-me" : ""}>
-                      <td className="lb-rank">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
+                      <td className="lb-rank"><RankLabel index={i} /></td>
                       <td className="lb-name">{entry.name}</td>
                       <td className="lb-wins">{entry.wins}</td>
                       <td className="lb-rate">{entry.games > 0 ? Math.round((entry.wins / entry.games) * 100) : 0}%</td>
@@ -321,7 +380,7 @@ function MenuPanel({
                 <tbody>
                   {infiniteLB.map((entry, i) => (
                     <tr key={`${entry.name}-${i}`} className={entry.name === playerName ? "lb-me" : ""}>
-                      <td className="lb-rank">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
+                      <td className="lb-rank"><RankLabel index={i} /></td>
                       <td className="lb-name">{entry.name}</td>
                       <td className="lb-wins" style={{ color: "#a78bfa" }}>{entry.boards}</td>
                       <td className="lb-rate">{entry.date}</td>
@@ -355,7 +414,7 @@ function ShopModal({
         <div className="menu-handle" />
         <div className="shop-header">
           <span className="shop-title">SHOP</span>
-          <span className="shop-coins"><span className="coin-icon">🪙</span>{coins}</span>
+          <span className="shop-coins"><CoinIcon size={18} /><span>{coins}</span></span>
         </div>
 
         <div className="menu-tabs">
@@ -384,7 +443,7 @@ function ShopModal({
                       onClick={() => onBuyTheme(t.id)}
                       disabled={!canAfford}
                     >
-                      🪙 {t.price}
+                      <CoinIcon size={11} /> {t.price}
                     </button>
                   )}
                 </div>
@@ -410,7 +469,7 @@ function ShopModal({
                       onClick={() => onBuyFlag(f.id)}
                       disabled={!canAfford}
                     >
-                      🪙 {f.price}
+                      <CoinIcon size={11} /> {f.price}
                     </button>
                   )}
                 </div>
@@ -843,19 +902,24 @@ export default function App() {
 
         <div className="topbar-right">
           <div className="coin-counter">
-            <span className="coin-icon-sm">🪙</span>
+            <CoinIcon size={14} />
             <span className="coin-amount">{coins}</span>
           </div>
-          <button className="icon-btn" onClick={() => setShopOpen(true)} title="Shop" aria-label="Shop">🛒</button>
-          <button className="icon-btn" onClick={() => setInventoryOpen(true)} title="Inventory" aria-label="Inventory">🎒</button>
-          <button className="icon-btn" onClick={reset} title="New game">↺</button>
+          <button className="icon-btn" onClick={reset} title="New game" aria-label="New game">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M13.5 8A5.5 5.5 0 1 1 8 2.5c1.8 0 3.4.87 4.4 2.2"/>
+              <polyline points="11 2 13.5 4.5 11 7"/>
+            </svg>
+          </button>
         </div>
       </div>
 
       {/* Banners */}
       {!infiniteMode && (status === "won" || status === "lost") && (
         <div className={`banner ${status}`}>
-          {status === "won" ? <>YOU WIN! <span className="coin-earn">+{COINS_PER_WIN}🪙</span></> : "GAME OVER"}
+          {status === "won"
+            ? <><span>YOU WIN!</span><span className="coin-earn"><CoinIcon size={13} />+{COINS_PER_WIN}</span></>
+            : "GAME OVER"}
           <button onClick={reset} className="play-again">Play Again</button>
         </div>
       )}
@@ -899,6 +963,9 @@ export default function App() {
         playerName={playerName} onSaveName={handleSaveName}
         infiniteMode={infiniteMode} onToggleInfinite={handleToggleInfinite}
         bestInfinite={bestInfinite}
+        coins={coins}
+        onOpenShop={() => setShopOpen(true)}
+        onOpenInventory={() => setInventoryOpen(true)}
       />
       <ShopModal
         open={shopOpen} onClose={() => setShopOpen(false)}

@@ -845,7 +845,7 @@ body {
 .coin-counter {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
   background: var(--icon-btn-bg);
   border-radius: 20px;
   padding: 0 10px;
@@ -856,17 +856,106 @@ body {
   transition: background 0.2s;
 }
 
-.coin-icon-sm { font-size: 14px; line-height: 1; }
 .coin-amount  { font-family: 'Courier New', monospace; min-width: 20px; }
 
 /* ── Win coin earn badge ── */
 .coin-earn {
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
   font-weight: bold;
   color: #ffd700;
   background: rgba(255,215,0,0.12);
   border-radius: 8px;
   padding: 2px 8px;
+}
+
+/* ── Menu divider ── */
+.menu-divider {
+  height: 1px;
+  background: var(--stat-divider);
+  margin: 0 0 16px;
+}
+
+/* ── Menu action buttons (Shop / Inventory in menu) ── */
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.menu-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: var(--toggle-row-bg);
+  border: 1px solid var(--tab-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.menu-action-btn:active {
+  transform: scale(0.98);
+  border-color: var(--accent);
+}
+
+.menu-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.menu-action-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  color: var(--text);
+}
+
+.menu-action-coins {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  color: #ffd700;
+}
+
+.menu-action-arrow {
+  font-size: 18px;
+  color: var(--tab-color);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Mine marker (no emoji) ── */
+.mine-marker {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ff6b6b;
+  line-height: 1;
+}
+
+/* ── Rank number labels ── */
+.lb-rank-num {
+  font-size: 13px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.lb-rank-plain {
+  color: var(--lb-td-color);
 }
 
 /* ── Shop / Inventory header ── */
