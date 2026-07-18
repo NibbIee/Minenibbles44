@@ -11,9 +11,6 @@ const BOARD_W = COLS * 32 + (COLS - 1) * 3;
 const BOARD_H = ROWS * 32 + (ROWS - 1) * 3;
 
 // ── XP thresholds ─────────────────────────────────────────────────────────────
-// Level N requires N*100 more XP than level N-1.
-// Cumulative XP to BE at level N = 20 * N*(N+1)/2  (5× easier than original)
-// [0, 20, 60, 120, 200, 300, 420, 560, 720, 900, 1100, 1320, 1560, 1820, 2100, 2400]
 const XP_THRESHOLDS = Array.from({ length: MAX_LEVEL + 1 }, (_, i) => 20 * i * (i + 1) / 2);
 
 function computeLevel(xp: number): number {
@@ -55,53 +52,78 @@ const LEVEL_REWARDS: {
 
 // ── Shop data ──────────────────────────────────────────────────────────────────
 const THEMES = [
-  { id: "dark",   label: "Dark",   bg: "#000000", cell: "#3a3a3a", accent: "#4caf50",  price: 0,  levelReq: 0 },
-  { id: "light",  label: "Light",  bg: "#f0f0f0", cell: "#bdbdbd", accent: "#4caf50",  price: 0,  levelReq: 0 },
-  { id: "blue",   label: "Blue",   bg: "#060d1f", cell: "#112244", accent: "#4d9fff",  price: 25, levelReq: 0 },
-  { id: "green",  label: "Green",  bg: "#000000", cell: "#0a1a0a", accent: "#00e676",  price: 25, levelReq: 0 },
-  { id: "red",    label: "Red",    bg: "#0d0000", cell: "#2a0808", accent: "#ff4444",  price: 25, levelReq: 0 },
-  { id: "pink",   label: "Pink",   bg: "#110010", cell: "#2a0a22", accent: "#ff69b4",  price: 25, levelReq: 0 },
+  // Free defaults
+  { id: "dark",      label: "Dark",       bg: "#000000",                                                                                        cell: "#3a3a3a", accent: "#4caf50",  price: 0,   levelReq: 0 },
+  { id: "light",     label: "Light",      bg: "#f0f0f0",                                                                                        cell: "#bdbdbd", accent: "#4caf50",  price: 0,   levelReq: 0 },
+  // Purchasable solid themes
+  { id: "blue",      label: "Blue",       bg: "#060d1f",                                                                                        cell: "#112244", accent: "#4d9fff",  price: 25,  levelReq: 0 },
+  { id: "green",     label: "Green",      bg: "#000000",                                                                                        cell: "#0a1a0a", accent: "#00e676",  price: 25,  levelReq: 0 },
+  { id: "red",       label: "Red",        bg: "#0d0000",                                                                                        cell: "#2a0808", accent: "#ff4444",  price: 25,  levelReq: 0 },
+  { id: "pink",      label: "Pink",       bg: "#110010",                                                                                        cell: "#2a0a22", accent: "#ff69b4",  price: 25,  levelReq: 0 },
+  // Gradient purchasable themes
+  { id: "sunset",    label: "Sunset",     bg: "linear-gradient(145deg,#1a0800 0%,#3d0d1a 55%,#1a0030 100%)",                                   cell: "#3a1208", accent: "#ff7a30",  price: 50,  levelReq: 0 },
+  { id: "ocean",     label: "Ocean",      bg: "linear-gradient(145deg,#00081a 0%,#001a2e 55%,#002a18 100%)",                                   cell: "#0a1e2e", accent: "#00c8ff",  price: 75,  levelReq: 0 },
+  { id: "inferno",   label: "Inferno",    bg: "linear-gradient(145deg,#1a0000 0%,#2d0800 55%,#1a0600 100%)",                                   cell: "#3a0e00", accent: "#ff6a00",  price: 100, levelReq: 0 },
+  { id: "aurora",    label: "Aurora",     bg: "linear-gradient(145deg,#000d1a 0%,#001a0d 45%,#0d0025 100%)",                                   cell: "#0a1a18", accent: "#00ffaa",  price: 150, levelReq: 0 },
+  { id: "neon",      label: "Neon City",  bg: "linear-gradient(145deg,#0d001a 0%,#1a0030 50%,#001a2a 100%)",                                   cell: "#180028", accent: "#ff00cc",  price: 200, levelReq: 0 },
+  { id: "deepspace", label: "Deep Space", bg: "linear-gradient(160deg,#020010 0%,#080020 40%,#100030 70%,#040015 100%)",                        cell: "#12002a", accent: "#c084fc",  price: 250, levelReq: 0 },
   // Level-exclusive themes (not in shop, awarded automatically)
-  { id: "cyber",  label: "Cyber",  bg: "#001a1a", cell: "#0a3030", accent: "#00ffcc",  price: 0,  levelReq: 5  },
-  { id: "void",   label: "Void",   bg: "#060010", cell: "#1a0050", accent: "#9d4dfa",  price: 0,  levelReq: 10 },
-  { id: "galaxy", label: "Galaxy", bg: "#08001a", cell: "#18003a", accent: "#ffd700",  price: 0,  levelReq: 15 },
+  { id: "cyber",     label: "Cyber",      bg: "#001a1a",                                                                                        cell: "#0a3030", accent: "#00ffcc",  price: 0,   levelReq: 5  },
+  { id: "void",      label: "Void",       bg: "#060010",                                                                                        cell: "#1a0050", accent: "#9d4dfa",  price: 0,   levelReq: 10 },
+  { id: "galaxy",    label: "Galaxy",     bg: "#08001a",                                                                                        cell: "#18003a", accent: "#ffd700",  price: 0,   levelReq: 15 },
 ];
 
 const FLAGS = [
-  { id: "default",  label: "Classic",  emoji: "🚩", price: 0,   levelReq: 0 },
-  { id: "cat",      label: "Cat",      emoji: "🐱", price: 10,  levelReq: 0 },
-  { id: "red",      label: "Red",      emoji: "🔴", price: 10,  levelReq: 0 },
-  { id: "green",    label: "Green",    emoji: "🟢", price: 10,  levelReq: 0 },
-  { id: "blue",     label: "Blue",     emoji: "🔵", price: 10,  levelReq: 0 },
-  { id: "frog",     label: "Frog",     emoji: "🐸", price: 15,  levelReq: 0 },
-  { id: "dog",      label: "Dog",      emoji: "🐶", price: 15,  levelReq: 0 },
-  { id: "purple",   label: "Purple",   emoji: "🟣", price: 15,  levelReq: 0 },
-  { id: "yellow",   label: "Yellow",   emoji: "🟡", price: 15,  levelReq: 0 },
-  { id: "orange",   label: "Orange",   emoji: "🟠", price: 15,  levelReq: 0 },
-  { id: "bunny",    label: "Bunny",    emoji: "🐰", price: 20,  levelReq: 0 },
-  { id: "fox",      label: "Fox",      emoji: "🦊", price: 20,  levelReq: 0 },
-  { id: "star",     label: "Star",     emoji: "⭐", price: 30,  levelReq: 0 },
-  { id: "skull",    label: "Skull",    emoji: "💀", price: 40,  levelReq: 0 },
-  { id: "fire",     label: "Fire",     emoji: "🔥", price: 50,  levelReq: 0 },
-  { id: "mushroom", label: "Mushroom", emoji: "🍄", price: 60,  levelReq: 0 },
-  { id: "alien",    label: "Alien",    emoji: "👾", price: 75,  levelReq: 0 },
-  { id: "rainbow",  label: "Rainbow",  emoji: "🌈", price: 100, levelReq: 0 },
+  // Free
+  { id: "default",   label: "Classic",   emoji: "🚩", price: 0,    levelReq: 0 },
+  // Cheap (10-20)
+  { id: "cat",       label: "Cat",       emoji: "🐱", price: 10,   levelReq: 0 },
+  { id: "red",       label: "Red",       emoji: "🔴", price: 10,   levelReq: 0 },
+  { id: "green",     label: "Green",     emoji: "🟢", price: 10,   levelReq: 0 },
+  { id: "blue",      label: "Blue",      emoji: "🔵", price: 10,   levelReq: 0 },
+  { id: "frog",      label: "Frog",      emoji: "🐸", price: 15,   levelReq: 0 },
+  { id: "dog",       label: "Dog",       emoji: "🐶", price: 15,   levelReq: 0 },
+  { id: "purple",    label: "Purple",    emoji: "🟣", price: 15,   levelReq: 0 },
+  { id: "yellow",    label: "Yellow",    emoji: "🟡", price: 15,   levelReq: 0 },
+  { id: "orange",    label: "Orange",    emoji: "🟠", price: 15,   levelReq: 0 },
+  { id: "bunny",     label: "Bunny",     emoji: "🐰", price: 20,   levelReq: 0 },
+  { id: "fox",       label: "Fox",       emoji: "🦊", price: 20,   levelReq: 0 },
+  // Mid-range (30-75)
+  { id: "star",      label: "Star",      emoji: "⭐", price: 30,   levelReq: 0 },
+  { id: "skull",     label: "Skull",     emoji: "💀", price: 40,   levelReq: 0 },
+  { id: "fire",      label: "Fire",      emoji: "🔥", price: 50,   levelReq: 0 },
+  { id: "mushroom",  label: "Mushroom",  emoji: "🍄", price: 60,   levelReq: 0 },
+  { id: "alien",     label: "Alien",     emoji: "👾", price: 75,   levelReq: 0 },
+  { id: "rainbow",   label: "Rainbow",   emoji: "🌈", price: 100,  levelReq: 0 },
+  // Premium (125-1000)
+  { id: "butterfly", label: "Butterfly", emoji: "🦋", price: 125,  levelReq: 0 },
+  { id: "lightning", label: "Lightning", emoji: "⚡", price: 150,  levelReq: 0 },
+  { id: "unicorn",   label: "Unicorn",   emoji: "🦄", price: 200,  levelReq: 0 },
+  { id: "comet",     label: "Comet",     emoji: "☄️", price: 300,  levelReq: 0 },
+  { id: "crystal",   label: "Crystal",   emoji: "🔮", price: 500,  levelReq: 0 },
+  { id: "explosion", label: "Explosion", emoji: "💥", price: 1000, levelReq: 0 },
   // Level-exclusive flags (not in shop, awarded automatically)
-  { id: "gem",    label: "Gem",    emoji: "💎", price: 0, levelReq: 5  },
-  { id: "dragon", label: "Dragon", emoji: "🐉", price: 0, levelReq: 10 },
-  { id: "crown",  label: "Crown",  emoji: "👑", price: 0, levelReq: 15 },
+  { id: "gem",       label: "Gem",       emoji: "💎", price: 0,    levelReq: 5  },
+  { id: "dragon",    label: "Dragon",    emoji: "🐉", price: 0,    levelReq: 10 },
+  { id: "crown",     label: "Crown",     emoji: "👑", price: 0,    levelReq: 15 },
 ];
 
 const CONFETTI_COLORS: Record<string, string[]> = {
-  dark:   ["#4caf50", "#81c784", "#ffffff", "#aaaaaa"],
-  light:  ["#4caf50", "#81c784", "#888888", "#cccccc"],
-  blue:   ["#4d9fff", "#1a78ff", "#b0d0ff", "#ffffff"],
-  green:  ["#00e676", "#00c853", "#b9f6ca", "#69f0ae"],
-  red:    ["#ff4444", "#cc0000", "#ff8888", "#ffcccc"],
-  pink:   ["#ff69b4", "#ff1493", "#ffb6c1", "#ff80c0"],
-  cyber:  ["#00ffcc", "#00e5b0", "#80fff0", "#ccffff"],
-  void:   ["#9d4dfa", "#6d28d9", "#c4b5fd", "#e9d5ff"],
-  galaxy: ["#ffd700", "#a78bfa", "#ff69b4", "#ffffff"],
+  dark:      ["#4caf50", "#81c784", "#ffffff", "#aaaaaa"],
+  light:     ["#4caf50", "#81c784", "#888888", "#cccccc"],
+  blue:      ["#4d9fff", "#1a78ff", "#b0d0ff", "#ffffff"],
+  green:     ["#00e676", "#00c853", "#b9f6ca", "#69f0ae"],
+  red:       ["#ff4444", "#cc0000", "#ff8888", "#ffcccc"],
+  pink:      ["#ff69b4", "#ff1493", "#ffb6c1", "#ff80c0"],
+  sunset:    ["#ff7a30", "#ff3060", "#a040ff", "#ffa060"],
+  ocean:     ["#00c8ff", "#0080ff", "#00ffcc", "#80e0ff"],
+  inferno:   ["#ff6a00", "#ff2200", "#ffcc00", "#ff8800"],
+  aurora:    ["#00ffaa", "#00ccff", "#aa00ff", "#00ff66"],
+  neon:      ["#ff00cc", "#00ccff", "#cc00ff", "#ff66ff"],
+  deepspace: ["#c084fc", "#8040cc", "#e0b0ff", "#ffffff"],
+  cyber:     ["#00ffcc", "#00e5b0", "#80fff0", "#ccffff"],
+  void:      ["#9d4dfa", "#6d28d9", "#c4b5fd", "#e9d5ff"],
+  galaxy:    ["#ffd700", "#a78bfa", "#ff69b4", "#ffffff"],
 };
 
 // ── Achievements ───────────────────────────────────────────────────────────────
@@ -126,12 +148,45 @@ export const ACHIEVEMENTS = [
   { id: "themes_all", title: "Art Director",   desc: "Own all purchasable themes",     reward: 75, category: "Collector" },
 ];
 
+// ── Daily Challenges ───────────────────────────────────────────────────────────
+const DAILY_CHALLENGE_POOL = [
+  { id: "dc_win1",    title: "First Win",       desc: "Win 1 game",               type: "wins",     target: 1  },
+  { id: "dc_win2",    title: "Double Down",     desc: "Win 2 games",              type: "wins",     target: 2  },
+  { id: "dc_win3",    title: "Hat Trick",       desc: "Win 3 games",              type: "wins",     target: 3  },
+  { id: "dc_play5",   title: "Practice Run",    desc: "Play 5 games",             type: "games",    target: 5  },
+  { id: "dc_play10",  title: "Marathon",        desc: "Play 10 games",            type: "games",    target: 10 },
+  { id: "dc_speed60", title: "Speed Run",       desc: "Win in under 60 seconds",  type: "speed",    target: 60 },
+  { id: "dc_speed45", title: "Lightning Fast",  desc: "Win in under 45 seconds",  type: "speed",    target: 45 },
+  { id: "dc_noflag",  title: "Bare Knuckle",    desc: "Win without placing flags", type: "no_flags", target: 1  },
+  { id: "dc_wave3",   title: "Wave Rider",      desc: "Reach Wave 3 in Infinite", type: "wave",     target: 3  },
+  { id: "dc_wave5",   title: "Surfer",          desc: "Reach Wave 5 in Infinite", type: "wave",     target: 5  },
+];
+
+function getTodayKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function getDailyChallenges() {
+  const key = getTodayKey();
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  const indices: number[] = [];
+  let seed = hash;
+  while (indices.length < 3) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const idx = seed % DAILY_CHALLENGE_POOL.length;
+    if (!indices.includes(idx)) indices.push(idx);
+  }
+  return indices.map(i => DAILY_CHALLENGE_POOL[i]);
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CellState = { mine: boolean; revealed: boolean; flagged: boolean; adjacent: number };
 type GameStatus = "idle" | "playing" | "won" | "lost" | "transitioning";
 interface ToastItem {
   key: number;
-  type: "achievement" | "levelup";
+  type: "achievement" | "levelup" | "daily";
   title: string;
   subtitle?: string;
   reward?: number;
@@ -298,6 +353,11 @@ function ToastStack({ toasts }: { toasts: ToastItem[] }) {
                 <circle cx="10" cy="10" r="9.5" fill="#2d1a4a" stroke="#a78bfa" strokeWidth="1.5"/>
                 <text x="10" y="14.5" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#a78bfa" fontFamily="Arial, sans-serif">★</text>
               </svg>
+            ) : t.type === "daily" ? (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9.5" fill="#0a2010" stroke="#00e676" strokeWidth="1.5"/>
+                <text x="10" y="14.5" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#00e676" fontFamily="Arial, sans-serif">✓</text>
+              </svg>
             ) : (
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <circle cx="10" cy="10" r="9.5" fill="#2a1a00" stroke="#ffd700" strokeWidth="1.5"/>
@@ -306,11 +366,13 @@ function ToastStack({ toasts }: { toasts: ToastItem[] }) {
             )}
           </div>
           <div className="toast-body">
-            <span className="toast-label">{t.type === "achievement" ? "Achievement Unlocked" : "Level Up!"}</span>
+            <span className="toast-label">
+              {t.type === "achievement" ? "Achievement Unlocked" : t.type === "daily" ? "Daily Challenge" : "Level Up!"}
+            </span>
             <span className="toast-title">{t.title}</span>
             {t.subtitle && <span className="toast-subtitle">{t.subtitle}</span>}
           </div>
-          {t.type === "achievement" && t.reward !== undefined && (
+          {(t.type === "achievement" || t.type === "daily") && t.reward !== undefined && (
             <span className="toast-reward"><CoinIcon size={13} />+{t.reward}</span>
           )}
           {t.type === "levelup" && t.coins !== undefined && (
@@ -356,6 +418,96 @@ function BoardGrid({ board, flagEmoji, onCellClick, onCellContext, interactive }
   );
 }
 
+// ── Daily Challenges Modal ────────────────────────────────────────────────────
+function DailyChallengesModal({ open, onClose, challenges, progress, completed, bonusClaimed }: {
+  open: boolean; onClose: () => void;
+  challenges: typeof DAILY_CHALLENGE_POOL;
+  progress: Record<string, number>;
+  completed: string[];
+  bonusClaimed: boolean;
+}) {
+  if (!open) return null;
+  const allDone = challenges.every(c => completed.includes(c.id));
+  const completedCount = challenges.filter(c => completed.includes(c.id)).length;
+
+  return (
+    <div className="menu-overlay" onClick={onClose}>
+      <div className="menu-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="menu-handle" />
+        <div className="shop-header">
+          <span className="shop-title">DAILY CHALLENGES</span>
+          <span className="daily-date-badge">{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+        </div>
+
+        {/* All-complete bonus */}
+        <div className={`daily-bonus-card${allDone ? " daily-bonus-done" : ""}`}>
+          <div className="daily-bonus-left">
+            <span className="daily-bonus-label">COMPLETE ALL</span>
+            <div className="daily-bonus-rewards">
+              <span className="daily-bonus-coin"><CoinIcon size={13} /> +25</span>
+              <span className="daily-bonus-xp">+20 XP</span>
+            </div>
+          </div>
+          <div className="daily-bonus-right">
+            <div className="daily-progress-dots">
+              {challenges.map((c) => (
+                <div key={c.id} className={`daily-dot${completed.includes(c.id) ? " daily-dot-done" : ""}`} />
+              ))}
+            </div>
+            {allDone
+              ? <span className="daily-bonus-status">{bonusClaimed ? "Claimed ✓" : "Bonus earned!"}</span>
+              : <span className="daily-bonus-status">{completedCount}/{challenges.length}</span>
+            }
+          </div>
+        </div>
+
+        <div className="daily-list">
+          {challenges.map((c) => {
+            const prog = progress[c.id] ?? 0;
+            const isDone = completed.includes(c.id);
+            const pct = Math.min(100, (prog / c.target) * 100);
+            return (
+              <div key={c.id} className={`daily-row${isDone ? " daily-row-done" : ""}`}>
+                <div className="daily-check">
+                  {isDone
+                    ? <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <circle cx="11" cy="11" r="10.5" fill="#0a2a0a" stroke="#4caf50" strokeWidth="1.5"/>
+                        <polyline points="6,11 9.5,14.5 16,8" stroke="#4caf50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    : <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <circle cx="11" cy="11" r="10.5" fill="var(--tab-bg)" stroke="var(--tab-border)" strokeWidth="1.5"/>
+                        <text x="11" y="15" textAnchor="middle" fontSize="11" fill="var(--stat-label-color)" fontFamily="Arial, sans-serif">○</text>
+                      </svg>
+                  }
+                </div>
+                <div className="daily-info">
+                  <span className="daily-title">{c.title}</span>
+                  <span className="daily-desc">{c.desc}</span>
+                  {!isDone && (
+                    <div className="daily-prog-bar">
+                      <div className="daily-prog-fill" style={{ width: `${pct}%` }} />
+                    </div>
+                  )}
+                </div>
+                <div className="daily-meta">
+                  {isDone
+                    ? <span className="daily-done">Done</span>
+                    : <span className="daily-count">{prog}/{c.target}</span>
+                  }
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="daily-reset-note">
+          Challenges reset at midnight
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Levels Modal ──────────────────────────────────────────────────────────────
 function LevelsModal({ open, onClose, totalXP }: {
   open: boolean; onClose: () => void; totalXP: number;
@@ -375,7 +527,6 @@ function LevelsModal({ open, onClose, totalXP }: {
           </span>
         </div>
 
-        {/* XP bar at top of modal */}
         <div className="lvl-modal-xpbar">
           <XPBar totalXP={totalXP} />
         </div>
@@ -385,7 +536,7 @@ function LevelsModal({ open, onClose, totalXP }: {
             const lvl = i + 1;
             const reward = LEVEL_REWARDS.find(r => r.level === lvl)!;
             const unlocked = currentLevel >= lvl;
-            const isCurrent = currentLevel === lvl - 1; // this is the next level to reach
+            const isCurrent = currentLevel === lvl - 1;
             const isMaxReached = currentLevel === MAX_LEVEL;
             const xpNeeded = XP_THRESHOLDS[lvl];
             const isMilestone = lvl % 5 === 0;
@@ -400,13 +551,11 @@ function LevelsModal({ open, onClose, totalXP }: {
                   isMilestone ? "lvl-milestone" : "",
                 ].join(" ")}
               >
-                {/* Level badge */}
                 <div className={`lvl-badge${isMilestone ? " lvl-badge-milestone" : ""}`}>
                   <span className="lvl-badge-num">{lvl}</span>
                   {lvl === MAX_LEVEL && <span className="lvl-badge-max-dot" />}
                 </div>
 
-                {/* Rewards list */}
                 <div className="lvl-rewards">
                   <div className="lvl-reward-row">
                     <CoinIcon size={12} />
@@ -430,7 +579,6 @@ function LevelsModal({ open, onClose, totalXP }: {
                   )}
                 </div>
 
-                {/* XP + status */}
                 <div className="lvl-meta">
                   <span className="lvl-xp-req">{xpNeeded >= 1000 ? `${(xpNeeded/1000).toFixed(1)}k` : xpNeeded} XP</span>
                   {unlocked
@@ -524,15 +672,16 @@ function AchievementsModal({ open, onClose, claimed, pending, onClaim }: {
 
 // ── MenuPanel ─────────────────────────────────────────────────────────────────
 function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode, onToggleInfinite,
-  bestInfinite, coins, onOpenShop, onOpenInventory, onOpenAchievements, onOpenLevels,
-  pendingCount, currentLevel, totalXP }: {
+  bestInfinite, coins, onOpenShop, onOpenInventory, onOpenAchievements, onOpenLevels, onOpenDaily,
+  pendingCount, currentLevel, totalXP, dailyIncomplete }: {
   open: boolean; onClose: () => void;
   stats: { wins: number; games: number; best: number | null };
   playerName: string; onSaveName: (name: string) => void;
   infiniteMode: boolean; onToggleInfinite: () => void; bestInfinite: number;
   coins: number; onOpenShop: () => void; onOpenInventory: () => void;
-  onOpenAchievements: () => void; onOpenLevels: () => void;
+  onOpenAchievements: () => void; onOpenLevels: () => void; onOpenDaily: () => void;
   pendingCount: number; currentLevel: number; totalXP: number;
+  dailyIncomplete: boolean;
 }) {
   const [nameInput, setNameInput] = useState(playerName);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -545,7 +694,6 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
       <div className="menu-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="menu-handle" />
 
-        {/* Quick-access actions */}
         <div className="menu-actions">
           <button className="menu-action-btn" onClick={() => { onClose(); onOpenShop(); }}>
             <span className="menu-action-icon">
@@ -565,6 +713,19 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
               </svg>
             </span>
             <span className="menu-action-label">INVENTORY</span>
+            <span className="menu-action-arrow">›</span>
+          </button>
+          <button className="menu-action-btn" onClick={() => { onClose(); onOpenDaily(); }}>
+            <span className="menu-action-icon" style={{ color: "#00e676" }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="14" height="13" rx="2"/>
+                <line x1="6" y1="1" x2="6" y2="5"/><line x1="12" y1="1" x2="12" y2="5"/>
+                <line x1="2" y1="8" x2="16" y2="8"/>
+                <line x1="6" y1="11" x2="8" y2="13"/><line x1="8" y1="13" x2="12" y2="10"/>
+              </svg>
+            </span>
+            <span className="menu-action-label" style={{ color: dailyIncomplete ? "#00e676" : undefined }}>DAILY</span>
+            {dailyIncomplete && <span className="menu-action-badge" style={{ background: "#00e676" }}>!</span>}
             <span className="menu-action-arrow">›</span>
           </button>
           <button className="menu-action-btn" onClick={() => { onClose(); onOpenAchievements(); }}>
@@ -627,8 +788,6 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
           <div className="stat-section-title" style={{ marginTop: 20 }}>Infinite</div>
           <div className="stat-row"><span className="stat-label">Best Run</span><span className="stat-value stat-best">{bestInfinite > 0 ? `${bestInfinite} boards` : "—"}</span></div>
         </div>
-
-
       </div>
     </div>
   );
@@ -642,7 +801,6 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
 }) {
   const [tab, setTab] = useState<"themes" | "flags">("themes");
   if (!open) return null;
-  // Only show shop-purchasable items (levelReq === 0 and price > 0, plus the free defaults)
   const shopThemes = THEMES.filter(t => t.levelReq === 0);
   const shopFlags = FLAGS.filter(f => f.levelReq === 0);
 
@@ -671,10 +829,13 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
                     <div className="theme-swatch-accent" style={{ background: t.accent }} />
                   </div>
                   <span className="shop-card-label">{t.label}</span>
+                  {t.price > 0 && !owned && <span className="shop-price-tier" style={{ color: t.price >= 200 ? "#ffd700" : t.price >= 100 ? "#c084fc" : t.price >= 50 ? "#00c8ff" : "var(--accent)" }}>
+                    {t.price >= 200 ? "★ PREMIUM" : t.price >= 100 ? "● RARE" : "◆ COOL"}
+                  </span>}
                   {owned ? <span className="shop-owned-badge">Owned</span> : (
                     <button className={`shop-buy-btn${canAfford ? "" : " cant-afford"}`}
                       onClick={() => onBuyTheme(t.id)} disabled={!canAfford}>
-                      <CoinIcon size={11} /> {t.price}
+                      <CoinIcon size={11} /> {t.price === 0 ? "Free" : t.price}
                     </button>
                   )}
                 </div>
@@ -691,10 +852,12 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
                 <div key={f.id} className={`shop-card${owned ? " owned" : ""}`}>
                   <div className="flag-preview">{f.emoji}</div>
                   <span className="shop-card-label">{f.label}</span>
+                  {f.price >= 500 && !owned && <span className="shop-price-tier" style={{ color: "#ffd700" }}>★ LEGENDARY</span>}
+                  {f.price >= 200 && f.price < 500 && !owned && <span className="shop-price-tier" style={{ color: "#c084fc" }}>● EPIC</span>}
                   {owned ? <span className="shop-owned-badge">Owned</span> : (
                     <button className={`shop-buy-btn${canAfford ? "" : " cant-afford"}`}
                       onClick={() => onBuyFlag(f.id)} disabled={!canAfford}>
-                      <CoinIcon size={11} /> {f.price}
+                      <CoinIcon size={11} /> {f.price === 0 ? "Free" : f.price}
                     </button>
                   )}
                 </div>
@@ -780,6 +943,8 @@ export default function App() {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
+  const [dailyOpen, setDailyOpen] = useState(false);
+  const [shaking, setShaking] = useState(false);
   const everFlaggedRef = useRef(false);
 
   // Theme
@@ -824,6 +989,98 @@ export default function App() {
     }, delayMs);
   }, []);
 
+  // ── Daily Challenges ─────────────────────────────────────────────────────────
+  const todayKey = getTodayKey();
+  const dailyChallenges = getDailyChallenges();
+
+  const [dailyProgress, setDailyProgress] = useState<Record<string, number>>(() => {
+    const storedKey = localStorage.getItem("ms-daily-key");
+    if (storedKey !== todayKey) return {};
+    const s = localStorage.getItem("ms-daily-progress");
+    return s ? JSON.parse(s) : {};
+  });
+  const [dailyCompleted, setDailyCompleted] = useState<string[]>(() => {
+    const storedKey = localStorage.getItem("ms-daily-key");
+    if (storedKey !== todayKey) return [];
+    const s = localStorage.getItem("ms-daily-completed");
+    return s ? JSON.parse(s) : [];
+  });
+  const [dailyBonusClaimed, setDailyBonusClaimed] = useState<boolean>(() => {
+    const storedKey = localStorage.getItem("ms-daily-key");
+    if (storedKey !== todayKey) return false;
+    return localStorage.getItem("ms-daily-bonus") === "true";
+  });
+
+  // Persist and reset daily state when the day changes
+  useEffect(() => {
+    const storedKey = localStorage.getItem("ms-daily-key");
+    if (storedKey !== todayKey) {
+      localStorage.setItem("ms-daily-key", todayKey);
+      localStorage.setItem("ms-daily-progress", "{}");
+      localStorage.setItem("ms-daily-completed", "[]");
+      localStorage.setItem("ms-daily-bonus", "false");
+    }
+  }, [todayKey]);
+
+  useEffect(() => { localStorage.setItem("ms-daily-progress", JSON.stringify(dailyProgress)); }, [dailyProgress]);
+  useEffect(() => { localStorage.setItem("ms-daily-completed", JSON.stringify(dailyCompleted)); }, [dailyCompleted]);
+  useEffect(() => { localStorage.setItem("ms-daily-bonus", String(dailyBonusClaimed)); }, [dailyBonusClaimed]);
+
+  const dailyIncomplete = dailyChallenges.some(c => !dailyCompleted.includes(c.id));
+
+  const advanceDailyChallenge = useCallback((type: string, value: number) => {
+    setDailyCompleted(completed => {
+      setDailyProgress(progress => {
+        const newProgress = { ...progress };
+        const newCompleted = [...completed];
+        let anyNewlyCompleted = false;
+
+        for (const c of dailyChallenges) {
+          if (completed.includes(c.id)) continue;
+          if (c.type !== type) continue;
+
+          let newVal: number;
+          // speed: value is the time, lower is better — check threshold
+          if (type === "speed") {
+            newVal = value <= c.target ? 1 : 0;
+          } else if (type === "no_flags") {
+            newVal = value >= 1 ? 1 : 0;
+          } else {
+            newVal = (progress[c.id] ?? 0) + value;
+          }
+
+          newProgress[c.id] = Math.min(newVal, c.target);
+
+          if (newProgress[c.id] >= c.target && !newCompleted.includes(c.id)) {
+            newCompleted.push(c.id);
+            anyNewlyCompleted = true;
+            setTimeout(() => pushToast({ type: "daily", title: c.title, subtitle: c.desc }), 200);
+          }
+        }
+
+        // Check if all complete — award bonus
+        if (anyNewlyCompleted) {
+          const allDone = dailyChallenges.every(c => newCompleted.includes(c.id));
+          if (allDone) {
+            setDailyBonusClaimed(prev => {
+              if (!prev) {
+                setCoins(c => c + 25);
+                setTotalXP(prev2 => prev2 + 20);
+                setTimeout(() => pushToast({ type: "daily", title: "All Dailies Complete!", subtitle: "+25 coins · +20 XP", reward: 25 }), 600);
+                return true;
+              }
+              return prev;
+            });
+          }
+          setDailyCompleted(newCompleted);
+        }
+
+        return newProgress;
+      });
+      return completed;
+    });
+  }, [dailyChallenges, pushToast]);
+
   // Award XP and handle level-ups
   const awardXP = useCallback((amount: number) => {
     setTotalXP(prev => {
@@ -837,13 +1094,10 @@ export default function App() {
         for (let lvl = oldLevel + 1; lvl <= newLevel; lvl++) {
           const reward = LEVEL_REWARDS.find(r => r.level === lvl);
           if (!reward) continue;
-          // Award coins
           setCoins(c => c + reward.coins);
-          // Award exclusive flag/theme
           if (reward.flag) setOwnedFlags(prev2 => prev2.includes(reward.flag!) ? prev2 : [...prev2, reward.flag!]);
           if (reward.theme) setOwnedThemes(prev2 => prev2.includes(reward.theme!) ? prev2 : [...prev2, reward.theme!]);
 
-          // Build subtitle for toast
           const extras: string[] = [];
           if (reward.flag) extras.push(`${reward.flagEmoji} ${reward.flagLabel} flag`);
           if (reward.theme) extras.push(`${reward.themeLabel} theme`);
@@ -899,7 +1153,7 @@ export default function App() {
     setPendingAchievements(prev => prev.filter(x => x !== id));
     setClaimedAchievements(prev => [...prev, id]);
     setCoins(c => c + def.reward);
-    awardXP(10); // small XP bonus for claiming
+    awardXP(10);
   }, [awardXP]);
 
   const checkAchievements = useCallback((opts: {
@@ -1018,6 +1272,12 @@ export default function App() {
   }, [theme]);
   useEffect(() => { if (status === "won") fireConfetti(); }, [status, fireConfetti]);
 
+  // Screen shake on loss
+  const triggerShake = useCallback(() => {
+    setShaking(true);
+    setTimeout(() => setShaking(false), 650);
+  }, []);
+
   const saveInfiniteScore = useCallback((name: string, boards: number) => {
     if (!name || boards === 0) return;
     const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
@@ -1089,7 +1349,9 @@ export default function App() {
       setInfiniteCount(newCount);
       infiniteCountRef.current = newCount;
       checkAchievements({ waveCount: newCount });
-      awardXP(15); // XP per infinite wave
+      awardXP(15);
+      // Daily: wave challenges
+      advanceDailyChallenge("wave", 1);
       triggerInfiniteTransition(finished);
     } else {
       setStatus("won");
@@ -1102,8 +1364,12 @@ export default function App() {
         checkAchievements({ wins: newWins, time, neverFlagged: !everFlaggedRef.current });
         return { games: s.games, wins: newWins, best: newBest };
       });
+      // Daily challenges for wins and speed
+      advanceDailyChallenge("wins", 1);
+      if (time < 60) advanceDailyChallenge("speed", time);
+      if (!everFlaggedRef.current) advanceDailyChallenge("no_flags", 1);
     }
-  }, [infiniteMode, checkAchievements, awardXP, triggerInfiniteTransition]);
+  }, [infiniteMode, checkAchievements, awardXP, triggerInfiniteTransition, advanceDailyChallenge]);
 
   const handleReveal = useCallback((r: number, c: number) => {
     if (status === "won" || status === "lost" || status === "transitioning") return;
@@ -1118,6 +1384,8 @@ export default function App() {
         setStats((s: typeof stats) => {
           const newGames = s.games + 1;
           checkAchievements({ games: newGames });
+          // Daily: games played
+          advanceDailyChallenge("games", 1);
           return { ...s, games: newGames };
         });
       }
@@ -1126,6 +1394,7 @@ export default function App() {
       const exploded = currentBoard.map(row => row.map(cell => (cell.mine ? { ...cell, revealed: true } : { ...cell })));
       setBoard(exploded);
       setStatus("lost");
+      triggerShake();
       endInfiniteRun();
       setInfiniteCount(0);
       infiniteCountRef.current = 0;
@@ -1134,7 +1403,7 @@ export default function App() {
     const revealed = floodReveal(currentBoard, r, c);
     if (checkWin(revealed)) handleWin(revealed, elapsed);
     else setBoard(revealed);
-  }, [board, status, firstClick, infiniteMode, elapsed, endInfiniteRun, handleWin, checkAchievements]);
+  }, [board, status, firstClick, infiniteMode, elapsed, endInfiniteRun, handleWin, checkAchievements, triggerShake, advanceDailyChallenge]);
 
   const handleFlag = useCallback((e: React.MouseEvent, r: number, c: number) => {
     e.preventDefault();
@@ -1170,6 +1439,7 @@ export default function App() {
           const boom = currentBoard.map(row => row.map(c => (c.mine ? { ...c, revealed: true } : { ...c })));
           setBoard(boom);
           setStatus("lost");
+          triggerShake();
           endInfiniteRun();
           setInfiniteCount(0);
           infiniteCountRef.current = 0;
@@ -1179,7 +1449,7 @@ export default function App() {
       }
     if (checkWin(currentBoard)) handleWin(currentBoard, elapsed);
     else setBoard(currentBoard);
-  }, [board, status, elapsed, endInfiniteRun, handleWin]);
+  }, [board, status, elapsed, endInfiniteRun, handleWin, triggerShake]);
 
   const handleSaveName = useCallback((name: string) => {
     const trimmed = name.slice(0, 16);
@@ -1211,7 +1481,7 @@ export default function App() {
             <line x1="0" y1="7" x2="18" y2="7" />
             <line x1="0" y1="13" x2="18" y2="13" />
           </svg>
-          {hasPending && <span className="menu-badge-dot" />}
+          {(hasPending || dailyIncomplete) && <span className="menu-badge-dot" />}
         </button>
 
         <div className="top-counters">
@@ -1269,7 +1539,7 @@ export default function App() {
       )}
 
       {/* Board */}
-      <div className="board-wrap">
+      <div className={`board-wrap${shaking ? " shaking" : ""}`}>
         <div className="board-clip" style={{ width: BOARD_W, height: BOARD_H }}>
           {transitioning && exitBoard && (
             <div className="board-pos board-exit">
@@ -1303,8 +1573,10 @@ export default function App() {
         onOpenInventory={() => setInventoryOpen(true)}
         onOpenAchievements={() => setAchievementsOpen(true)}
         onOpenLevels={() => setLevelsOpen(true)}
+        onOpenDaily={() => setDailyOpen(true)}
         pendingCount={pendingAchievements.length}
         currentLevel={currentLevel} totalXP={totalXP}
+        dailyIncomplete={dailyIncomplete}
       />
       <ShopModal open={shopOpen} onClose={() => setShopOpen(false)}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
@@ -1317,6 +1589,9 @@ export default function App() {
         claimed={claimedAchievements} pending={pendingAchievements}
         onClaim={handleClaimAchievement} />
       <LevelsModal open={levelsOpen} onClose={() => setLevelsOpen(false)} totalXP={totalXP} />
+      <DailyChallengesModal open={dailyOpen} onClose={() => setDailyOpen(false)}
+        challenges={dailyChallenges} progress={dailyProgress}
+        completed={dailyCompleted} bonusClaimed={dailyBonusClaimed} />
     </div>
   );
 }

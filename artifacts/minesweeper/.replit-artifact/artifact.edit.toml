@@ -2,7 +2,7 @@ kind = "web"
 previewPath = "/"
 title = "Minesweeper"
 version = "1.0.0"
-id = "minesweeper-game-001"
+id = "minesweeper-game-artifact"
 
 [[services]]
 localPort = 18718
