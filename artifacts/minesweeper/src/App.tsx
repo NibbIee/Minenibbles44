@@ -953,11 +953,13 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
 }
 
 // ── ShopModal ─────────────────────────────────────────────────────────────────
-function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, onBuyFlag, onOpenCrate, defaultTab = "themes" }: {
+function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, onBuyFlag, onOpenCrate, onOpenCrateWithKey, miscKeys = 0, defaultTab = "themes" }: {
   open: boolean; onClose: () => void; coins: number;
   ownedThemes: string[]; ownedFlags: string[];
   onBuyTheme: (id: string) => void; onBuyFlag: (id: string) => void;
   onOpenCrate: (qty: 1 | 3) => void;
+  onOpenCrateWithKey: () => void;
+  miscKeys?: number;
   defaultTab?: "themes" | "flags" | "crates";
 }) {
   const [tab, setTab] = useState<"themes" | "flags" | "crates">(defaultTab);
@@ -1071,6 +1073,15 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
                   <CoinIcon size={12} /> 3× — {CRATE_COST * 3}
                 </button>
               </div>
+              {miscKeys > 0 && (
+                <button
+                  className="crate-open-btn"
+                  style={{ marginTop: 8, width: "100%", background: "transparent", borderColor: "#ffd700", color: "#ffd700" }}
+                  onClick={() => { onClose(); onOpenCrateWithKey(); }}
+                >
+                  🗝️ Use Key — Open Free ({miscKeys} key{miscKeys !== 1 ? "s" : ""})
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -1244,6 +1255,7 @@ export default function App() {
   const [dailyOpen, setDailyOpen] = useState(false);
   const [crateOpen,     setCrateOpen]     = useState(false);
   const [crateAutoOpen, setCrateAutoOpen] = useState<1 | 3 | undefined>(undefined);
+  const [crateKeyOpen,  setCrateKeyOpen]  = useState(false);
   const [shopInitTab,   setShopInitTab]   = useState<"themes" | "flags" | "crates">("themes");
   const [shaking, setShaking] = useState(false);
   const everFlaggedRef = useRef(false);
@@ -1868,7 +1880,7 @@ export default function App() {
         </button>
 
         <div className="top-counters">
-          {infiniteMode && (
+          {infiniteMode ? (
             <>
               <div className="counter-box">
                 <span className="counter-num infinite-wave-num">{infiniteCount}</span>
@@ -1876,12 +1888,15 @@ export default function App() {
               </div>
               <div className="counter-divider" />
             </>
+          ) : (
+            <>
+              <div className="counter-box">
+                <span className="counter-num">{minesLeft}</span>
+                <span className="counter-label">MINES</span>
+              </div>
+              <div className="counter-divider" />
+            </>
           )}
-          <div className="counter-box">
-            <span className="counter-num">{minesLeft}</span>
-            <span className="counter-label">MINES</span>
-          </div>
-          <div className="counter-divider" />
           <div className="counter-box">
             <span className="counter-num">{String(elapsed).padStart(3, "0")}</span>
             <span className="counter-label">TIME</span>
@@ -1964,17 +1979,19 @@ export default function App() {
       <ShopModal open={shopOpen} onClose={() => { setShopOpen(false); setShopInitTab("themes"); }}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag}
-        onOpenCrate={(qty) => { setCrateAutoOpen(qty); setCrateOpen(true); }}
+        onOpenCrate={(qty) => { setShopOpen(false); setCrateAutoOpen(qty); setCrateOpen(true); }}
+        onOpenCrateWithKey={() => { setShopOpen(false); setCrateKeyOpen(true); setCrateOpen(true); }}
+        miscKeys={miscKeys}
         defaultTab={shopInitTab} />
       <InventoryModal open={inventoryOpen} onClose={() => setInventoryOpen(false)}
         ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         activeTheme={theme} activeFlag={activeFlag}
         onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag}
         ownedCrateItems={ownedCrateItems} miscKeys={miscKeys} />
-      <CrateModal open={crateOpen} onClose={() => { setCrateOpen(false); setCrateAutoOpen(undefined); setShopInitTab("crates"); setShopOpen(true); }}
+      <CrateModal open={crateOpen} onClose={() => { setCrateOpen(false); setCrateAutoOpen(undefined); setCrateKeyOpen(false); setShopInitTab("crates"); setShopOpen(true); }}
         coins={coins} ownedCrateItems={ownedCrateItems}
         onPay={handleCratePay} onClaim={handleCrateClaim}
-        autoOpen={crateAutoOpen} miscKeys={miscKeys} onUseKey={handleUseKey} />
+        autoOpen={crateAutoOpen} keyOpen={crateKeyOpen} miscKeys={miscKeys} onUseKey={handleUseKey} />
       <AchievementsModal open={achievementsOpen} onClose={() => setAchievementsOpen(false)}
         claimed={claimedAchievements} pending={pendingAchievements}
         onClaim={handleClaimAchievement} />

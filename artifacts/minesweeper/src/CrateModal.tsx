@@ -214,9 +214,11 @@ export interface CrateModalProps {
   miscKeys?: number;
   /** Called when the player uses a key to open a crate */
   onUseKey?: () => void;
+  /** If true, auto-spin once using a key on open — skips idle button press */
+  keyOpen?: boolean;
 }
 
-export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onClaim, autoOpen, miscKeys = 0, onUseKey }: CrateModalProps) {
+export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onClaim, autoOpen, miscKeys = 0, onUseKey, keyOpen }: CrateModalProps) {
   const [phase,    setPhase]    = useState<"idle" | "spinning" | "done">("idle");
   const [quantity, setQuantity] = useState<1 | 3>(1);
   const [strip,    setStrip]    = useState<CrateItem[]>([]);
@@ -279,6 +281,24 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
     }
   }, [open, autoOpen]);
 
+  // Keep a stable ref so the keyOpen effect always sees the latest handleKeyOpen
+  const handleKeyOpenRef = useRef(handleKeyOpen);
+  handleKeyOpenRef.current = handleKeyOpen;
+
+  // Auto-spin with a key when opened via "Use Key" button
+  const hasKeySpun = useRef(false);
+  useEffect(() => {
+    if (!open) {
+      hasKeySpun.current = false;
+      return;
+    }
+    if (keyOpen && !hasKeySpun.current) {
+      hasKeySpun.current = true;
+      const t = setTimeout(() => handleKeyOpenRef.current(), 60);
+      return () => clearTimeout(t);
+    }
+  }, [open, keyOpen]);
+
   const handleOpen = useCallback(() => startSpin(quantity), [startSpin, quantity]);
 
   // Open 1 crate for free using a key (no coin cost)
@@ -314,8 +334,8 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
     setPhase("idle");
     setStrip([]);
     setWinners([]);
-    if (autoOpen) onClose();
-  }, [winners, onClaim, autoOpen, onClose]);
+    if (autoOpen || keyOpen) onClose();
+  }, [winners, onClaim, autoOpen, keyOpen, onClose]);
 
   const handleClose = useCallback(() => {
     if (phase === "spinning") return;
