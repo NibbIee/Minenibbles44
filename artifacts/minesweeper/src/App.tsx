@@ -330,7 +330,7 @@ type CellState = { mine: boolean; revealed: boolean; flagged: boolean; adjacent:
 type GameStatus = "idle" | "playing" | "won" | "lost" | "transitioning";
 interface ToastItem {
   key: number;
-  type: "achievement" | "levelup" | "daily";
+  type: "achievement" | "levelup" | "daily" | "keydrop";
   title: string;
   subtitle?: string;
   reward?: number;
@@ -502,6 +502,11 @@ function ToastStack({ toasts }: { toasts: ToastItem[] }) {
                 <circle cx="10" cy="10" r="9.5" fill="#0a2010" stroke="#00e676" strokeWidth="1.5"/>
                 <text x="10" y="14.5" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#00e676" fontFamily="Arial, sans-serif">✓</text>
               </svg>
+            ) : t.type === "keydrop" ? (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9.5" fill="#1a1400" stroke="#ffd700" strokeWidth="1.5"/>
+                <text x="10" y="14.5" textAnchor="middle" fontSize="11" fill="#ffd700" fontFamily="Arial, sans-serif">🗝</text>
+              </svg>
             ) : (
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <circle cx="10" cy="10" r="9.5" fill="#2a1a00" stroke="#ffd700" strokeWidth="1.5"/>
@@ -511,7 +516,7 @@ function ToastStack({ toasts }: { toasts: ToastItem[] }) {
           </div>
           <div className="toast-body">
             <span className="toast-label">
-              {t.type === "achievement" ? "Achievement Unlocked" : t.type === "daily" ? "Daily Challenge" : "Level Up!"}
+              {t.type === "achievement" ? "Achievement Unlocked" : t.type === "daily" ? "Daily Challenge" : t.type === "keydrop" ? "Item Found!" : "Level Up!"}
             </span>
             <span className="toast-title">{t.title}</span>
             {t.subtitle && <span className="toast-subtitle">{t.subtitle}</span>}
@@ -1075,14 +1080,15 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
 }
 
 // ── InventoryModal ────────────────────────────────────────────────────────────
-function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag, onEquipTheme, onEquipFlag, ownedCrateItems }: {
+function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag, onEquipTheme, onEquipFlag, ownedCrateItems, miscKeys }: {
   open: boolean; onClose: () => void;
   ownedThemes: string[]; ownedFlags: string[];
   activeTheme: string; activeFlag: string;
   onEquipTheme: (id: string) => void; onEquipFlag: (id: string) => void;
   ownedCrateItems: string[];
+  miscKeys: number;
 }) {
-  const [tab, setTab] = useState<"themes" | "flags">("themes");
+  const [tab, setTab] = useState<"themes" | "flags" | "misc">("themes");
   if (!open) return null;
 
   // Regular flags (bought from shop or earned by leveling) — exclude crate-only emoji flags
@@ -1106,6 +1112,9 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
         <div className="menu-tabs">
           <button className={`menu-tab${tab === "themes" ? " active" : ""}`} onClick={() => setTab("themes")}>THEMES</button>
           <button className={`menu-tab${tab === "flags" ? " active" : ""}`} onClick={() => setTab("flags")}>FLAGS</button>
+          <button className={`menu-tab${tab === "misc" ? " active" : ""}`} onClick={() => setTab("misc")}>
+            MISC{miscKeys > 0 ? <span style={{ marginLeft: 4, background: "#ffd700", color: "#000", borderRadius: 8, padding: "0 5px", fontSize: 9, fontWeight: 700 }}>{miscKeys}</span> : null}
+          </button>
         </div>
         {tab === "themes" && (
           <div className="shop-grid">
@@ -1189,6 +1198,31 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
             )}
           </div>
         )}
+        {tab === "misc" && (
+          <div style={{ padding: "4px 0" }}>
+            <div className="inv-section-header">
+              <span>Crate Keys</span>
+              <span className="inv-section-count">{miscKeys}</span>
+            </div>
+            {miscKeys > 0 ? (
+              <div className="shop-grid" style={{ marginTop: 8 }}>
+                <div className="shop-card" style={{ pointerEvents: "none", textAlign: "center" }}>
+                  <div className="flag-preview" style={{ fontSize: 28 }}>🗝️</div>
+                  <span className="shop-card-label">Crate Key</span>
+                  <span style={{ fontSize: 11, color: "#ffd700", fontWeight: 700 }}>×{miscKeys}</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", padding: "28px 0", color: "var(--stat-label-color)", fontSize: 13 }}>
+                No keys yet!
+              </div>
+            )}
+            <div style={{ marginTop: 16, fontSize: 11, color: "var(--stat-label-color)", textAlign: "center", lineHeight: 1.6 }}>
+              Keys drop randomly when clearing tiles<br />(1 in 50 chance per reveal).<br />
+              Use a key in the Crate to open it for free!
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1260,6 +1294,14 @@ export default function App() {
     return s ? JSON.parse(s) : [];
   });
   useEffect(() => { localStorage.setItem("ms-crate-items", JSON.stringify(ownedCrateItems)); }, [ownedCrateItems]);
+
+  // Misc inventory (crate keys, etc.)
+  const [miscKeys, setMiscKeys] = useState<number>(() => Number(localStorage.getItem("ms-misc-keys") || "0"));
+  useEffect(() => { localStorage.setItem("ms-misc-keys", String(miscKeys)); }, [miscKeys]);
+
+  const handleUseKey = useCallback(() => {
+    setMiscKeys(k => Math.max(0, k - 1));
+  }, []);
 
   const handleCratePay = useCallback((amount: number) => {
     setCoins((c) => c - amount);
@@ -1721,9 +1763,14 @@ export default function App() {
       return;
     }
     const revealed = floodReveal(currentBoard, r, c);
+    // 1/50 chance: a key drops when clearing a tile
+    if (Math.random() < 1 / 50) {
+      setMiscKeys(k => k + 1);
+      pushToast({ type: "keydrop", title: "Key Found! 🗝️", subtitle: "Use it to open any crate free" });
+    }
     if (checkWin(revealed)) handleWin(revealed, elapsed);
     else setBoard(revealed);
-  }, [board, status, firstClick, infiniteMode, elapsed, endInfiniteRun, handleWin, checkAchievements, triggerShake, advanceDailyChallenge]);
+  }, [board, status, firstClick, infiniteMode, elapsed, endInfiniteRun, handleWin, checkAchievements, triggerShake, advanceDailyChallenge, pushToast]);
 
   const handleFlag = useCallback((e: React.MouseEvent, r: number, c: number) => {
     e.preventDefault();
@@ -1767,9 +1814,14 @@ export default function App() {
         }
         currentBoard = floodReveal(currentBoard, nr, nc);
       }
+    // 1/50 chance: a key drops when chording clears tiles
+    if (Math.random() < 1 / 50) {
+      setMiscKeys(k => k + 1);
+      pushToast({ type: "keydrop", title: "Key Found! 🗝️", subtitle: "Use it to open any crate free" });
+    }
     if (checkWin(currentBoard)) handleWin(currentBoard, elapsed);
     else setBoard(currentBoard);
-  }, [board, status, elapsed, endInfiniteRun, handleWin, triggerShake]);
+  }, [board, status, elapsed, endInfiniteRun, handleWin, triggerShake, pushToast]);
 
   const handleSaveName = useCallback((name: string) => {
     const trimmed = name.slice(0, 16);
@@ -1918,11 +1970,11 @@ export default function App() {
         ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         activeTheme={theme} activeFlag={activeFlag}
         onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag}
-        ownedCrateItems={ownedCrateItems} />
+        ownedCrateItems={ownedCrateItems} miscKeys={miscKeys} />
       <CrateModal open={crateOpen} onClose={() => { setCrateOpen(false); setCrateAutoOpen(undefined); setShopInitTab("crates"); setShopOpen(true); }}
         coins={coins} ownedCrateItems={ownedCrateItems}
         onPay={handleCratePay} onClaim={handleCrateClaim}
-        autoOpen={crateAutoOpen} />
+        autoOpen={crateAutoOpen} miscKeys={miscKeys} onUseKey={handleUseKey} />
       <AchievementsModal open={achievementsOpen} onClose={() => setAchievementsOpen(false)}
         claimed={claimedAchievements} pending={pendingAchievements}
         onClaim={handleClaimAchievement} />

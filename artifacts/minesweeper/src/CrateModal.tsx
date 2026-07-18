@@ -210,9 +210,13 @@ export interface CrateModalProps {
   onClaim: (item: CrateItem) => void;
   /** If set, spin immediately on open with this quantity — skips idle button press */
   autoOpen?: 1 | 3;
+  /** Number of free crate keys in the player's misc inventory */
+  miscKeys?: number;
+  /** Called when the player uses a key to open a crate */
+  onUseKey?: () => void;
 }
 
-export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onClaim, autoOpen }: CrateModalProps) {
+export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onClaim, autoOpen, miscKeys = 0, onUseKey }: CrateModalProps) {
   const [phase,    setPhase]    = useState<"idle" | "spinning" | "done">("idle");
   const [quantity, setQuantity] = useState<1 | 3>(1);
   const [strip,    setStrip]    = useState<CrateItem[]>([]);
@@ -276,6 +280,34 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
   }, [open, autoOpen]);
 
   const handleOpen = useCallback(() => startSpin(quantity), [startSpin, quantity]);
+
+  // Open 1 crate for free using a key (no coin cost)
+  const handleKeyOpen = useCallback(() => {
+    if (miscKeys <= 0 || phase !== "idle") return;
+    onUseKey?.();
+
+    const winner = pickCrateItem();
+    const newStrip = buildStrip(winner);
+    setQuantity(1);
+    setWinners([winner]);
+    setStrip(newStrip);
+    setPhase("spinning");
+
+    requestAnimationFrame(() => {
+      if (!stripRef.current || !reelRef.current) return;
+      const containerW  = reelRef.current.offsetWidth || 320;
+      const centerOffset = containerW / 2 - ITEM_W / 2;
+      const targetX      = -(WINNER_IDX * ITEM_W - centerOffset);
+      stripRef.current.style.transition = "none";
+      stripRef.current.style.transform  = "translateX(0px)";
+      requestAnimationFrame(() => {
+        if (!stripRef.current) return;
+        stripRef.current.style.transition = "transform 5.5s cubic-bezier(0.12, 0.8, 0.32, 1)";
+        stripRef.current.style.transform  = `translateX(${targetX}px)`;
+      });
+    });
+    setTimeout(() => setPhase("done"), 5700);
+  }, [miscKeys, phase, onUseKey]);
 
   const handleClaimAll = useCallback(() => {
     winners.forEach((w) => onClaim(w));
@@ -413,6 +445,27 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
             >
               <CoinIcon size={14} />
               Open {quantity > 1 ? `${quantity}x ` : ""}Crate{quantity > 1 ? "s" : ""} — {CRATE_COST * quantity}
+            </button>
+            {miscKeys > 0 && (
+              <button
+                className="crate-open-btn"
+                style={{ marginTop: 6, background: "transparent", borderColor: "#ffd700", color: "#ffd700" }}
+                onClick={handleKeyOpen}
+              >
+                🗝️ Use Key — Open 1 Free ({miscKeys} key{miscKeys !== 1 ? "s" : ""})
+              </button>
+            )}
+          </div>
+        )}
+        {/* Key button also visible when autoOpen is set (after claiming) */}
+        {phase === "idle" && autoOpen && miscKeys > 0 && (
+          <div className="crate-open-area" style={{ paddingTop: 0 }}>
+            <button
+              className="crate-open-btn"
+              style={{ background: "transparent", borderColor: "#ffd700", color: "#ffd700" }}
+              onClick={handleKeyOpen}
+            >
+              🗝️ Use Key — Open 1 Free ({miscKeys} key{miscKeys !== 1 ? "s" : ""})
             </button>
           </div>
         )}
