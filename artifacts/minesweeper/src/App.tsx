@@ -50,12 +50,40 @@ const CONFETTI_COLORS: Record<string, string[]> = {
   pink:  ["#ff69b4", "#ff1493", "#ffb6c1", "#ff80c0"],
 };
 
+// ── Achievements ───────────────────────────────────────────────────────────────
+
+export const ACHIEVEMENTS = [
+  // Classic wins
+  { id: "first_win",  title: "First Blood",    desc: "Win your first game",          reward: 10,  category: "Classic"   },
+  { id: "wins_10",    title: "Getting Good",   desc: "Win 10 games",                 reward: 25,  category: "Classic"   },
+  { id: "wins_50",    title: "Veteran",        desc: "Win 50 games",                 reward: 75,  category: "Classic"   },
+  { id: "wins_100",   title: "Legend",         desc: "Win 100 games",                reward: 200, category: "Classic"   },
+  { id: "no_flags",   title: "Naked Sweep",    desc: "Win without placing any flags", reward: 50, category: "Classic"   },
+  // Speed
+  { id: "speed_60",   title: "Speed Runner",   desc: "Win in under 60 seconds",      reward: 15,  category: "Speed"     },
+  { id: "speed_30",   title: "Blazing Fast",   desc: "Win in under 30 seconds",      reward: 35,  category: "Speed"     },
+  { id: "speed_15",   title: "Untouchable",    desc: "Win in under 15 seconds",      reward: 75,  category: "Speed"     },
+  // General
+  { id: "games_10",   title: "Newcomer",       desc: "Play 10 games",                reward: 5,   category: "General"   },
+  { id: "games_50",   title: "Dedicated",      desc: "Play 50 games",                reward: 15,  category: "General"   },
+  { id: "games_100",  title: "Obsessed",       desc: "Play 100 games",               reward: 30,  category: "General"   },
+  // Infinite
+  { id: "wave_5",     title: "Wave Surfer",    desc: "Reach Wave 5 in Infinite Mode",  reward: 15,  category: "Infinite" },
+  { id: "wave_10",    title: "Wave Master",    desc: "Reach Wave 10 in Infinite Mode", reward: 35,  category: "Infinite" },
+  { id: "wave_25",    title: "Endless",        desc: "Reach Wave 25 in Infinite Mode", reward: 100, category: "Infinite" },
+  { id: "wave_50",    title: "Unstoppable",    desc: "Reach Wave 50 in Infinite Mode", reward: 250, category: "Infinite" },
+  // Collector
+  { id: "flags_5",    title: "Flag Collector", desc: "Own 5 different flags",         reward: 20,  category: "Collector" },
+  { id: "flags_all",  title: "Flag Master",    desc: "Own all flags",                 reward: 100, category: "Collector" },
+  { id: "themes_all", title: "Art Director",   desc: "Own all themes",                reward: 75,  category: "Collector" },
+];
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type CellState = { mine: boolean; revealed: boolean; flagged: boolean; adjacent: number };
 type GameStatus = "idle" | "playing" | "won" | "lost" | "transitioning";
-type LeaderEntry = { name: string; wins: number; games: number; best: number | null };
-type InfiniteEntry = { name: string; boards: number; date: string };
+
+interface AchievementToastItem { id: string; title: string; reward: number; key: number }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
@@ -183,6 +211,31 @@ function CoinIcon({ size = 14 }: { size?: number }) {
   );
 }
 
+// ── Achievement Toast ──────────────────────────────────────────────────────────
+
+function AchievementToastStack({ toasts }: { toasts: AchievementToastItem[] }) {
+  if (toasts.length === 0) return null;
+  return (
+    <div className="toast-stack">
+      {toasts.map((t) => (
+        <div key={t.key} className="achievement-toast">
+          <div className="toast-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="8.5" fill="#6d28d9" stroke="#a78bfa" strokeWidth="1"/>
+              <text x="9" y="13" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#fff" fontFamily="Arial, sans-serif">★</text>
+            </svg>
+          </div>
+          <div className="toast-body">
+            <span className="toast-label">Achievement Unlocked</span>
+            <span className="toast-title">{t.title}</span>
+          </div>
+          <span className="toast-reward"><CoinIcon size={13} />+{t.reward}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── BoardGrid ─────────────────────────────────────────────────────────────────
 
 function BoardGrid({
@@ -231,36 +284,119 @@ function BoardGrid({
   );
 }
 
-// ── Rank label (no medals) ────────────────────────────────────────────────────
+// ── Achievements Modal ─────────────────────────────────────────────────────────
 
-function RankLabel({ index }: { index: number }) {
-  const rankColors = ["#ffd700", "#c0c0c0", "#cd7f32"];
-  if (index < 3) {
-    return (
-      <span className="lb-rank-num" style={{ color: rankColors[index] }}>
-        {index + 1}
-      </span>
-    );
-  }
-  return <span className="lb-rank-num lb-rank-plain">{index + 1}</span>;
+function AchievementsModal({
+  open, onClose, claimed, pending, onClaim,
+}: {
+  open: boolean;
+  onClose: () => void;
+  claimed: string[];
+  pending: string[];
+  onClaim: (id: string) => void;
+}) {
+  const [tab, setTab] = useState<"Classic" | "Speed" | "Infinite" | "General" | "Collector">("Classic");
+  if (!open) return null;
+
+  const categories = ["Classic", "Speed", "Infinite", "General", "Collector"] as const;
+  const filtered = ACHIEVEMENTS.filter((a) => a.category === tab);
+  const totalPending = pending.length;
+
+  return (
+    <div className="menu-overlay" onClick={onClose}>
+      <div className="menu-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="menu-handle" />
+        <div className="shop-header">
+          <span className="shop-title">ACHIEVEMENTS</span>
+          {totalPending > 0 && (
+            <span className="ach-claim-badge">{totalPending} to claim</span>
+          )}
+        </div>
+
+        <div className="ach-cat-tabs">
+          {categories.map((cat) => {
+            const catPending = ACHIEVEMENTS.filter(
+              (a) => a.category === cat && pending.includes(a.id)
+            ).length;
+            return (
+              <button
+                key={cat}
+                className={`ach-cat-tab${tab === cat ? " active" : ""}`}
+                onClick={() => setTab(cat)}
+              >
+                {cat}
+                {catPending > 0 && <span className="ach-cat-dot" />}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="ach-list">
+          {filtered.map((a) => {
+            const isClaimed = claimed.includes(a.id);
+            const isPending = pending.includes(a.id);
+            return (
+              <div key={a.id} className={`ach-row${isClaimed ? " ach-claimed" : ""}${isPending ? " ach-pending" : ""}`}>
+                <div className="ach-icon-wrap">
+                  {isClaimed ? (
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                      <circle cx="11" cy="11" r="10.5" fill="#1a3a1a" stroke="#4caf50" strokeWidth="1.5"/>
+                      <polyline points="6,11 9.5,14.5 16,8" stroke="#4caf50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : isPending ? (
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                      <circle cx="11" cy="11" r="10.5" fill="#2d1a4a" stroke="#a78bfa" strokeWidth="1.5"/>
+                      <text x="11" y="15" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#a78bfa" fontFamily="Arial, sans-serif">★</text>
+                    </svg>
+                  ) : (
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                      <circle cx="11" cy="11" r="10.5" fill="var(--tab-bg)" stroke="var(--tab-border)" strokeWidth="1.5"/>
+                      <text x="11" y="15" textAnchor="middle" fontSize="12" fill="var(--stat-label-color)" fontFamily="Arial, sans-serif">★</text>
+                    </svg>
+                  )}
+                </div>
+                <div className="ach-info">
+                  <span className="ach-title">{a.title}</span>
+                  <span className="ach-desc">{a.desc}</span>
+                </div>
+                <div className="ach-right">
+                  {isClaimed ? (
+                    <span className="ach-done">Claimed</span>
+                  ) : isPending ? (
+                    <button className="ach-claim-btn" onClick={() => onClaim(a.id)}>
+                      <CoinIcon size={12} />&nbsp;+{a.reward}
+                    </button>
+                  ) : (
+                    <span className="ach-reward-label"><CoinIcon size={11} />&nbsp;{a.reward}</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── MenuPanel ─────────────────────────────────────────────────────────────────
 
 function MenuPanel({
-  open, onClose, stats, leaderboard, infiniteLB, playerName, onSaveName,
+  open, onClose, stats,
+  playerName, onSaveName,
   infiniteMode, onToggleInfinite, bestInfinite,
-  coins, onOpenShop, onOpenInventory,
+  coins, onOpenShop, onOpenInventory, onOpenAchievements,
+  pendingCount,
 }: {
   open: boolean; onClose: () => void;
   stats: { wins: number; games: number; best: number | null };
-  leaderboard: LeaderEntry[]; infiniteLB: InfiniteEntry[];
   playerName: string; onSaveName: (name: string) => void;
   infiniteMode: boolean; onToggleInfinite: () => void; bestInfinite: number;
   coins: number; onOpenShop: () => void; onOpenInventory: () => void;
+  onOpenAchievements: () => void;
+  pendingCount: number;
 }) {
   const [nameInput, setNameInput] = useState(playerName);
-  const [tab, setTab] = useState<"stats" | "classic" | "infinite">("stats");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { if (open) setNameInput(playerName); }, [open, playerName]);
@@ -273,7 +409,7 @@ function MenuPanel({
       <div className="menu-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="menu-handle" />
 
-        {/* Shop & Inventory quick-access */}
+        {/* Quick-access buttons */}
         <div className="menu-actions">
           <button className="menu-action-btn" onClick={() => { onClose(); onOpenShop(); }}>
             <span className="menu-action-icon">
@@ -297,6 +433,16 @@ function MenuPanel({
               </svg>
             </span>
             <span className="menu-action-label">INVENTORY</span>
+            <span className="menu-action-arrow">›</span>
+          </button>
+          <button className="menu-action-btn" onClick={() => { onClose(); onOpenAchievements(); }}>
+            <span className="menu-action-icon" style={{ color: "#a78bfa" }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="9,2 11.3,7 17,7.6 12.9,11.5 14,17 9,14.3 4,17 5.1,11.5 1,7.6 6.7,7"/>
+              </svg>
+            </span>
+            <span className="menu-action-label" style={{ color: pendingCount > 0 ? "#a78bfa" : undefined }}>ACHIEVEMENTS</span>
+            {pendingCount > 0 && <span className="menu-action-badge">{pendingCount}</span>}
             <span className="menu-action-arrow">›</span>
           </button>
         </div>
@@ -326,71 +472,18 @@ function MenuPanel({
           </button>
         </div>
 
-        <div className="menu-tabs">
-          <button className={`menu-tab${tab === "stats" ? " active" : ""}`} onClick={() => setTab("stats")}>STATS</button>
-          <button className={`menu-tab${tab === "classic" ? " active" : ""}`} onClick={() => setTab("classic")}>CLASSIC</button>
-          <button className={`menu-tab${tab === "infinite" ? " active" : ""}`} onClick={() => setTab("infinite")}>INFINITE</button>
+        <div className="menu-stats">
+          <div className="stat-section-title">Classic</div>
+          <div className="stat-row"><span className="stat-label">Win Rate</span><span className="stat-value">{winRate}%</span></div>
+          <div className="stat-divider" />
+          <div className="stat-row"><span className="stat-label">Wins</span><span className="stat-value">{stats.wins}</span></div>
+          <div className="stat-divider" />
+          <div className="stat-row"><span className="stat-label">Games Played</span><span className="stat-value">{stats.games}</span></div>
+          <div className="stat-divider" />
+          <div className="stat-row"><span className="stat-label">Best Time</span><span className="stat-value stat-best">{fmtTime(stats.best)}</span></div>
+          <div className="stat-section-title" style={{ marginTop: 20 }}>Infinite</div>
+          <div className="stat-row"><span className="stat-label">Best Run</span><span className="stat-value stat-best">{bestInfinite > 0 ? `${bestInfinite} boards` : "—"}</span></div>
         </div>
-
-        {tab === "stats" && (
-          <div className="menu-stats">
-            <div className="stat-section-title">Classic</div>
-            <div className="stat-row"><span className="stat-label">Win Rate</span><span className="stat-value">{winRate}%</span></div>
-            <div className="stat-divider" />
-            <div className="stat-row"><span className="stat-label">Wins</span><span className="stat-value">{stats.wins}</span></div>
-            <div className="stat-divider" />
-            <div className="stat-row"><span className="stat-label">Games Played</span><span className="stat-value">{stats.games}</span></div>
-            <div className="stat-divider" />
-            <div className="stat-row"><span className="stat-label">Best Time</span><span className="stat-value stat-best">{fmtTime(stats.best)}</span></div>
-            <div className="stat-section-title" style={{ marginTop: 20 }}>Infinite</div>
-            <div className="stat-row"><span className="stat-label">Best Run</span><span className="stat-value stat-best">{bestInfinite > 0 ? `${bestInfinite} boards` : "—"}</span></div>
-          </div>
-        )}
-
-        {tab === "classic" && (
-          <div className="menu-leaderboard">
-            {leaderboard.length === 0 ? (
-              <p className="lb-empty">No entries yet. Win a game to appear!</p>
-            ) : (
-              <table className="lb-table">
-                <thead><tr><th>#</th><th>Name</th><th>Wins</th><th>Rate</th><th>Best</th></tr></thead>
-                <tbody>
-                  {leaderboard.map((entry, i) => (
-                    <tr key={entry.name} className={entry.name === playerName ? "lb-me" : ""}>
-                      <td className="lb-rank"><RankLabel index={i} /></td>
-                      <td className="lb-name">{entry.name}</td>
-                      <td className="lb-wins">{entry.wins}</td>
-                      <td className="lb-rate">{entry.games > 0 ? Math.round((entry.wins / entry.games) * 100) : 0}%</td>
-                      <td className="lb-best">{fmtTime(entry.best)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
-
-        {tab === "infinite" && (
-          <div className="menu-leaderboard">
-            {infiniteLB.length === 0 ? (
-              <p className="lb-empty">No runs yet. Enable Infinite Mode and survive as long as you can!</p>
-            ) : (
-              <table className="lb-table">
-                <thead><tr><th>#</th><th>Name</th><th>Boards</th><th>Date</th></tr></thead>
-                <tbody>
-                  {infiniteLB.map((entry, i) => (
-                    <tr key={`${entry.name}-${i}`} className={entry.name === playerName ? "lb-me" : ""}>
-                      <td className="lb-rank"><RankLabel index={i} /></td>
-                      <td className="lb-name">{entry.name}</td>
-                      <td className="lb-wins" style={{ color: "#a78bfa" }}>{entry.boards}</td>
-                      <td className="lb-rate">{entry.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -567,6 +660,10 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
+
+  // Track if any flag was placed this game (for no_flags achievement)
+  const everFlaggedRef = useRef(false);
 
   // Theme
   const [theme, setTheme] = useState<string>(() => localStorage.getItem("ms-theme") || "dark");
@@ -594,19 +691,130 @@ export default function App() {
 
   const flagEmoji = FLAGS.find((f) => f.id === activeFlag)?.emoji ?? "🚩";
 
+  // ── Achievements state ──────────────────────────────────────────────────────
+
+  const [claimedAchievements, setClaimedAchievements] = useState<string[]>(() => {
+    const s = localStorage.getItem("ms-claimed-achievements");
+    return s ? JSON.parse(s) : [];
+  });
+  const [pendingAchievements, setPendingAchievements] = useState<string[]>(() => {
+    const s = localStorage.getItem("ms-pending-achievements");
+    return s ? JSON.parse(s) : [];
+  });
+  const [toasts, setToasts] = useState<AchievementToastItem[]>([]);
+  const toastKeyRef = useRef(0);
+
+  useEffect(() => { localStorage.setItem("ms-claimed-achievements", JSON.stringify(claimedAchievements)); }, [claimedAchievements]);
+  useEffect(() => { localStorage.setItem("ms-pending-achievements", JSON.stringify(pendingAchievements)); }, [pendingAchievements]);
+
+  // Show toast + mark pending for a list of newly unlocked achievement IDs
+  const unlockAchievements = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setPendingAchievements((prev) => {
+      const toAdd = ids.filter((id) => !prev.includes(id));
+      return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+    });
+    // Queue toasts
+    ids.forEach((id, i) => {
+      const def = ACHIEVEMENTS.find((a) => a.id === id);
+      if (!def) return;
+      const key = ++toastKeyRef.current;
+      setTimeout(() => {
+        setToasts((t) => [...t, { id, title: def.title, reward: def.reward, key }]);
+        setTimeout(() => setToasts((t) => t.filter((x) => x.key !== key)), 3500);
+      }, i * 600);
+    });
+  }, []);
+
+  // Claim a pending achievement → give coins, move to claimed
+  const handleClaimAchievement = useCallback((id: string) => {
+    const def = ACHIEVEMENTS.find((a) => a.id === id);
+    if (!def) return;
+    setPendingAchievements((prev) => prev.filter((x) => x !== id));
+    setClaimedAchievements((prev) => [...prev, id]);
+    setCoins((c) => c + def.reward);
+  }, []);
+
+  // Check achievements given current snapshot of stats + game data
+  const checkAchievements = useCallback((opts: {
+    wins?: number;
+    games?: number;
+    time?: number;
+    neverFlagged?: boolean;
+    waveCount?: number;
+    ownedFlagsCount?: number;
+    allFlagsOwned?: boolean;
+    allThemesOwned?: boolean;
+  }) => {
+    setPendingAchievements((pending) => {
+      setClaimedAchievements((claimed) => {
+        const newIds: string[] = [];
+        const has = (id: string) => claimed.includes(id) || pending.includes(id) || newIds.includes(id);
+
+        const { wins, games, time, neverFlagged, waveCount, ownedFlagsCount, allFlagsOwned, allThemesOwned } = opts;
+
+        if (wins !== undefined) {
+          if (wins >= 1   && !has("first_win")) newIds.push("first_win");
+          if (wins >= 10  && !has("wins_10"))   newIds.push("wins_10");
+          if (wins >= 50  && !has("wins_50"))   newIds.push("wins_50");
+          if (wins >= 100 && !has("wins_100"))  newIds.push("wins_100");
+        }
+        if (time !== undefined) {
+          if (time < 60 && !has("speed_60")) newIds.push("speed_60");
+          if (time < 30 && !has("speed_30")) newIds.push("speed_30");
+          if (time < 15 && !has("speed_15")) newIds.push("speed_15");
+        }
+        if (neverFlagged && !has("no_flags")) newIds.push("no_flags");
+
+        if (games !== undefined) {
+          if (games >= 10  && !has("games_10"))  newIds.push("games_10");
+          if (games >= 50  && !has("games_50"))  newIds.push("games_50");
+          if (games >= 100 && !has("games_100")) newIds.push("games_100");
+        }
+        if (waveCount !== undefined) {
+          if (waveCount >= 5  && !has("wave_5"))  newIds.push("wave_5");
+          if (waveCount >= 10 && !has("wave_10")) newIds.push("wave_10");
+          if (waveCount >= 25 && !has("wave_25")) newIds.push("wave_25");
+          if (waveCount >= 50 && !has("wave_50")) newIds.push("wave_50");
+        }
+        if (ownedFlagsCount !== undefined) {
+          if (ownedFlagsCount >= 5 && !has("flags_5")) newIds.push("flags_5");
+        }
+        if (allFlagsOwned && !has("flags_all")) newIds.push("flags_all");
+        if (allThemesOwned && !has("themes_all")) newIds.push("themes_all");
+
+        if (newIds.length > 0) unlockAchievements(newIds);
+        return claimed; // no change to claimed here
+      });
+      return pending; // no change to pending here (unlockAchievements handles it)
+    });
+  }, [unlockAchievements]);
+
+  // ── Shop handlers ───────────────────────────────────────────────────────────
+
   const handleBuyTheme = useCallback((id: string) => {
     const t = THEMES.find((t) => t.id === id);
     if (!t || ownedThemes.includes(id) || coins < t.price) return;
     setCoins((c) => c - t.price);
-    setOwnedThemes((prev) => [...prev, id]);
-  }, [coins, ownedThemes]);
+    setOwnedThemes((prev) => {
+      const next = [...prev, id];
+      const allOwned = THEMES.every((th) => next.includes(th.id));
+      setTimeout(() => checkAchievements({ allThemesOwned: allOwned }), 0);
+      return next;
+    });
+  }, [coins, ownedThemes, checkAchievements]);
 
   const handleBuyFlag = useCallback((id: string) => {
     const f = FLAGS.find((f) => f.id === id);
     if (!f || ownedFlags.includes(id) || coins < f.price) return;
     setCoins((c) => c - f.price);
-    setOwnedFlags((prev) => [...prev, id]);
-  }, [coins, ownedFlags]);
+    setOwnedFlags((prev) => {
+      const next = [...prev, id];
+      const allOwned = FLAGS.every((fl) => next.includes(fl.id));
+      setTimeout(() => checkAchievements({ ownedFlagsCount: next.length, allFlagsOwned: allOwned }), 0);
+      return next;
+    });
+  }, [coins, ownedFlags, checkAchievements]);
 
   const handleEquipTheme = useCallback((id: string) => {
     setTheme(id);
@@ -624,7 +832,7 @@ export default function App() {
   const infiniteCountRef = useRef(0);
   const [transitioning, setTransitioning] = useState(false);
   const [exitBoard, setExitBoard] = useState<CellState[][] | null>(null);
-  const [infiniteLB, setInfiniteLB] = useState<InfiniteEntry[]>(() => {
+  const [infiniteLB, setInfiniteLB] = useState<{ name: string; boards: number; date: string }[]>(() => {
     const s = localStorage.getItem("ms-infinite-lb");
     return s ? JSON.parse(s) : [];
   });
@@ -634,15 +842,14 @@ export default function App() {
     const saved = localStorage.getItem("ms-stats");
     return saved ? JSON.parse(saved) : { games: 0, wins: 0, best: null as number | null };
   });
-  const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>(() => {
-    const saved = localStorage.getItem("ms-leaderboard");
-    return saved ? JSON.parse(saved) : [];
-  });
 
   useEffect(() => { localStorage.setItem("ms-stats", JSON.stringify(stats)); }, [stats]);
-  useEffect(() => { localStorage.setItem("ms-leaderboard", JSON.stringify(leaderboard)); }, [leaderboard]);
   useEffect(() => { localStorage.setItem("ms-infinite-lb", JSON.stringify(infiniteLB)); }, [infiniteLB]);
   useEffect(() => { infiniteCountRef.current = infiniteCount; }, [infiniteCount]);
+
+  const bestInfinite = infiniteLB
+    .filter((e) => e.name === (playerName || "Anonymous"))
+    .reduce((m, e) => Math.max(m, e.boards), 0);
 
   // Timer
   useEffect(() => {
@@ -651,7 +858,7 @@ export default function App() {
     return () => clearInterval(id);
   }, [status]);
 
-  // Confetti — colors match active theme
+  // Confetti
   const fireConfetti = useCallback(() => {
     const colors = CONFETTI_COLORS[theme] ?? CONFETTI_COLORS.dark;
     const duration = 3000;
@@ -668,30 +875,11 @@ export default function App() {
     if (status === "won") fireConfetti();
   }, [status, fireConfetti]);
 
-  // Leaderboard helpers
-  const updateLeaderboard = useCallback((name: string, won: boolean, time: number) => {
-    if (!name) return;
-    setLeaderboard((lb) => {
-      const existing = lb.find((e) => e.name === name);
-      let updated: LeaderEntry[];
-      if (existing) {
-        updated = lb.map((e) => e.name === name
-          ? { ...e, wins: won ? e.wins + 1 : e.wins, games: e.games + 1, best: won ? (e.best === null || time < e.best ? time : e.best) : e.best }
-          : e);
-      } else {
-        updated = [...lb, { name, wins: won ? 1 : 0, games: 1, best: won ? time : null }];
-      }
-      return updated.sort((a, b) => b.wins - a.wins);
-    });
-  }, []);
-
   const saveInfiniteScore = useCallback((name: string, boards: number) => {
     if (!name || boards === 0) return;
     const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
     setInfiniteLB((lb) => [...lb, { name, boards, date: today }].sort((a, b) => b.boards - a.boards).slice(0, 20));
   }, []);
-
-  const bestInfinite = infiniteLB.filter((e) => e.name === (playerName || "Anonymous")).reduce((m, e) => Math.max(m, e.boards), 0);
 
   const endInfiniteRun = useCallback(() => {
     if (infiniteMode && infiniteCountRef.current > 0)
@@ -708,6 +896,7 @@ export default function App() {
     setFlagCount(0);
     setInfiniteCount(0);
     infiniteCountRef.current = 0;
+    everFlaggedRef.current = false;
     setTransitioning(false);
     setExitBoard(null);
   }, [endInfiniteRun]);
@@ -731,6 +920,7 @@ export default function App() {
     setFlagCount(0);
     setInfiniteCount(0);
     infiniteCountRef.current = 0;
+    everFlaggedRef.current = false;
     setTransitioning(false);
     setExitBoard(null);
   }, [endInfiniteRun]);
@@ -747,6 +937,7 @@ export default function App() {
       setElapsed(0);
       setTransitioning(false);
       setExitBoard(null);
+      everFlaggedRef.current = false;
     }, 600);
   }, []);
 
@@ -759,14 +950,25 @@ export default function App() {
       const newCount = infiniteCountRef.current + 1;
       setInfiniteCount(newCount);
       infiniteCountRef.current = newCount;
+      // Check wave achievements
+      checkAchievements({ waveCount: newCount });
       triggerInfiniteTransition(finished);
     } else {
       setStatus("won");
       setCoins((c) => c + COINS_PER_WIN);
-      setStats((s: typeof stats) => ({ games: s.games, wins: s.wins + 1, best: s.best === null || time < s.best ? time : s.best }));
-      updateLeaderboard(playerName || "Anonymous", true, time);
+      setStats((s: typeof stats) => {
+        const newWins = s.wins + 1;
+        const newBest = s.best === null || time < s.best ? time : s.best;
+        // Check win/speed/no-flags achievements
+        checkAchievements({
+          wins: newWins,
+          time,
+          neverFlagged: !everFlaggedRef.current,
+        });
+        return { games: s.games, wins: newWins, best: newBest };
+      });
     }
-  }, [infiniteMode, playerName, updateLeaderboard, triggerInfiniteTransition]);
+  }, [infiniteMode, checkAchievements, triggerInfiniteTransition]);
 
   // Handle reveal
   const handleReveal = useCallback((r: number, c: number) => {
@@ -778,13 +980,18 @@ export default function App() {
       currentBoard = placeMines(board, r, c);
       setFirstClick(false);
       setStatus("playing");
-      if (!infiniteMode) setStats((s: typeof stats) => ({ ...s, games: s.games + 1 }));
+      if (!infiniteMode) {
+        setStats((s: typeof stats) => {
+          const newGames = s.games + 1;
+          checkAchievements({ games: newGames });
+          return { ...s, games: newGames };
+        });
+      }
     }
     if (currentBoard[r][c].mine) {
       const exploded = currentBoard.map((row) => row.map((cell) => (cell.mine ? { ...cell, revealed: true } : { ...cell })));
       setBoard(exploded);
       setStatus("lost");
-      if (!infiniteMode) updateLeaderboard(playerName || "Anonymous", false, elapsed);
       endInfiniteRun();
       setInfiniteCount(0);
       infiniteCountRef.current = 0;
@@ -796,7 +1003,7 @@ export default function App() {
     } else {
       setBoard(revealed);
     }
-  }, [board, status, firstClick, infiniteMode, playerName, elapsed, updateLeaderboard, endInfiniteRun, handleWin]);
+  }, [board, status, firstClick, infiniteMode, elapsed, endInfiniteRun, handleWin, checkAchievements]);
 
   // Handle flag
   const handleFlag = useCallback((e: React.MouseEvent, r: number, c: number) => {
@@ -808,6 +1015,7 @@ export default function App() {
     next[r][c].flagged = !next[r][c].flagged;
     setBoard(next);
     setFlagCount((f) => (cell.flagged ? f - 1 : f + 1));
+    if (!cell.flagged) everFlaggedRef.current = true; // placing a flag
   }, [board, status]);
 
   // Handle chord
@@ -833,7 +1041,6 @@ export default function App() {
           const boom = currentBoard.map((row) => row.map((c) => (c.mine ? { ...c, revealed: true } : { ...c })));
           setBoard(boom);
           setStatus("lost");
-          if (!infiniteMode) updateLeaderboard(playerName || "Anonymous", false, elapsed);
           endInfiniteRun();
           setInfiniteCount(0);
           infiniteCountRef.current = 0;
@@ -846,7 +1053,7 @@ export default function App() {
     } else {
       setBoard(currentBoard);
     }
-  }, [board, status, infiniteMode, playerName, elapsed, updateLeaderboard, endInfiniteRun, handleWin]);
+  }, [board, status, elapsed, endInfiniteRun, handleWin]);
 
   const handleSaveName = useCallback((name: string) => {
     const trimmed = name.slice(0, 16);
@@ -866,17 +1073,19 @@ export default function App() {
   }, [handleFlag]);
 
   const minesLeft = MINES - flagCount;
+  const hasPending = pendingAchievements.length > 0;
 
   return (
     <div className="app">
       {/* Top bar */}
       <div className="topbar">
-        <button className="icon-btn" onClick={() => setMenuOpen(true)} title="Menu" aria-label="Open menu">
+        <button className="icon-btn menu-btn-wrap" onClick={() => setMenuOpen(true)} title="Menu" aria-label="Open menu">
           <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="0" y1="1" x2="18" y2="1" />
             <line x1="0" y1="7" x2="18" y2="7" />
             <line x1="0" y1="13" x2="18" y2="13" />
           </svg>
+          {hasPending && <span className="menu-badge-dot" />}
         </button>
 
         <div className="top-counters">
@@ -956,16 +1165,21 @@ export default function App() {
         <button className={`mode-btn${mode === "flag" ? " active" : ""}`} onClick={() => setMode("flag")}>FLAG</button>
       </div>
 
+      {/* Achievement toasts */}
+      <AchievementToastStack toasts={toasts} />
+
       {/* Modals */}
       <MenuPanel
         open={menuOpen} onClose={() => setMenuOpen(false)}
-        stats={stats} leaderboard={leaderboard} infiniteLB={infiniteLB}
+        stats={stats}
         playerName={playerName} onSaveName={handleSaveName}
         infiniteMode={infiniteMode} onToggleInfinite={handleToggleInfinite}
         bestInfinite={bestInfinite}
         coins={coins}
         onOpenShop={() => setShopOpen(true)}
         onOpenInventory={() => setInventoryOpen(true)}
+        onOpenAchievements={() => setAchievementsOpen(true)}
+        pendingCount={pendingAchievements.length}
       />
       <ShopModal
         open={shopOpen} onClose={() => setShopOpen(false)}
@@ -977,6 +1191,12 @@ export default function App() {
         ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         activeTheme={theme} activeFlag={activeFlag}
         onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag}
+      />
+      <AchievementsModal
+        open={achievementsOpen} onClose={() => setAchievementsOpen(false)}
+        claimed={claimedAchievements}
+        pending={pendingAchievements}
+        onClaim={handleClaimAchievement}
       />
     </div>
   );
