@@ -282,7 +282,8 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
     setPhase("idle");
     setStrip([]);
     setWinners([]);
-  }, [winners, onClaim]);
+    if (autoOpen) onClose();
+  }, [winners, onClaim, autoOpen, onClose]);
 
   const handleClose = useCallback(() => {
     if (phase === "spinning") return;
@@ -303,9 +304,9 @@ export function CrateModal({ open, onClose, coins, ownedCrateItems, onPay, onCla
   const DROP_RATES = [
     { label: "Common",    pct: "65%", color: "#8a9bb0", preview: "🥕🥦🌾🍀" },
     { label: "Rare",      pct: "25%", color: "#4d9fff", preview: "🌊🍒🎯" },
-    { label: "Epic",      pct: "8%",  color: "#c084fc", preview: "★ ☽" },
-    { label: "Legendary", pct: "2%",  color: "#ffd700", preview: "🌋 💻" },
-  ] as const;
+    { label: "Epic",      pct: "8%",  color: "#c084fc", preview: <span style={{ display: "flex", gap: 3, alignItems: "center" }}><RadiantStarSVG size={20} /><NeonCrescentSVG size={20} /></span> },
+    { label: "Legendary", pct: "2%",  color: "#ffd700", preview: <span style={{ display: "flex", gap: 3, alignItems: "center" }}><VolcanoFurySVG size={20} /><CyberHackSVG size={20} /></span> },
+  ];
 
   return (
     <div className="menu-overlay" onClick={handleClose}>

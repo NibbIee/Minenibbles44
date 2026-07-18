@@ -948,13 +948,15 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
 }
 
 // ── ShopModal ─────────────────────────────────────────────────────────────────
-function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, onBuyFlag, onOpenCrate }: {
+function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, onBuyFlag, onOpenCrate, defaultTab = "themes" }: {
   open: boolean; onClose: () => void; coins: number;
   ownedThemes: string[]; ownedFlags: string[];
   onBuyTheme: (id: string) => void; onBuyFlag: (id: string) => void;
   onOpenCrate: (qty: 1 | 3) => void;
+  defaultTab?: "themes" | "flags" | "crates";
 }) {
-  const [tab, setTab] = useState<"themes" | "flags" | "crates">("themes");
+  const [tab, setTab] = useState<"themes" | "flags" | "crates">(defaultTab);
+  useEffect(() => { if (open) setTab(defaultTab); }, [open, defaultTab]);
   if (!open) return null;
   const shopThemes = THEMES.filter(t => t.levelReq === 0);
   const shopFlags = FLAGS.filter(f => f.levelReq === 0);
@@ -1208,6 +1210,7 @@ export default function App() {
   const [dailyOpen, setDailyOpen] = useState(false);
   const [crateOpen,     setCrateOpen]     = useState(false);
   const [crateAutoOpen, setCrateAutoOpen] = useState<1 | 3 | undefined>(undefined);
+  const [shopInitTab,   setShopInitTab]   = useState<"themes" | "flags" | "crates">("themes");
   const [shaking, setShaking] = useState(false);
   const everFlaggedRef = useRef(false);
 
@@ -1906,16 +1909,17 @@ export default function App() {
         currentLevel={currentLevel} totalXP={totalXP}
         dailyIncomplete={dailyBadge}
       />
-      <ShopModal open={shopOpen} onClose={() => setShopOpen(false)}
+      <ShopModal open={shopOpen} onClose={() => { setShopOpen(false); setShopInitTab("themes"); }}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag}
-        onOpenCrate={(qty) => { setCrateAutoOpen(qty); setCrateOpen(true); }} />
+        onOpenCrate={(qty) => { setCrateAutoOpen(qty); setCrateOpen(true); }}
+        defaultTab={shopInitTab} />
       <InventoryModal open={inventoryOpen} onClose={() => setInventoryOpen(false)}
         ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         activeTheme={theme} activeFlag={activeFlag}
         onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag}
         ownedCrateItems={ownedCrateItems} />
-      <CrateModal open={crateOpen} onClose={() => { setCrateOpen(false); setCrateAutoOpen(undefined); }}
+      <CrateModal open={crateOpen} onClose={() => { setCrateOpen(false); setCrateAutoOpen(undefined); setShopInitTab("crates"); setShopOpen(true); }}
         coins={coins} ownedCrateItems={ownedCrateItems}
         onPay={handleCratePay} onClaim={handleCrateClaim}
         autoOpen={crateAutoOpen} />
