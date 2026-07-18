@@ -181,6 +181,61 @@ function getDailyChallenges() {
   return indices.map(i => DAILY_CHALLENGE_POOL[i]);
 }
 
+// ── Galaxy background ─────────────────────────────────────────────────────────
+function _lcg(seed: number) {
+  let s = seed >>> 0;
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff; };
+}
+function _genStarShadow(count: number, seed: number): string {
+  const r = _lcg(seed);
+  const out: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const x = ((r() * 440) | 0) - 20;
+    const y = ((r() * 900) | 0) - 50;
+    const a = (0.25 + r() * 0.75).toFixed(2);
+    out.push(`${x}px ${y}px rgba(255,255,255,${a})`);
+  }
+  return out.join(",");
+}
+const GX_SM = _genStarShadow(220, 0xdeadbeef);
+const GX_MD = _genStarShadow(80,  0x12345678);
+const GX_LG = _genStarShadow(28,  0xabcdef01);
+
+function GalaxyBackground() {
+  return (
+    <div className="galaxy-backdrop" aria-hidden="true">
+      <div className="gx-stars gx-sm" style={{ boxShadow: GX_SM }} />
+      <div className="gx-stars gx-md" style={{ boxShadow: GX_MD }} />
+      <div className="gx-stars gx-lg" style={{ boxShadow: GX_LG }} />
+      <div className="gx-nebula" />
+      <div className="gx-core" />
+      <div className="gx-arm gx-arm-1" />
+      <div className="gx-arm gx-arm-2" />
+      <div className="gx-arm gx-arm-3" />
+    </div>
+  );
+}
+
+// ── Stockholm countdown ───────────────────────────────────────────────────────
+function getSecsUntilStockholmMidnight(): number {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Stockholm",
+    hour: "numeric", minute: "numeric", second: "numeric", hour12: false,
+  }).formatToParts(now);
+  const h = parseInt(parts.find(p => p.type === "hour")?.value   ?? "0");
+  const m = parseInt(parts.find(p => p.type === "minute")?.value ?? "0");
+  const s = parseInt(parts.find(p => p.type === "second")?.value ?? "0");
+  const elapsed = (h === 24 ? 0 : h) * 3600 + m * 60 + s;
+  return 86400 - elapsed;
+}
+function fmtCountdown(secs: number): string {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CellState = { mine: boolean; revealed: boolean; flagged: boolean; adjacent: number };
 type GameStatus = "idle" | "playing" | "won" | "lost" | "transitioning";
@@ -419,13 +474,23 @@ function BoardGrid({ board, flagEmoji, onCellClick, onCellContext, interactive }
 }
 
 // ── Daily Challenges Modal ────────────────────────────────────────────────────
-function DailyChallengesModal({ open, onClose, challenges, progress, completed, bonusClaimed }: {
-  open: boolean; onClose: () => void;
+function DailyChallengesModal({ open, onClose, onViewed, challenges, progress, completed, bonusClaimed }: {
+  open: boolean; onClose: () => void; onViewed: () => void;
   challenges: typeof DAILY_CHALLENGE_POOL;
   progress: Record<string, number>;
   completed: string[];
   bonusClaimed: boolean;
 }) {
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+    onViewed();
+    setCountdown(getSecsUntilStockholmMidnight());
+    const id = setInterval(() => setCountdown(getSecsUntilStockholmMidnight()), 1000);
+    return () => clearInterval(id);
+  }, [open, onViewed]);
+
   if (!open) return null;
   const allDone = challenges.every(c => completed.includes(c.id));
   const completedCount = challenges.filter(c => completed.includes(c.id)).length;
@@ -501,7 +566,7 @@ function DailyChallengesModal({ open, onClose, challenges, progress, completed, 
         </div>
 
         <div className="daily-reset-note">
-          Challenges reset at midnight
+          Resets in <span className="daily-countdown">{fmtCountdown(countdown)}</span>
         </div>
       </div>
     </div>
@@ -1019,6 +1084,7 @@ export default function App() {
       localStorage.setItem("ms-daily-progress", "{}");
       localStorage.setItem("ms-daily-completed", "[]");
       localStorage.setItem("ms-daily-bonus", "false");
+      localStorage.setItem("ms-daily-viewed", "false");
     }
   }, [todayKey]);
 
@@ -1026,7 +1092,18 @@ export default function App() {
   useEffect(() => { localStorage.setItem("ms-daily-completed", JSON.stringify(dailyCompleted)); }, [dailyCompleted]);
   useEffect(() => { localStorage.setItem("ms-daily-bonus", String(dailyBonusClaimed)); }, [dailyBonusClaimed]);
 
+  // Daily badge: cleared once user opens the daily modal
+  const [dailyViewed, setDailyViewed] = useState<boolean>(() => {
+    const storedKey = localStorage.getItem("ms-daily-key");
+    if (storedKey !== todayKey) return false;
+    return localStorage.getItem("ms-daily-viewed") === "true";
+  });
+  useEffect(() => { localStorage.setItem("ms-daily-viewed", String(dailyViewed)); }, [dailyViewed]);
+  const handleViewedDaily = useCallback(() => setDailyViewed(true), []);
+
   const dailyIncomplete = dailyChallenges.some(c => !dailyCompleted.includes(c.id));
+  // Badge only shows while there are incomplete challenges AND user hasn't opened modal yet today
+  const dailyBadge = dailyIncomplete && !dailyViewed;
 
   const advanceDailyChallenge = useCallback((type: string, value: number) => {
     setDailyCompleted(completed => {
@@ -1473,6 +1550,7 @@ export default function App() {
 
   return (
     <div className="app">
+      {theme === "galaxy" && <GalaxyBackground />}
       {/* Top bar */}
       <div className="topbar">
         <button className="icon-btn menu-btn-wrap" onClick={() => setMenuOpen(true)} title="Menu" aria-label="Open menu">
@@ -1481,7 +1559,7 @@ export default function App() {
             <line x1="0" y1="7" x2="18" y2="7" />
             <line x1="0" y1="13" x2="18" y2="13" />
           </svg>
-          {(hasPending || dailyIncomplete) && <span className="menu-badge-dot" />}
+          {(hasPending || dailyBadge) && <span className="menu-badge-dot" />}
         </button>
 
         <div className="top-counters">
@@ -1576,7 +1654,7 @@ export default function App() {
         onOpenDaily={() => setDailyOpen(true)}
         pendingCount={pendingAchievements.length}
         currentLevel={currentLevel} totalXP={totalXP}
-        dailyIncomplete={dailyIncomplete}
+        dailyIncomplete={dailyBadge}
       />
       <ShopModal open={shopOpen} onClose={() => setShopOpen(false)}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
@@ -1590,6 +1668,7 @@ export default function App() {
         onClaim={handleClaimAchievement} />
       <LevelsModal open={levelsOpen} onClose={() => setLevelsOpen(false)} totalXP={totalXP} />
       <DailyChallengesModal open={dailyOpen} onClose={() => setDailyOpen(false)}
+        onViewed={handleViewedDaily}
         challenges={dailyChallenges} progress={dailyProgress}
         completed={dailyCompleted} bonusClaimed={dailyBonusClaimed} />
     </div>

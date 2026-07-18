@@ -752,6 +752,112 @@ body {
   height: 100%;
   max-width: 430px;
   margin: 0 auto;
+  position: relative;
+  isolation: isolate; /* local stacking context so galaxy-backdrop z-index:-1 works */
+}
+
+/* ── Galaxy backdrop ── */
+.galaxy-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(ellipse 90% 60% at 50% 42%,
+    rgba(140, 60, 200, 0.18) 0%,
+    rgba(80, 20, 160, 0.12) 40%,
+    transparent 75%
+  );
+}
+
+/* Star layers — 1×1 px dots via box-shadow */
+.gx-stars {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1px;
+  height: 1px;
+  border-radius: 50%;
+  background: transparent;
+}
+.gx-sm { animation: gx-twinkle-a 5s ease-in-out infinite alternate; }
+.gx-md { animation: gx-twinkle-b 7s ease-in-out infinite alternate-reverse; }
+.gx-lg {
+  width: 2px; height: 2px;
+  animation: gx-twinkle-a 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes gx-twinkle-a {
+  0%   { opacity: 0.55; }
+  100% { opacity: 1; }
+}
+@keyframes gx-twinkle-b {
+  0%   { opacity: 0.4; }
+  100% { opacity: 0.9; }
+}
+
+/* Nebula — large soft glow behind the board */
+.gx-nebula {
+  position: absolute;
+  left: 50%; top: 42%;
+  transform: translate(-50%, -50%);
+  width: 420px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 45% 50%,
+    rgba(255, 150, 60, 0.10) 0%,
+    rgba(180, 50, 220, 0.09) 30%,
+    rgba(60, 20, 160, 0.07) 60%,
+    transparent 100%
+  );
+  animation: gx-pulse 9s ease-in-out infinite alternate;
+}
+
+/* Galactic core — bright warm centre */
+.gx-core {
+  position: absolute;
+  left: 50%; top: 42%;
+  transform: translate(-50%, -50%);
+  width: 110px; height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(255, 230, 160, 0.22) 0%,
+    rgba(255, 150, 60, 0.14) 45%,
+    transparent 85%
+  );
+  animation: gx-pulse 5.5s ease-in-out infinite alternate-reverse;
+}
+
+/* Spiral arms */
+.gx-arm {
+  position: absolute;
+  left: 50%; top: 42%;
+  width: 220px; height: 55px;
+  border-radius: 50%;
+  transform-origin: 0 50%;
+  opacity: 0.6;
+  animation: gx-spin 50s linear infinite;
+}
+.gx-arm-1 {
+  background: linear-gradient(90deg, rgba(160, 80, 240, 0.18), rgba(80, 40, 200, 0.06), transparent);
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+.gx-arm-2 {
+  background: linear-gradient(90deg, rgba(100, 40, 200, 0.14), rgba(200, 100, 255, 0.05), transparent);
+  transform: translate(-50%, -50%) rotate(130deg);
+  animation-delay: -17s;
+}
+.gx-arm-3 {
+  background: linear-gradient(90deg, rgba(255, 120, 60, 0.10), rgba(200, 80, 200, 0.04), transparent);
+  transform: translate(-50%, -50%) rotate(260deg);
+  animation-delay: -34s;
+}
+
+@keyframes gx-spin {
+  from { transform: translate(-50%, -50%) rotate(var(--gx-start, 0deg)); }
+  to   { transform: translate(-50%, -50%) rotate(calc(var(--gx-start, 0deg) + 360deg)); }
+}
+@keyframes gx-pulse {
+  from { opacity: 0.65; transform: translate(-50%,-50%) scale(1); }
+  to   { opacity: 1;    transform: translate(-50%,-50%) scale(1.18); }
 }
 
 /* ── Top bar ── */
@@ -2361,9 +2467,16 @@ body {
 
 .daily-reset-note {
   text-align: center;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--stat-label-color);
   margin-top: 14px;
   letter-spacing: 0.5px;
-  opacity: 0.6;
+}
+
+.daily-countdown {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 13px;
+  color: #00e676;
+  letter-spacing: 1px;
 }
