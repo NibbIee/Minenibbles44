@@ -264,24 +264,26 @@ body {
   left: 0;
 }
 
-/* Entering board: slides in from above */
+/* Entering board: rises up from below — sits on top so it covers the old board */
 .board-enter {
-  animation: board-slide-in 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  z-index: 2;
+  animation: board-slide-in 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Exiting board: slides out downward */
+/* Exiting board: scrolls upward off screen in sync with the entering board */
 .board-exit {
-  animation: board-slide-out 0.65s cubic-bezier(0.55, 0, 0.75, 0.25) forwards;
+  z-index: 1;
+  animation: board-slide-out 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes board-slide-in {
-  from { transform: translateY(-100%); }
+  from { transform: translateY(100%); }
   to   { transform: translateY(0); }
 }
 
 @keyframes board-slide-out {
   from { transform: translateY(0); }
-  to   { transform: translateY(100%); }
+  to   { transform: translateY(-100%); }
 }
 
 /* ── Infinite wave counter ── */
