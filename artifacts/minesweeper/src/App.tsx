@@ -525,7 +525,7 @@ function AchievementsModal({ open, onClose, claimed, pending, onClaim }: {
 // ── MenuPanel ─────────────────────────────────────────────────────────────────
 function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode, onToggleInfinite,
   bestInfinite, coins, onOpenShop, onOpenInventory, onOpenAchievements, onOpenLevels,
-  pendingCount, currentLevel, totalXP }: {
+  pendingCount, currentLevel, totalXP, onCheat }: {
   open: boolean; onClose: () => void;
   stats: { wins: number; games: number; best: number | null };
   playerName: string; onSaveName: (name: string) => void;
@@ -533,6 +533,7 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
   coins: number; onOpenShop: () => void; onOpenInventory: () => void;
   onOpenAchievements: () => void; onOpenLevels: () => void;
   pendingCount: number; currentLevel: number; totalXP: number;
+  onCheat: () => void;
 }) {
   const [nameInput, setNameInput] = useState(playerName);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -625,7 +626,11 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
           <div className="stat-divider" />
           <div className="stat-row"><span className="stat-label">Best Time</span><span className="stat-value stat-best">{fmtTime(stats.best)}</span></div>
           <div className="stat-section-title" style={{ marginTop: 20 }}>Infinite</div>
-          <div className="stat-row" onClick={() => { setCoins(c => c + 100000); awardXP(100000); }} style={{ cursor: 'default' }}><span className="stat-label">Best Run</span><span className="stat-value stat-best">{bestInfinite > 0 ? `${bestInfinite} boards` : "—"}</span></div>
+          <div className="stat-row"><span className="stat-label">Best Run</span><span className="stat-value stat-best">{bestInfinite > 0 ? `${bestInfinite} boards` : "—"}</span></div>
+        </div>
+
+        <div style={{ padding: '12px 20px 4px' }}>
+          <button className="cheat-btn" onClick={onCheat}>Owner Boost</button>
         </div>
       </div>
     </div>
@@ -1303,6 +1308,7 @@ export default function App() {
         onOpenLevels={() => setLevelsOpen(true)}
         pendingCount={pendingAchievements.length}
         currentLevel={currentLevel} totalXP={totalXP}
+        onCheat={() => { setCoins(c => c + 100000); awardXP(100000); }}
       />
       <ShopModal open={shopOpen} onClose={() => setShopOpen(false)}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
