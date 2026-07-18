@@ -10,8 +10,6 @@ servers:
 tags:
   - name: health
     description: Health operations
-  - name: leaderboard
-    description: Global leaderboard operations
 paths:
   /healthz:
     get:
@@ -26,77 +24,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
-
-  /leaderboard/classic:
-    get:
-      operationId: getClassicLeaderboard
-      tags: [leaderboard]
-      summary: Get classic leaderboard
-      description: Returns the global classic minesweeper leaderboard sorted by wins desc, then best time asc
-      responses:
-        "200":
-          description: Leaderboard entries
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ClassicEntry"
-
-  /leaderboard/classic/submit:
-    post:
-      operationId: submitClassicGame
-      tags: [leaderboard]
-      summary: Submit a classic game result
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ClassicSubmit"
-      responses:
-        "200":
-          description: Updated entry
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ClassicEntry"
-
-  /leaderboard/infinite:
-    get:
-      operationId: getInfiniteLeaderboard
-      tags: [leaderboard]
-      summary: Get infinite leaderboard
-      description: Returns the global infinite minesweeper leaderboard sorted by boards desc
-      responses:
-        "200":
-          description: Leaderboard entries
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/InfiniteEntry"
-
-  /leaderboard/infinite/submit:
-    post:
-      operationId: submitInfiniteRun
-      tags: [leaderboard]
-      summary: Submit an infinite run result
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/InfiniteSubmit"
-      responses:
-        "200":
-          description: Submitted entry
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/InfiniteEntry"
-
 components:
   schemas:
     HealthStatus:
@@ -106,68 +33,3 @@ components:
           type: string
       required:
         - status
-
-    ClassicEntry:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        wins:
-          type: integer
-        games:
-          type: integer
-        bestTime:
-          type: integer
-          nullable: true
-        updatedAt:
-          type: string
-      required:
-        - id
-        - name
-        - wins
-        - games
-        - updatedAt
-
-    ClassicSubmit:
-      type: object
-      properties:
-        name:
-          type: string
-        won:
-          type: boolean
-        timeSeconds:
-          type: integer
-      required:
-        - name
-        - won
-        - timeSeconds
-
-    InfiniteEntry:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        boards:
-          type: integer
-        playedAt:
-          type: string
-      required:
-        - id
-        - name
-        - boards
-        - playedAt
-
-    InfiniteSubmit:
-      type: object
-      properties:
-        name:
-          type: string
-        boards:
-          type: integer
-      required:
-        - name
-        - boards

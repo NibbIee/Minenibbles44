@@ -1,14 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import confetti from "canvas-confetti";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  useGetClassicLeaderboard,
-  useGetInfiniteLeaderboard,
-  useSubmitClassicGame,
-  useSubmitInfiniteRun,
-  getGetClassicLeaderboardQueryKey,
-  getGetInfiniteLeaderboardQueryKey,
-} from "@workspace/api-client-react";
 
 const ROWS = 16;
 const COLS = 9;
@@ -26,6 +17,19 @@ type CellState = {
 };
 
 type GameStatus = "idle" | "playing" | "won" | "lost" | "transitioning";
+
+type LeaderEntry = {
+  name: string;
+  wins: number;
+  games: number;
+  best: number | null;
+};
+
+type InfiniteEntry = {
+  name: string;
+  boards: number;
+  date: string;
+};
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
@@ -147,15 +151,59 @@ function checkWin(board: CellState[][]): boolean {
   return true;
 }
 
-function fmtTime(s: number | null | undefined): string {
-  if (s === null || s === undefined) return "—";
+function fmtTime(s: number | null): string {
+  if (s === null) return "—";
   if (s < 60) return `${s}s`;
   return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
-function fmtDate(iso: string | Date): string {
-  const d = typeof iso === "string" ? new Date(iso) : iso;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
+// ── Board renderer (pure, no interaction logic) ───────────────────────────────
+
+function BoardGrid({
+  board,
+  onCellClick,
+  onCellContext,
+  interactive,
+}: {
+  board: CellState[][];
+  onCellClick?: (r: number, c: number) => void;
+  onCellContext?: (e: React.MouseEvent, r: number, c: number) => void;
+  interactive: boolean;
+}) {
+  return (
+    <div className="board" style={{ pointerEvents: interactive ? "auto" : "none" }}>
+      {board.map((row, r) =>
+        row.map((cell, c) => {
+          let content: React.ReactNode = null;
+          let cellClass = "cell";
+
+          if (cell.revealed) {
+            cellClass += " revealed";
+            if (cell.mine) {
+              content = "💣";
+              cellClass += " mine";
+            } else if (cell.adjacent > 0) {
+              content = <span className={`number n${cell.adjacent}`}>{cell.adjacent}</span>;
+            }
+          } else if (cell.flagged) {
+            cellClass += " flagged";
+            content = <span className="flag-dot" />;
+          }
+
+          return (
+            <div
+              key={`${r}-${c}`}
+              className={cellClass}
+              onClick={() => onCellClick?.(r, c)}
+              onContextMenu={(e) => onCellContext?.(e, r, c)}
+            >
+              {content}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
 }
 
 // ── Menu panel ────────────────────────────────────────────────────────────────
@@ -164,6 +212,8 @@ function MenuPanel({
   open,
   onClose,
   stats,
+  leaderboard,
+  infiniteLB,
   playerName,
   onSaveName,
   infiniteMode,
@@ -173,6 +223,8 @@ function MenuPanel({
   open: boolean;
   onClose: () => void;
   stats: { wins: number; games: number; best: number | null };
+  leaderboard: LeaderEntry[];
+  infiniteLB: InfiniteEntry[];
   playerName: string;
   onSaveName: (name: string) => void;
   infiniteMode: boolean;
@@ -182,9 +234,6 @@ function MenuPanel({
   const [nameInput, setNameInput] = useState(playerName);
   const [tab, setTab] = useState<"stats" | "classic" | "infinite">("stats");
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const { data: classicLB = [], isLoading: classicLoading } = useGetClassicLeaderboard();
-  const { data: infiniteLB = [], isLoading: infiniteLoading } = useGetInfiniteLeaderboard();
 
   useEffect(() => {
     if (open) setNameInput(playerName);
@@ -279,12 +328,10 @@ function MenuPanel({
           </div>
         )}
 
-        {/* Classic leaderboard — global */}
+        {/* Classic leaderboard */}
         {tab === "classic" && (
           <div className="menu-leaderboard">
-            {classicLoading ? (
-              <p className="lb-empty">Loading…</p>
-            ) : classicLB.length === 0 ? (
+            {leaderboard.length === 0 ? (
               <p className="lb-empty">No entries yet. Win a game to appear!</p>
             ) : (
               <table className="lb-table">
@@ -298,13 +345,13 @@ function MenuPanel({
                   </tr>
                 </thead>
                 <tbody>
-                  {classicLB.map((entry, i) => (
-                    <tr key={entry.id} className={entry.name === playerName ? "lb-me" : ""}>
+                  {leaderboard.map((entry, i) => (
+                    <tr key={entry.name} className={entry.name === playerName ? "lb-me" : ""}>
                       <td className="lb-rank">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
                       <td className="lb-name">{entry.name}</td>
                       <td className="lb-wins">{entry.wins}</td>
                       <td className="lb-rate">{entry.games > 0 ? Math.round((entry.wins / entry.games) * 100) : 0}%</td>
-                      <td className="lb-best">{fmtTime(entry.bestTime)}</td>
+                      <td className="lb-best">{fmtTime(entry.best)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -313,12 +360,10 @@ function MenuPanel({
           </div>
         )}
 
-        {/* Infinite leaderboard — global */}
+        {/* Infinite leaderboard */}
         {tab === "infinite" && (
           <div className="menu-leaderboard">
-            {infiniteLoading ? (
-              <p className="lb-empty">Loading…</p>
-            ) : infiniteLB.length === 0 ? (
+            {infiniteLB.length === 0 ? (
               <p className="lb-empty">No runs yet. Enable Infinite Mode and survive as long as you can!</p>
             ) : (
               <table className="lb-table">
@@ -332,11 +377,11 @@ function MenuPanel({
                 </thead>
                 <tbody>
                   {infiniteLB.map((entry, i) => (
-                    <tr key={entry.id} className={entry.name === playerName ? "lb-me" : ""}>
+                    <tr key={`${entry.name}-${i}`} className={entry.name === playerName ? "lb-me" : ""}>
                       <td className="lb-rank">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
                       <td className="lb-name">{entry.name}</td>
                       <td className="lb-wins" style={{ color: "#a78bfa" }}>{entry.boards}</td>
-                      <td className="lb-rate">{fmtDate(entry.playedAt)}</td>
+                      <td className="lb-rate">{entry.date}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -352,7 +397,6 @@ function MenuPanel({
 // ── Main App ──────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const queryClient = useQueryClient();
   const [mode, setMode] = useState<"reveal" | "flag">("reveal");
   const [board, setBoard] = useState<CellState[][]>(createEmptyBoard);
   const [status, setStatus] = useState<GameStatus>("idle");
@@ -361,33 +405,47 @@ export default function App() {
   const [flagCount, setFlagCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Theme
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    return (localStorage.getItem("ms-theme") as "dark" | "light") || "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("ms-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((t) => (t === "dark" ? "light" : "dark"));
+  }, []);
+
   // Infinite mode
   const [infiniteMode, setInfiniteMode] = useState(() => localStorage.getItem("ms-infinite") === "true");
-  const [infiniteCount, setInfiniteCount] = useState(0);
+  const [infiniteCount, setInfiniteCount] = useState(0); // boards cleared this run
   const infiniteCountRef = useRef(0);
   const [transitioning, setTransitioning] = useState(false);
   const [exitBoard, setExitBoard] = useState<CellState[][] | null>(null);
+  const [infiniteLB, setInfiniteLB] = useState<InfiniteEntry[]>(() => {
+    const s = localStorage.getItem("ms-infinite-lb");
+    return s ? JSON.parse(s) : [];
+  });
 
   const [playerName, setPlayerName] = useState<string>(() => localStorage.getItem("ms-player") || "");
 
-  // Local stats (personal, not shared)
   const [stats, setStats] = useState(() => {
     const saved = localStorage.getItem("ms-stats");
     return saved ? JSON.parse(saved) : { games: 0, wins: 0, best: null as number | null };
   });
 
-  // Best personal infinite score (local)
-  const [bestInfinite, setBestInfinite] = useState(() => {
-    return parseInt(localStorage.getItem("ms-best-infinite") || "0", 10);
+  const [leaderboard, setLeaderboard] = useState<LeaderEntry[]>(() => {
+    const saved = localStorage.getItem("ms-leaderboard");
+    return saved ? JSON.parse(saved) : [];
   });
 
-  // API mutations
-  const submitClassic = useSubmitClassicGame();
-  const submitInfinite = useSubmitInfiniteRun();
-
-  // Persist local stats
+  // Persist
   useEffect(() => { localStorage.setItem("ms-stats", JSON.stringify(stats)); }, [stats]);
-  useEffect(() => { localStorage.setItem("ms-best-infinite", String(bestInfinite)); }, [bestInfinite]);
+  useEffect(() => { localStorage.setItem("ms-leaderboard", JSON.stringify(leaderboard)); }, [leaderboard]);
+  useEffect(() => { localStorage.setItem("ms-infinite-lb", JSON.stringify(infiniteLB)); }, [infiniteLB]);
   useEffect(() => { infiniteCountRef.current = infiniteCount; }, [infiniteCount]);
 
   // Timer — runs during playing; pauses during transitioning / idle / won / lost
@@ -413,40 +471,50 @@ export default function App() {
 
   // ── Leaderboard helpers ──
 
-  const submitToGlobalClassic = useCallback((name: string, won: boolean, time: number) => {
+  const updateLeaderboard = useCallback((name: string, won: boolean, time: number) => {
     if (!name) return;
-    submitClassic.mutate(
-      { data: { name, won, timeSeconds: time } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetClassicLeaderboardQueryKey() });
-        },
+    setLeaderboard((lb) => {
+      const existing = lb.find((e) => e.name === name);
+      let updated: LeaderEntry[];
+      if (existing) {
+        updated = lb.map((e) =>
+          e.name === name
+            ? {
+                ...e,
+                wins: won ? e.wins + 1 : e.wins,
+                games: e.games + 1,
+                best: won ? (e.best === null || time < e.best ? time : e.best) : e.best,
+              }
+            : e
+        );
+      } else {
+        updated = [...lb, { name, wins: won ? 1 : 0, games: 1, best: won ? time : null }];
       }
-    );
-  }, [submitClassic, queryClient]);
+      return updated.sort((a, b) => b.wins - a.wins);
+    });
+  }, []);
 
-  const submitToGlobalInfinite = useCallback((name: string, boards: number) => {
-    if (!name || boards <= 0) return;
-    submitInfinite.mutate(
-      { data: { name, boards } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetInfiniteLeaderboardQueryKey() });
-        },
-      }
-    );
-    // Track personal best locally
-    setBestInfinite((prev) => Math.max(prev, boards));
-  }, [submitInfinite, queryClient]);
+  const saveInfiniteScore = useCallback((name: string, boards: number) => {
+    if (!name || boards === 0) return;
+    const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
+    setInfiniteLB((lb) => {
+      const updated = [...lb, { name, boards, date: today }];
+      return updated.sort((a, b) => b.boards - a.boards).slice(0, 20);
+    });
+  }, []);
+
+  const bestInfinite =
+    infiniteLB.filter((e) => e.name === (playerName || "Anonymous"))
+      .reduce((m, e) => Math.max(m, e.boards), 0);
 
   // ── End of infinite run ──
 
   const endInfiniteRun = useCallback(() => {
     const count = infiniteCountRef.current;
     if (infiniteMode && count > 0) {
-      submitToGlobalInfinite(playerName || "Anonymous", count);
+      saveInfiniteScore(playerName || "Anonymous", count);
     }
-  }, [infiniteMode, playerName, submitToGlobalInfinite]);
+  }, [infiniteMode, playerName, saveInfiniteScore]);
 
   // ── Reset ──
 
@@ -477,6 +545,7 @@ export default function App() {
       localStorage.setItem("ms-infinite", String(next));
       return next;
     });
+    // Reset game when toggling
     endInfiniteRun();
     setBoard(createEmptyBoard());
     setStatus("idle");
@@ -492,6 +561,7 @@ export default function App() {
   // ── Infinite board transition ──
 
   const triggerInfiniteTransition = useCallback((clearedBoard: CellState[][]) => {
+    // Show cleared board as the one sliding OUT; new board is blank immediately
     setExitBoard(clearedBoard);
     setBoard(createEmptyBoard());
     setFlagCount(0);
@@ -532,7 +602,7 @@ export default function App() {
         exploded[r][c] = { ...exploded[r][c], revealed: true };
         setBoard(exploded);
         setStatus("lost");
-        if (!infiniteMode) submitToGlobalClassic(playerName || "Anonymous", false, elapsed);
+        if (!infiniteMode) updateLeaderboard(playerName || "Anonymous", false, elapsed);
         endInfiniteRun();
         setInfiniteCount(0);
         infiniteCountRef.current = 0;
@@ -561,11 +631,11 @@ export default function App() {
             wins: s.wins + 1,
             best: s.best === null || elapsed < s.best ? elapsed : s.best,
           }));
-          submitToGlobalClassic(playerName || "Anonymous", true, elapsed);
+          updateLeaderboard(playerName || "Anonymous", true, elapsed);
         }
       }
     },
-    [board, status, firstClick, infiniteMode, playerName, elapsed, submitToGlobalClassic, triggerInfiniteTransition, endInfiniteRun]
+    [board, status, firstClick, infiniteMode, playerName, elapsed, updateLeaderboard, triggerInfiniteTransition, endInfiniteRun]
   );
 
   // ── Handle flag ──
@@ -612,7 +682,7 @@ export default function App() {
             );
             setBoard(boom);
             setStatus("lost");
-            if (!infiniteMode) submitToGlobalClassic(playerName || "Anonymous", false, elapsed);
+            if (!infiniteMode) updateLeaderboard(playerName || "Anonymous", false, elapsed);
             endInfiniteRun();
             setInfiniteCount(0);
             infiniteCountRef.current = 0;
@@ -640,11 +710,11 @@ export default function App() {
             wins: s.wins + 1,
             best: s.best === null || elapsed < s.best ? elapsed : s.best,
           }));
-          submitToGlobalClassic(playerName || "Anonymous", true, elapsed);
+          updateLeaderboard(playerName || "Anonymous", true, elapsed);
         }
       }
     },
-    [board, status, infiniteMode, playerName, elapsed, submitToGlobalClassic, triggerInfiniteTransition, endInfiniteRun]
+    [board, status, infiniteMode, playerName, elapsed, updateLeaderboard, triggerInfiniteTransition, endInfiniteRun]
   );
 
   const handleSaveName = useCallback((name: string) => {
@@ -712,7 +782,31 @@ export default function App() {
           </div>
         </div>
 
-        <button className="icon-btn" onClick={reset} title="New game">↺</button>
+        <div className="topbar-right">
+          {/* Theme toggle */}
+          <button className="icon-btn" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle light/dark mode">
+            {theme === "dark" ? (
+              /* Sun icon for light mode */
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            ) : (
+              /* Moon icon for dark mode */
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </button>
+          <button className="icon-btn" onClick={reset} title="New game">↺</button>
+        </div>
       </div>
 
       {/* Classic win / lose banner (infinite mode has no banner) */}
@@ -735,64 +829,21 @@ export default function App() {
           className="board-clip"
           style={{ width: BOARD_W, height: BOARD_H }}
         >
-          {/* Exiting board (slides down) */}
+          {/* Exiting board (slides out) */}
           {transitioning && exitBoard && (
             <div className="board-pos board-exit">
-              <div className="board" style={{ pointerEvents: "none" }}>
-                {exitBoard.map((row, r) =>
-                  row.map((cell, c) => {
-                    let content: React.ReactNode = null;
-                    let cellClass = "cell";
-                    if (cell.revealed) {
-                      cellClass += " revealed";
-                      if (cell.mine) { content = "💣"; cellClass += " mine"; }
-                      else if (cell.adjacent > 0) {
-                        content = <span className={`number n${cell.adjacent}`}>{cell.adjacent}</span>;
-                      }
-                    } else if (cell.flagged) {
-                      cellClass += " flagged";
-                      content = <span className="flag-dot" />;
-                    }
-                    return <div key={`${r}-${c}`} className={cellClass}>{content}</div>;
-                  })
-                )}
-              </div>
+              <BoardGrid board={exitBoard} interactive={false} />
             </div>
           )}
 
           {/* Current / entering board */}
           <div className={`board-pos ${transitioning ? "board-enter" : ""}`}>
-            <div
-              className="board"
-              style={{ pointerEvents: transitioning ? "none" : "auto" }}
-            >
-              {board.map((row, r) =>
-                row.map((cell, c) => {
-                  let content: React.ReactNode = null;
-                  let cellClass = "cell";
-                  if (cell.revealed) {
-                    cellClass += " revealed";
-                    if (cell.mine) { content = "💣"; cellClass += " mine"; }
-                    else if (cell.adjacent > 0) {
-                      content = <span className={`number n${cell.adjacent}`}>{cell.adjacent}</span>;
-                    }
-                  } else if (cell.flagged) {
-                    cellClass += " flagged";
-                    content = <span className="flag-dot" />;
-                  }
-                  return (
-                    <div
-                      key={`${r}-${c}`}
-                      className={cellClass}
-                      onClick={() => handleCellClick(r, c)}
-                      onContextMenu={(e) => handleCellContext(e, r, c)}
-                    >
-                      {content}
-                    </div>
-                  );
-                })
-              )}
-            </div>
+            <BoardGrid
+              board={board}
+              onCellClick={handleCellClick}
+              onCellContext={handleCellContext}
+              interactive={!transitioning}
+            />
           </div>
         </div>
       </div>
@@ -808,6 +859,8 @@ export default function App() {
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
         stats={stats}
+        leaderboard={leaderboard}
+        infiniteLB={infiniteLB}
         playerName={playerName}
         onSaveName={handleSaveName}
         infiniteMode={infiniteMode}
