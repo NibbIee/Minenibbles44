@@ -250,3 +250,220 @@ body {
 }
 
 .mode-btn:active { transform: scale(0.94); }
+
+/* ── Menu overlay ── */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  animation: fade-in 0.15s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.menu-sheet {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  background: #141414;
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px 32px;
+  animation: slide-up 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.menu-handle {
+  width: 40px;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+/* ── Player name row ── */
+.menu-name-row {
+  margin-bottom: 20px;
+}
+
+.menu-name-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #555;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.menu-name-field {
+  display: flex;
+  gap: 8px;
+}
+
+.menu-name-input {
+  flex: 1;
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  padding: 10px 14px;
+  outline: none;
+  font-family: inherit;
+}
+
+.menu-name-input:focus {
+  border-color: #4caf50;
+}
+
+.menu-name-input::placeholder {
+  color: #3a3a3a;
+}
+
+.menu-name-save {
+  background: #0d3b0d;
+  border: 1px solid #4caf50;
+  border-radius: 10px;
+  color: #4caf50;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 0 16px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.menu-name-save:active { transform: scale(0.95); }
+
+/* ── Tabs ── */
+.menu-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.menu-tab {
+  flex: 1;
+  height: 40px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  color: #555;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: 0.12s;
+}
+
+.menu-tab.active {
+  background: #0d3b0d;
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+/* ── Stats ── */
+.menu-stats {
+  background: #1a1a1a;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #888;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  color: #fff;
+}
+
+.stat-best {
+  color: #4caf50;
+}
+
+.stat-divider {
+  height: 1px;
+  background: #222;
+  margin: 0 18px;
+}
+
+/* ── Leaderboard ── */
+.menu-leaderboard {
+  background: #1a1a1a;
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 4px 0;
+}
+
+.lb-empty {
+  text-align: center;
+  color: #555;
+  font-size: 14px;
+  padding: 32px 16px;
+  line-height: 1.6;
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.lb-table thead tr {
+  border-bottom: 1px solid #222;
+}
+
+.lb-table th {
+  color: #444;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: bold;
+  text-align: left;
+  padding: 10px 10px;
+}
+
+.lb-table th:first-child { padding-left: 14px; }
+.lb-table th:last-child  { padding-right: 14px; text-align: right; }
+
+.lb-table tbody tr {
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.lb-table tbody tr:last-child { border-bottom: none; }
+
+.lb-table td {
+  padding: 12px 10px;
+  color: #ccc;
+}
+
+.lb-table td:first-child { padding-left: 14px; }
+.lb-table td:last-child  { padding-right: 14px; text-align: right; }
+
+.lb-me td { color: #fff; background: rgba(76, 175, 80, 0.08); }
+
+.lb-rank { font-size: 16px; width: 32px; }
+.lb-name { font-weight: bold; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-wins { color: #4caf50; font-weight: bold; font-size: 15px; }
+.lb-rate { color: #888; }
+.lb-best { color: #4caf50; font-family: 'Courier New', monospace; }
