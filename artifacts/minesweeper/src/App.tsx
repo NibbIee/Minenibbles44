@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { CrateModal, CrateItem, CRATE_ITEMS, CrateItemDisplay, getRarityColor, getRarityLabel, CRATE_COST } from "./CrateModal";
 import confetti from "canvas-confetti";
 
 const ROWS = 16;
@@ -106,6 +107,14 @@ const FLAGS = [
   { id: "gem",       label: "Gem",       emoji: "💎", price: 0,    levelReq: 5  },
   { id: "dragon",    label: "Dragon",    emoji: "🐉", price: 0,    levelReq: 10 },
   { id: "crown",     label: "Crown",     emoji: "👑", price: 0,    levelReq: 15 },
+  // Crate-exclusive emoji flags (levelReq 99 = never shown in shop)
+  { id: "crate-carrot",   label: "Carrot",    emoji: "🥕", price: 0, levelReq: 99 },
+  { id: "crate-broccoli", label: "Broccoli",  emoji: "🥦", price: 0, levelReq: 99 },
+  { id: "crate-wheat",    label: "Wheat",     emoji: "🌾", price: 0, levelReq: 99 },
+  { id: "crate-clover",   label: "Four-Leaf", emoji: "🍀", price: 0, levelReq: 99 },
+  { id: "crate-wave",     label: "Wave",      emoji: "🌊", price: 0, levelReq: 99 },
+  { id: "crate-cherry",   label: "Cherry",    emoji: "🍒", price: 0, levelReq: 99 },
+  { id: "crate-target",   label: "Target",    emoji: "🎯", price: 0, levelReq: 99 },
 ];
 
 const CONFETTI_COLORS: Record<string, string[]> = {
@@ -939,12 +948,13 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
 }
 
 // ── ShopModal ─────────────────────────────────────────────────────────────────
-function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, onBuyFlag }: {
+function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, onBuyFlag, onOpenCrate }: {
   open: boolean; onClose: () => void; coins: number;
   ownedThemes: string[]; ownedFlags: string[];
   onBuyTheme: (id: string) => void; onBuyFlag: (id: string) => void;
+  onOpenCrate: () => void;
 }) {
-  const [tab, setTab] = useState<"themes" | "flags">("themes");
+  const [tab, setTab] = useState<"themes" | "flags" | "crates">("themes");
   if (!open) return null;
   const shopThemes = THEMES.filter(t => t.levelReq === 0);
   const shopFlags = FLAGS.filter(f => f.levelReq === 0);
@@ -960,6 +970,7 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
         <div className="menu-tabs">
           <button className={`menu-tab${tab === "themes" ? " active" : ""}`} onClick={() => setTab("themes")}>THEMES</button>
           <button className={`menu-tab${tab === "flags" ? " active" : ""}`} onClick={() => setTab("flags")}>FLAGS</button>
+          <button className={`menu-tab${tab === "crates" ? " active" : ""}`} onClick={() => setTab("crates")}>CRATES</button>
         </div>
         {tab === "themes" && (
           <div className="shop-grid">
@@ -1010,29 +1021,76 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
             })}
           </div>
         )}
+        {tab === "crates" && (
+          <div className="crate-shop-panel">
+            {/* Crate #1 card */}
+            <div className="crate-shop-card">
+              <div className="crate-shop-card-top">
+                <span style={{ fontSize: 36 }}>📦</span>
+                <div>
+                  <div className="crate-shop-name">Crate #1</div>
+                  <div className="crate-shop-sub">Themed flags &amp; animated items</div>
+                </div>
+                <span className="crate-shop-cost"><CoinIcon size={13} /> {CRATE_COST}</span>
+              </div>
+              {/* Mini drop rate list */}
+              <div className="crate-shop-rates">
+                {([
+                  { label: "Common",    pct: "65%", color: "#8a9bb0" },
+                  { label: "Rare",      pct: "25%", color: "#4d9fff" },
+                  { label: "Epic",      pct: "8%",  color: "#c084fc" },
+                  { label: "Legendary", pct: "2%",  color: "#ffd700" },
+                ] as const).map(r => (
+                  <div key={r.label} className="crate-shop-rate-row">
+                    <span className="crate-drop-dot" style={{ background: r.color }} />
+                    <span style={{ color: r.color, fontSize: 11, fontWeight: 600 }}>{r.label}</span>
+                    <span style={{ color: "var(--stat-label-color)", fontSize: 11, marginLeft: "auto" }}>{r.pct}</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                className={`crate-open-btn${coins >= CRATE_COST ? "" : " cant-afford"}`}
+                onClick={() => { onClose(); onOpenCrate(); }}
+                disabled={coins < CRATE_COST}
+                style={{ marginTop: 12 }}
+              >
+                <CoinIcon size={13} /> Open Crate — {CRATE_COST}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ── InventoryModal ────────────────────────────────────────────────────────────
-function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag, onEquipTheme, onEquipFlag }: {
+function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag, onEquipTheme, onEquipFlag, ownedCrateItems }: {
   open: boolean; onClose: () => void;
   ownedThemes: string[]; ownedFlags: string[];
   activeTheme: string; activeFlag: string;
   onEquipTheme: (id: string) => void; onEquipFlag: (id: string) => void;
+  ownedCrateItems: string[];
 }) {
-  const [tab, setTab] = useState<"themes" | "flags">("themes");
+  const [tab, setTab] = useState<"themes" | "flags" | "crates">("themes");
   if (!open) return null;
+
+  const crateCount = ownedCrateItems.length;
 
   return (
     <div className="menu-overlay" onClick={onClose}>
       <div className="menu-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="menu-handle" />
-        <div className="shop-header"><span className="shop-title">INVENTORY</span></div>
+        <div className="shop-header">
+          <span className="shop-title">INVENTORY</span>
+          {crateCount > 0 && <span className="inv-crate-badge">{crateCount}</span>}
+        </div>
         <div className="menu-tabs">
           <button className={`menu-tab${tab === "themes" ? " active" : ""}`} onClick={() => setTab("themes")}>THEMES</button>
           <button className={`menu-tab${tab === "flags" ? " active" : ""}`} onClick={() => setTab("flags")}>FLAGS</button>
+          <button className={`menu-tab${tab === "crates" ? " active" : ""}`} onClick={() => setTab("crates")}>
+            CRATES{crateCount > 0 && <span className="menu-tab-dot" />}
+          </button>
         </div>
         {tab === "themes" && (
           <div className="shop-grid">
@@ -1058,16 +1116,53 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
           <div className="shop-grid">
             {FLAGS.filter(f => ownedFlags.includes(f.id)).map((f) => {
               const active = activeFlag === f.id;
-              const isExclusive = f.levelReq > 0;
+              const isExclusive = f.levelReq > 0 && f.levelReq < 99;
+              const isCrate = f.levelReq === 99;
               return (
                 <button key={f.id} className={`shop-card inv-card${active ? " inv-active" : ""}`} onClick={() => onEquipFlag(f.id)}>
                   <div className="flag-preview">{f.emoji}</div>
                   <span className="shop-card-label">{f.label}</span>
                   {isExclusive && <span className="inv-exclusive-dot" />}
+                  {isCrate && <span className="inv-crate-dot" />}
                   {active && <span className="inv-check">✓</span>}
                 </button>
               );
             })}
+          </div>
+        )}
+        {tab === "crates" && (
+          <div className="crate-inv-grid">
+            {ownedCrateItems.length === 0 ? (
+              <div className="crate-inv-empty">
+                <span style={{ fontSize: 36 }}>📦</span>
+                <span>No crate items yet</span>
+                <span style={{ fontSize: 11, opacity: 0.6 }}>Open crates in the Shop!</span>
+              </div>
+            ) : (
+              ownedCrateItems.map((id) => {
+                const item = CRATE_ITEMS.find((i) => i.id === id);
+                if (!item) return null;
+                const color = getRarityColor(item.rarity);
+                const isActive = item.type === "emoji" && item.flagId === activeFlag;
+                return (
+                  <button
+                    key={id}
+                    className={`crate-inv-item${isActive ? " inv-active" : ""}`}
+                    style={{ borderColor: color + "60" }}
+                    onClick={() => {
+                      if (item.type === "emoji" && item.flagId) onEquipFlag(item.flagId);
+                    }}
+                  >
+                    <div className="crate-inv-icon">
+                      <CrateItemDisplay item={item} size={32} />
+                    </div>
+                    <span className="crate-inv-label">{item.label}</span>
+                    <span className="crate-inv-rarity" style={{ color }}>{getRarityLabel(item.rarity)}</span>
+                    {isActive && <span className="inv-check crate-inv-check">✓</span>}
+                  </button>
+                );
+              })
+            )}
           </div>
         )}
       </div>
@@ -1089,6 +1184,7 @@ export default function App() {
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [dailyOpen, setDailyOpen] = useState(false);
+  const [crateOpen, setCrateOpen] = useState(false);
   const [shaking, setShaking] = useState(false);
   const everFlaggedRef = useRef(false);
 
@@ -1123,6 +1219,28 @@ export default function App() {
   useEffect(() => { localStorage.setItem("ms-owned-flags", JSON.stringify(ownedFlags)); }, [ownedFlags]);
   useEffect(() => { localStorage.setItem("ms-active-flag", activeFlag); }, [activeFlag]);
   const flagEmoji = FLAGS.find((f) => f.id === activeFlag)?.emoji ?? "🚩";
+
+  // Crate collection
+  const [ownedCrateItems, setOwnedCrateItems] = useState<string[]>(() => {
+    const s = localStorage.getItem("ms-crate-items");
+    return s ? JSON.parse(s) : [];
+  });
+  useEffect(() => { localStorage.setItem("ms-crate-items", JSON.stringify(ownedCrateItems)); }, [ownedCrateItems]);
+
+  const handleCratePay = useCallback(() => {
+    setCoins((c) => c - CRATE_COST);
+  }, []);
+
+  const handleCrateClaim = useCallback((item: CrateItem) => {
+    setOwnedCrateItems((prev) => {
+      if (prev.includes(item.id)) return prev;
+      return [...prev, item.id];
+    });
+    if (item.type === "emoji" && item.flagId) {
+      setOwnedFlags((prev) => prev.includes(item.flagId!) ? prev : [...prev, item.flagId!]);
+    }
+    setCrateOpen(false);
+  }, []);
 
   // XP & Level
   const [totalXP, setTotalXP] = useState<number>(() => Number(localStorage.getItem("ms-xp") || "0"));
@@ -1756,11 +1874,16 @@ export default function App() {
       />
       <ShopModal open={shopOpen} onClose={() => setShopOpen(false)}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
-        onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag} />
+        onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag}
+        onOpenCrate={() => setCrateOpen(true)} />
       <InventoryModal open={inventoryOpen} onClose={() => setInventoryOpen(false)}
         ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         activeTheme={theme} activeFlag={activeFlag}
-        onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag} />
+        onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag}
+        ownedCrateItems={ownedCrateItems} />
+      <CrateModal open={crateOpen} onClose={() => setCrateOpen(false)}
+        coins={coins} ownedCrateItems={ownedCrateItems}
+        onPay={handleCratePay} onClaim={handleCrateClaim} />
       <AchievementsModal open={achievementsOpen} onClose={() => setAchievementsOpen(false)}
         claimed={claimedAchievements} pending={pendingAchievements}
         onClaim={handleClaimAchievement} />

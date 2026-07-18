@@ -2997,3 +2997,411 @@ body {
   color: #00e676;
   letter-spacing: 1px;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   CRATE SYSTEM
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Shop panel ── */
+.crate-shop-panel {
+  padding: 4px 0 12px;
+}
+
+.crate-shop-card {
+  background: var(--tab-bg);
+  border: 1px solid var(--tab-border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.crate-shop-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.crate-shop-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+
+.crate-shop-sub {
+  font-size: 11px;
+  color: var(--stat-label-color);
+  margin-top: 2px;
+}
+
+.crate-shop-cost {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.crate-shop-rates {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--icon-btn-bg);
+  border-radius: 6px;
+  border: 1px solid var(--tab-border);
+}
+
+.crate-shop-rate-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Drop rate row (used in both shop preview and crate modal) ── */
+.crate-drop-rates {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  background: var(--icon-btn-bg);
+  border-radius: 6px;
+  border: 1px solid var(--tab-border);
+  margin-bottom: 10px;
+}
+
+.crate-drop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crate-drop-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.crate-drop-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  min-width: 66px;
+}
+
+.crate-drop-pct {
+  font-size: 11px;
+  color: var(--stat-label-color);
+  min-width: 32px;
+  font-family: 'Courier New', monospace;
+}
+
+.crate-drop-preview {
+  font-size: 13px;
+  margin-left: auto;
+  letter-spacing: 2px;
+}
+
+/* ── Reel ── */
+.crate-reel-wrap {
+  position: relative;
+  height: 100px;
+  background: var(--icon-btn-bg);
+  border: 1px solid var(--tab-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.crate-selector {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 82px;
+  border: 2px solid #ffd700;
+  z-index: 10;
+  pointer-events: none;
+  border-radius: 3px;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.crate-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 70px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.crate-fade-l {
+  left: 0;
+  background: linear-gradient(to right, var(--icon-btn-bg) 0%, transparent 100%);
+}
+
+.crate-fade-r {
+  right: 0;
+  background: linear-gradient(to left, var(--icon-btn-bg) 0%, transparent 100%);
+}
+
+.crate-reel-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.crate-idle-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.crate-strip {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  will-change: transform;
+}
+
+.crate-strip-item {
+  width: 80px;
+  min-width: 80px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--tab-border);
+  position: relative;
+  background: var(--icon-btn-bg);
+}
+
+.crate-strip-icon {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crate-strip-bar {
+  width: 100%;
+  height: 3px;
+  flex-shrink: 0;
+}
+
+/* ── Winner card ── */
+.crate-winner-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: var(--tab-bg);
+  border: 1px solid;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.crate-winner-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.crate-winner-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.crate-winner-rarity {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.crate-winner-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.crate-winner-hint {
+  font-size: 11px;
+  color: var(--stat-label-color);
+}
+
+.crate-claim-btn {
+  padding: 9px 18px;
+  border: 1px solid;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.crate-claim-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Open button ── */
+.crate-open-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: filter 0.15s;
+}
+
+.crate-open-btn:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.crate-open-btn:active:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+.crate-open-btn.cant-afford {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.crate-rolling {
+  text-align: center;
+  padding: 14px;
+  font-size: 11px;
+  color: var(--stat-label-color);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+}
+
+/* ── Inventory CRATES tab ── */
+.crate-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 4px 0 16px;
+}
+
+.crate-inv-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  background: var(--theme-card-bg);
+  border: 1px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.crate-inv-item:hover {
+  background: var(--accent-dim);
+}
+
+.crate-inv-item.inv-active {
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.crate-inv-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crate-inv-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.crate-inv-rarity {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.crate-inv-check {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 10px;
+}
+
+.crate-inv-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 36px 0;
+  color: var(--stat-label-color);
+  font-size: 13px;
+}
+
+/* ── Inventory badges ── */
+.inv-crate-badge {
+  background: #ffd700;
+  color: #000;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+}
+
+.inv-crate-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffd700;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
+.menu-tab-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffd700;
+  margin-left: 4px;
+  vertical-align: middle;
+}
