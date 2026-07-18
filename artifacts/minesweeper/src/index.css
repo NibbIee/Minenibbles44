@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 @import 'tailwindcss';
 
 /* ── Theme variables ── */
@@ -754,6 +755,248 @@ body {
   margin: 0 auto;
   position: relative;
   isolation: isolate; /* local stacking context so galaxy-backdrop z-index:-1 works */
+}
+
+/* ── Splash screen ── */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.9s ease;
+}
+.splash-screen.splash-fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sp-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Star layers */
+.sp-stars {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1px; height: 1px;
+  background: transparent;
+}
+.sp-stars-sm { animation: gx-twinkle-a 6s ease-in-out infinite alternate; }
+.sp-stars-md { animation: gx-twinkle-b 9s ease-in-out infinite alternate-reverse; }
+.sp-stars-lg {
+  width: 2px; height: 2px;
+  animation: gx-twinkle-a 4s ease-in-out infinite alternate;
+}
+
+/* Subtle teal grid */
+.sp-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 204, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 204, 0.05) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+
+/* Radar sweep */
+.sp-radar {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 900px; height: 900px;
+  margin-left: -450px; margin-top: -450px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(0, 255, 204, 0.11) 7%,
+    rgba(0, 255, 204, 0.04) 13%,
+    transparent 18%,
+    transparent 100%
+  );
+  animation: sp-radar-spin 5s linear infinite;
+}
+@keyframes sp-radar-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Expanding rings */
+.sp-ring {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 204, 0.35);
+  animation: sp-ring-expand 4.5s ease-out infinite;
+}
+.sp-ring-1 { animation-delay: 0s; }
+.sp-ring-2 { animation-delay: -1.5s; }
+.sp-ring-3 { animation-delay: -3s; border-color: rgba(157, 77, 250, 0.3); }
+@keyframes sp-ring-expand {
+  0%   { transform: translate(-50%, -50%) scale(0.05); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(5.5);  opacity: 0;   }
+}
+
+/* Sweeping scan line */
+.sp-scan {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 255, 204, 0.75) 50%, transparent 100%);
+  box-shadow: 0 0 18px rgba(0, 255, 204, 0.5), 0 0 40px rgba(0, 255, 204, 0.25);
+  animation: sp-scan-move 6s linear infinite;
+}
+@keyframes sp-scan-move {
+  from { top: -2px; }
+  to   { top: 100vh; }
+}
+
+/* Ambient glows */
+.sp-glow-teal {
+  position: absolute;
+  left: 15%; top: 18%;
+  width: 420px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 255, 204, 0.08), transparent 70%);
+  filter: blur(50px);
+  animation: vd-shimmer 9s ease-in-out infinite alternate;
+}
+.sp-glow-violet {
+  position: absolute;
+  right: 8%; bottom: 15%;
+  width: 380px; height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(157, 77, 250, 0.09), transparent 70%);
+  filter: blur(50px);
+  animation: vd-shimmer 11s ease-in-out infinite alternate-reverse;
+}
+
+/* Content */
+.sp-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 0 24px;
+}
+
+/* Floating mine */
+.sp-mine-icon {
+  font-size: 52px;
+  line-height: 1;
+  animation: sp-mine-float 3.2s ease-in-out infinite alternate;
+  filter:
+    drop-shadow(0 0 12px rgba(0, 255, 204, 0.7))
+    drop-shadow(0 0 30px rgba(157, 77, 250, 0.4));
+}
+@keyframes sp-mine-float {
+  from { transform: translateY(0px)  rotate(-6deg); }
+  to   { transform: translateY(-12px) rotate(6deg); }
+}
+
+/* Title */
+.sp-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+.sp-title-sub {
+  font-family: 'Orbitron', 'Courier New', monospace;
+  font-size: clamp(14px, 3.5vw, 20px);
+  font-weight: 400;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  color: rgba(0, 255, 204, 0.9);
+  text-shadow: 0 0 14px rgba(0, 255, 204, 0.65), 0 0 32px rgba(0, 255, 204, 0.3);
+  animation: sp-sub-shift 5s ease-in-out infinite alternate;
+}
+.sp-title-main {
+  font-family: 'Orbitron', 'Courier New', monospace;
+  font-size: clamp(32px, 8vw, 56px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow:
+    0 0 20px rgba(255, 255, 255, 0.55),
+    0 0 45px rgba(0, 255, 204, 0.45),
+    0 0 90px rgba(157, 77, 250, 0.35);
+  animation: sp-main-glow 3.5s ease-in-out infinite alternate;
+}
+@keyframes sp-sub-shift {
+  0%   { color: rgba(0, 255, 204, 0.85); text-shadow: 0 0 14px rgba(0,255,204,0.6); }
+  100% { color: rgba(157, 77, 250, 0.95); text-shadow: 0 0 18px rgba(157,77,250,0.65), 0 0 36px rgba(157,77,250,0.3); }
+}
+@keyframes sp-main-glow {
+  from {
+    text-shadow:
+      0 0 20px rgba(255,255,255,0.4),
+      0 0 45px rgba(0,255,204,0.45),
+      0 0 90px rgba(157,77,250,0.3);
+  }
+  to {
+    text-shadow:
+      0 0 30px rgba(255,255,255,0.75),
+      0 0 65px rgba(157,77,250,0.55),
+      0 0 110px rgba(0,255,204,0.35);
+  }
+}
+
+/* PLAY button */
+.sp-play-btn {
+  margin-top: 14px;
+  padding: 16px 64px;
+  font-family: 'Orbitron', 'Courier New', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  color: #000;
+  background: linear-gradient(135deg, #00ffcc 0%, #9d4dfa 100%);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow:
+    0 0 22px rgba(0, 255, 204, 0.45),
+    0 0 45px rgba(157, 77, 250, 0.35);
+}
+.sp-play-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.28) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.5s ease;
+}
+.sp-play-btn:hover::before { transform: translateX(120%); }
+.sp-play-btn:hover {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 32px rgba(0, 255, 204, 0.65),
+    0 0 65px rgba(157, 77, 250, 0.55);
+}
+.sp-play-btn:active { transform: scale(0.96); }
+
+/* Credits */
+.sp-credits {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.28);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-top: -4px;
 }
 
 /* ── Cyber backdrop ── */

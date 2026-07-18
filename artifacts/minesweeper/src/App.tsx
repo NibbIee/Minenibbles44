@@ -200,6 +200,10 @@ function _genStarShadow(count: number, seed: number, ri = 255, gi = 255, bi = 25
 const GX_SM = _genStarShadow(220, 0xdeadbeef);
 const GX_MD = _genStarShadow(80,  0x12345678);
 const GX_LG = _genStarShadow(28,  0xabcdef01);
+// Splash screen particles
+const SP_STARS_SM = _genStarShadow(220, 0xfeedbeef);
+const SP_STARS_MD = _genStarShadow(70,  0x0badf00d);
+const SP_STARS_LG = _genStarShadow(22,  0x1337c0de, 0, 255, 204);
 // Cyber particles — teal/cyan
 const CY_PART_SM = _genStarShadow(160, 0xc0debabe, 0,   255, 204);
 const CY_PART_LG = _genStarShadow(25,  0xfadedead, 140, 255, 230);
@@ -253,6 +257,41 @@ function VoidBackground() {
       <div className="vd-core" />
       <div className="vd-particles" style={{ boxShadow: VD_PART_SM }} />
       <div className="vd-particles vd-particles-lg" style={{ boxShadow: VD_PART_LG }} />
+    </div>
+  );
+}
+
+// ── Splash screen ─────────────────────────────────────────────────────────────
+function SplashScreen({ onPlay }: { onPlay: () => void }) {
+  const [fading, setFading] = useState(false);
+  function handlePlay() {
+    setFading(true);
+    setTimeout(onPlay, 900);
+  }
+  return (
+    <div className={`splash-screen${fading ? " splash-fading" : ""}`}>
+      <div className="sp-bg" aria-hidden="true">
+        <div className="sp-stars sp-stars-sm" style={{ boxShadow: SP_STARS_SM }} />
+        <div className="sp-stars sp-stars-md" style={{ boxShadow: SP_STARS_MD }} />
+        <div className="sp-stars sp-stars-lg" style={{ boxShadow: SP_STARS_LG }} />
+        <div className="sp-grid" />
+        <div className="sp-radar" />
+        <div className="sp-ring sp-ring-1" />
+        <div className="sp-ring sp-ring-2" />
+        <div className="sp-ring sp-ring-3" />
+        <div className="sp-scan" />
+        <div className="sp-glow-teal" />
+        <div className="sp-glow-violet" />
+      </div>
+      <div className="sp-content">
+        <div className="sp-mine-icon">💣</div>
+        <h1 className="sp-title">
+          <span className="sp-title-sub">Nibble's</span>
+          <span className="sp-title-main">Minesweeper</span>
+        </h1>
+        <button className="sp-play-btn" onClick={handlePlay}>PLAY</button>
+        <p className="sp-credits">credits to mibble</p>
+      </div>
     </div>
   );
 }
@@ -1053,6 +1092,14 @@ export default function App() {
   const [shaking, setShaking] = useState(false);
   const everFlaggedRef = useRef(false);
 
+  // Splash screen
+  const [splashDone, setSplashDone] = useState(false);
+  const [gameFadingIn, setGameFadingIn] = useState(false);
+  const handleSplashPlay = useCallback(() => {
+    setGameFadingIn(true);
+    setTimeout(() => setSplashDone(true), 900);
+  }, []);
+
   // Theme
   const [theme, setTheme] = useState<string>(() => localStorage.getItem("ms-theme") || "dark");
   useEffect(() => {
@@ -1590,7 +1637,15 @@ export default function App() {
   const hasPending = pendingAchievements.length > 0;
 
   return (
-    <div className="app">
+    <>
+    {!splashDone && <SplashScreen onPlay={handleSplashPlay} />}
+    <div
+      className="app"
+      style={{
+        opacity: gameFadingIn ? 1 : 0,
+        transition: gameFadingIn ? "opacity 0.8s ease 0.35s" : "none",
+      }}
+    >
       {theme === "galaxy" && <GalaxyBackground />}
       {theme === "cyber"  && <CyberBackground  />}
       {theme === "void"   && <VoidBackground   />}
@@ -1715,5 +1770,6 @@ export default function App() {
         challenges={dailyChallenges} progress={dailyProgress}
         completed={dailyCompleted} bonusClaimed={dailyBonusClaimed} />
     </div>
+    </>
   );
 }
