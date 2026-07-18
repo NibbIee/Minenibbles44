@@ -547,18 +547,19 @@ export default function App() {
   // ── Infinite board transition ──
 
   const triggerInfiniteTransition = useCallback((clearedBoard: CellState[][]) => {
+    // Show cleared board as the one sliding OUT; new board is blank immediately
     setExitBoard(clearedBoard);
+    setBoard(createEmptyBoard());
+    setFlagCount(0);
     setTransitioning(true);
     setStatus("transitioning");
     setTimeout(() => {
-      setBoard(createEmptyBoard());
       setStatus("idle");
       setFirstClick(true);
-      setFlagCount(0);
       setElapsed(0);
       setTransitioning(false);
       setExitBoard(null);
-    }, 700);
+    }, 600);
   }, []);
 
   // ── Handle reveal ──
