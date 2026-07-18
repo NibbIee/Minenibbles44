@@ -1590,25 +1590,6 @@ body {
   color: #ffd700 !important;
 }
 
-/* ── Owner cheat button ── */
-.cheat-btn {
-  width: 100%;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1.5px solid var(--tab-border);
-  background: var(--tab-bg);
-  color: var(--stat-label-color);
-  font-size: 11px;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-.cheat-btn:active {
-  background: color-mix(in srgb, var(--accent) 15%, var(--tab-bg));
-  border-color: var(--accent);
-}
 
 /* ── Menu button badge dot ── */
 .menu-btn-wrap {
