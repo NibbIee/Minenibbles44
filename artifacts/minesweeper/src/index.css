@@ -241,6 +241,150 @@
   --accent-dim: #280606;
 }
 
+[data-theme="cyber"] {
+  --bg: #001a1a;
+  --text: #ccffee;
+  --counter-label: #0a4a3a;
+  --counter-divider: #0a3030;
+  --icon-btn-bg: #0a2a2a;
+  --icon-btn-color: #00ffcc;
+  --play-again-bg: #0a2a2a;
+  --play-again-border: #0a4a3a;
+  --play-again-color: #ccffee;
+  --cell-bg: #0a3030;
+  --cell-revealed-bg: #031212;
+  --cell-flagged-bg: #071e1e;
+  --mode-btn-bg: #071a1a;
+  --mode-btn-border: #0a3030;
+  --mode-btn-color: #0a4a3a;
+  --menu-overlay-bg: rgba(0, 0, 0, 0.75);
+  --menu-sheet-bg: #071a1a;
+  --menu-handle-bg: #0a3030;
+  --name-input-bg: #0a2a2a;
+  --name-input-border: #0a3030;
+  --name-input-color: #ccffee;
+  --name-input-placeholder: #0a4a3a;
+  --toggle-row-bg: #0a2a2a;
+  --toggle-sub-color: #0a4a3a;
+  --toggle-label-color: #ccffee;
+  --toggle-bg: #0a3030;
+  --tab-bg: #0a2a2a;
+  --tab-border: #0a3030;
+  --tab-color: #0a4a3a;
+  --stats-bg: #0a2a2a;
+  --stat-section-title-color: #0a3a2a;
+  --stat-label-color: #3aaa88;
+  --stat-value-color: #ccffee;
+  --stat-divider: #0a3030;
+  --lb-bg: #0a2a2a;
+  --lb-empty-color: #0a4a3a;
+  --lb-thead-border: #0a3030;
+  --lb-th-color: #0a3a2a;
+  --lb-td-color: #6addc0;
+  --lb-tr-border: #071a1a;
+  --theme-card-bg: #0a2a2a;
+  --theme-card-border: #0a3030;
+  --theme-card-label: #3aaa88;
+  --accent: #00ffcc;
+  --accent-dim: #012a1a;
+}
+
+[data-theme="void"] {
+  --bg: #060010;
+  --text: #e0d0ff;
+  --counter-label: #2a1060;
+  --counter-divider: #1a0050;
+  --icon-btn-bg: #12003a;
+  --icon-btn-color: #9d4dfa;
+  --play-again-bg: #12003a;
+  --play-again-border: #2a0070;
+  --play-again-color: #e0d0ff;
+  --cell-bg: #1a0050;
+  --cell-revealed-bg: #080020;
+  --cell-flagged-bg: #100040;
+  --mode-btn-bg: #0c0030;
+  --mode-btn-border: #1a0050;
+  --mode-btn-color: #2a1060;
+  --menu-overlay-bg: rgba(0, 0, 0, 0.8);
+  --menu-sheet-bg: #0c0030;
+  --menu-handle-bg: #1a0050;
+  --name-input-bg: #12003a;
+  --name-input-border: #1a0050;
+  --name-input-color: #e0d0ff;
+  --name-input-placeholder: #2a1060;
+  --toggle-row-bg: #12003a;
+  --toggle-sub-color: #2a1060;
+  --toggle-label-color: #e0d0ff;
+  --toggle-bg: #1a0050;
+  --tab-bg: #12003a;
+  --tab-border: #1a0050;
+  --tab-color: #2a1060;
+  --stats-bg: #12003a;
+  --stat-section-title-color: #200060;
+  --stat-label-color: #6a40aa;
+  --stat-value-color: #e0d0ff;
+  --stat-divider: #1a0050;
+  --lb-bg: #12003a;
+  --lb-empty-color: #2a1060;
+  --lb-thead-border: #1a0050;
+  --lb-th-color: #200060;
+  --lb-td-color: #aa80dd;
+  --lb-tr-border: #0c0030;
+  --theme-card-bg: #12003a;
+  --theme-card-border: #1a0050;
+  --theme-card-label: #6a40aa;
+  --accent: #9d4dfa;
+  --accent-dim: #1a003a;
+}
+
+[data-theme="galaxy"] {
+  --bg: #08001a;
+  --text: #ffe8a0;
+  --counter-label: #2a1a00;
+  --counter-divider: #1a0040;
+  --icon-btn-bg: #150030;
+  --icon-btn-color: #ffd700;
+  --play-again-bg: #150030;
+  --play-again-border: #2a1a00;
+  --play-again-color: #ffe8a0;
+  --cell-bg: #18003a;
+  --cell-revealed-bg: #06000f;
+  --cell-flagged-bg: #100030;
+  --mode-btn-bg: #0e0025;
+  --mode-btn-border: #1a0040;
+  --mode-btn-color: #3a2a00;
+  --menu-overlay-bg: rgba(0, 0, 0, 0.82);
+  --menu-sheet-bg: #0e0025;
+  --menu-handle-bg: #1a0040;
+  --name-input-bg: #150030;
+  --name-input-border: #1a0040;
+  --name-input-color: #ffe8a0;
+  --name-input-placeholder: #3a2a00;
+  --toggle-row-bg: #150030;
+  --toggle-sub-color: #3a2a00;
+  --toggle-label-color: #ffe8a0;
+  --toggle-bg: #1a0040;
+  --tab-bg: #150030;
+  --tab-border: #1a0040;
+  --tab-color: #3a2a00;
+  --stats-bg: #150030;
+  --stat-section-title-color: #2a1a00;
+  --stat-label-color: #8a7040;
+  --stat-value-color: #ffe8a0;
+  --stat-divider: #1a0040;
+  --lb-bg: #150030;
+  --lb-empty-color: #3a2a00;
+  --lb-thead-border: #1a0040;
+  --lb-th-color: #2a1a00;
+  --lb-td-color: #ccaa60;
+  --lb-tr-border: #0e0025;
+  --theme-card-bg: #150030;
+  --theme-card-border: #1a0040;
+  --theme-card-label: #8a7040;
+  --accent: #ffd700;
+  --accent-dim: #2a1a00;
+}
+
 [data-theme="pink"] {
   --bg: #110010;
   --text: #ffd0f0;
@@ -1121,6 +1265,329 @@ body {
   line-height: 1;
   display: block;
   user-select: none;
+}
+
+/* ── XP Bar ── */
+.xp-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px 8px;
+  flex-shrink: 0;
+}
+
+.xp-lvl-label {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--stat-label-color);
+  white-space: nowrap;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+  min-width: 44px;
+}
+
+.xp-lvl-num {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.xp-track {
+  flex: 1;
+  height: 5px;
+  background: var(--tab-bg);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--tab-border);
+}
+
+.xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 60%, #fff 40%) 100%);
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 3px;
+}
+
+.xp-right {
+  font-size: 9px;
+  font-family: 'Courier New', monospace;
+  color: var(--stat-label-color);
+  white-space: nowrap;
+  min-width: 52px;
+  text-align: right;
+}
+
+.xp-sep { opacity: 0.4; margin: 0 1px; }
+
+.xp-max {
+  color: var(--accent);
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  font-size: 9px;
+}
+
+/* ── XP earn badge in win banner ── */
+.xp-earn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  border-radius: 8px;
+  padding: 2px 7px;
+}
+
+/* ── Level modal header ── */
+.lvl-modal-current {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.lvl-modal-lbl {
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--stat-label-color);
+  text-transform: uppercase;
+}
+
+.lvl-modal-num {
+  font-size: 22px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  color: #ffd700;
+  line-height: 1;
+}
+
+.lvl-modal-xpbar {
+  margin: -4px 0 12px;
+}
+
+/* ── Level list ── */
+.lvl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lvl-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--tab-bg);
+  border: 1px solid var(--tab-border);
+  border-radius: 14px;
+  padding: 11px 13px;
+  transition: border-color 0.15s, background 0.15s;
+  opacity: 0.45;
+}
+
+.lvl-row.lvl-unlocked {
+  opacity: 1;
+}
+
+.lvl-row.lvl-current {
+  border-color: var(--accent);
+  opacity: 1;
+  background: color-mix(in srgb, var(--accent) 8%, var(--tab-bg));
+}
+
+.lvl-row.lvl-milestone {
+  border-width: 1.5px;
+}
+
+.lvl-row.lvl-milestone.lvl-unlocked {
+  border-color: #ffd700;
+}
+
+.lvl-row.lvl-milestone.lvl-current {
+  border-color: var(--accent);
+}
+
+/* Level badge circle */
+.lvl-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--toggle-bg);
+  border: 1.5px solid var(--tab-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.lvl-badge-milestone {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.lvl-row.lvl-unlocked .lvl-badge {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--tab-bg));
+}
+
+.lvl-row.lvl-milestone.lvl-unlocked .lvl-badge {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.15);
+}
+
+.lvl-badge-num {
+  font-size: 12px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  color: var(--stat-label-color);
+}
+
+.lvl-row.lvl-unlocked .lvl-badge-num {
+  color: var(--accent);
+}
+
+.lvl-row.lvl-milestone.lvl-unlocked .lvl-badge-num {
+  color: #ffd700;
+}
+
+.lvl-badge-max-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffd700;
+  border: 1.5px solid var(--menu-sheet-bg);
+}
+
+/* Level rewards */
+.lvl-rewards {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lvl-reward-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--stat-label-color);
+}
+
+.lvl-reward-text {
+  font-size: 11px;
+  color: var(--stat-label-color);
+}
+
+.lvl-row.lvl-unlocked .lvl-reward-text {
+  color: var(--text);
+}
+
+.lvl-reward-emoji {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.lvl-exclusive {
+  gap: 5px;
+}
+
+.lvl-excl-badge {
+  font-size: 8px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  border-radius: 5px;
+  padding: 1px 5px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.lvl-theme-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Level meta (xp + status) */
+.lvl-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.lvl-xp-req {
+  font-size: 10px;
+  font-family: 'Courier New', monospace;
+  color: var(--stat-label-color);
+  white-space: nowrap;
+}
+
+.lvl-row.lvl-unlocked .lvl-xp-req {
+  color: var(--accent);
+}
+
+.lvl-status-done {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.lvl-status-next {
+  font-size: 8px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-radius: 5px;
+  padding: 2px 5px;
+  text-transform: uppercase;
+}
+
+.lvl-status-lock {
+  font-size: 12px;
+  color: var(--tab-color);
+}
+
+/* ── Inventory exclusive dot ── */
+.inv-exclusive-dot {
+  position: absolute;
+  top: 5px;
+  left: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffd700;
+  border: 1px solid var(--menu-sheet-bg);
+}
+
+/* ── Toast level-up styling ── */
+.toast-levelup {
+  border-color: #ffd700 !important;
+  background: #1a1000 !important;
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.25), 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+.toast-subtitle {
+  font-size: 10px;
+  color: #ffd700;
+  opacity: 0.85;
+  margin-top: 1px;
+}
+
+.toast-lvl-coins {
+  color: #ffd700 !important;
 }
 
 /* ── Menu button badge dot ── */

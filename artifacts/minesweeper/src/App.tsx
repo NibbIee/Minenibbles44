@@ -5,88 +5,140 @@ const ROWS = 16;
 const COLS = 9;
 const MINES = 27;
 const COINS_PER_WIN = 10;
+const MAX_LEVEL = 15;
 
 const BOARD_W = COLS * 32 + (COLS - 1) * 3;
 const BOARD_H = ROWS * 32 + (ROWS - 1) * 3;
 
-// ── Shop data ──────────────────────────────────────────────────────────────────
+// ── XP thresholds ─────────────────────────────────────────────────────────────
+// Level N requires N*100 more XP than level N-1.
+// Cumulative XP to BE at level N = 100 * N*(N+1)/2
+// [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 5500, 6600, 7800, 9100, 10500, 12000]
+const XP_THRESHOLDS = Array.from({ length: MAX_LEVEL + 1 }, (_, i) => 100 * i * (i + 1) / 2);
 
+function computeLevel(xp: number): number {
+  for (let i = MAX_LEVEL; i >= 0; i--) {
+    if (xp >= XP_THRESHOLDS[i]) return i;
+  }
+  return 0;
+}
+
+function getWinXP(time: number): number {
+  if (time < 30) return 50;
+  if (time < 60) return 40;
+  if (time < 90) return 32;
+  return 25;
+}
+
+// ── Level rewards ─────────────────────────────────────────────────────────────
+const LEVEL_REWARDS: {
+  level: number; coins: number;
+  flag?: string; flagLabel?: string; flagEmoji?: string;
+  theme?: string; themeLabel?: string;
+}[] = [
+  { level: 1,  coins: 20 },
+  { level: 2,  coins: 20 },
+  { level: 3,  coins: 20 },
+  { level: 4,  coins: 20 },
+  { level: 5,  coins: 25, flag: "gem",    flagLabel: "Gem",    flagEmoji: "💎", theme: "cyber",  themeLabel: "Cyber"  },
+  { level: 6,  coins: 30 },
+  { level: 7,  coins: 30 },
+  { level: 8,  coins: 30 },
+  { level: 9,  coins: 30 },
+  { level: 10, coins: 40, flag: "dragon", flagLabel: "Dragon", flagEmoji: "🐉", theme: "void",   themeLabel: "Void"   },
+  { level: 11, coins: 50 },
+  { level: 12, coins: 50 },
+  { level: 13, coins: 50 },
+  { level: 14, coins: 50 },
+  { level: 15, coins: 100, flag: "crown",  flagLabel: "Crown",  flagEmoji: "👑", theme: "galaxy", themeLabel: "Galaxy" },
+];
+
+// ── Shop data ──────────────────────────────────────────────────────────────────
 const THEMES = [
-  { id: "dark",  label: "Dark",  bg: "#000000", cell: "#3a3a3a", accent: "#4caf50", price: 0 },
-  { id: "light", label: "Light", bg: "#f0f0f0", cell: "#bdbdbd", accent: "#4caf50", price: 0 },
-  { id: "blue",  label: "Blue",  bg: "#060d1f", cell: "#112244", accent: "#4d9fff", price: 25 },
-  { id: "green", label: "Green", bg: "#000000", cell: "#0a1a0a", accent: "#00e676", price: 25 },
-  { id: "red",   label: "Red",   bg: "#0d0000", cell: "#2a0808", accent: "#ff4444", price: 25 },
-  { id: "pink",  label: "Pink",  bg: "#110010", cell: "#2a0a22", accent: "#ff69b4", price: 25 },
+  { id: "dark",   label: "Dark",   bg: "#000000", cell: "#3a3a3a", accent: "#4caf50",  price: 0,  levelReq: 0 },
+  { id: "light",  label: "Light",  bg: "#f0f0f0", cell: "#bdbdbd", accent: "#4caf50",  price: 0,  levelReq: 0 },
+  { id: "blue",   label: "Blue",   bg: "#060d1f", cell: "#112244", accent: "#4d9fff",  price: 25, levelReq: 0 },
+  { id: "green",  label: "Green",  bg: "#000000", cell: "#0a1a0a", accent: "#00e676",  price: 25, levelReq: 0 },
+  { id: "red",    label: "Red",    bg: "#0d0000", cell: "#2a0808", accent: "#ff4444",  price: 25, levelReq: 0 },
+  { id: "pink",   label: "Pink",   bg: "#110010", cell: "#2a0a22", accent: "#ff69b4",  price: 25, levelReq: 0 },
+  // Level-exclusive themes (not in shop, awarded automatically)
+  { id: "cyber",  label: "Cyber",  bg: "#001a1a", cell: "#0a3030", accent: "#00ffcc",  price: 0,  levelReq: 5  },
+  { id: "void",   label: "Void",   bg: "#060010", cell: "#1a0050", accent: "#9d4dfa",  price: 0,  levelReq: 10 },
+  { id: "galaxy", label: "Galaxy", bg: "#08001a", cell: "#18003a", accent: "#ffd700",  price: 0,  levelReq: 15 },
 ];
 
 const FLAGS = [
-  { id: "default", label: "Classic",  emoji: "🚩", price: 0 },
-  { id: "cat",     label: "Cat",      emoji: "🐱", price: 10 },
-  { id: "red",     label: "Red",      emoji: "🔴", price: 10 },
-  { id: "green",   label: "Green",    emoji: "🟢", price: 10 },
-  { id: "blue",    label: "Blue",     emoji: "🔵", price: 10 },
-  { id: "frog",    label: "Frog",     emoji: "🐸", price: 15 },
-  { id: "dog",     label: "Dog",      emoji: "🐶", price: 15 },
-  { id: "purple",  label: "Purple",   emoji: "🟣", price: 15 },
-  { id: "yellow",  label: "Yellow",   emoji: "🟡", price: 15 },
-  { id: "orange",  label: "Orange",   emoji: "🟠", price: 15 },
-  { id: "bunny",   label: "Bunny",    emoji: "🐰", price: 20 },
-  { id: "fox",     label: "Fox",      emoji: "🦊", price: 20 },
-  { id: "star",    label: "Star",     emoji: "⭐", price: 30 },
-  { id: "skull",   label: "Skull",    emoji: "💀", price: 40 },
-  { id: "fire",    label: "Fire",     emoji: "🔥", price: 50 },
-  { id: "mushroom",label: "Mushroom", emoji: "🍄", price: 60 },
-  { id: "alien",   label: "Alien",    emoji: "👾", price: 75 },
-  { id: "rainbow", label: "Rainbow",  emoji: "🌈", price: 100 },
+  { id: "default",  label: "Classic",  emoji: "🚩", price: 0,   levelReq: 0 },
+  { id: "cat",      label: "Cat",      emoji: "🐱", price: 10,  levelReq: 0 },
+  { id: "red",      label: "Red",      emoji: "🔴", price: 10,  levelReq: 0 },
+  { id: "green",    label: "Green",    emoji: "🟢", price: 10,  levelReq: 0 },
+  { id: "blue",     label: "Blue",     emoji: "🔵", price: 10,  levelReq: 0 },
+  { id: "frog",     label: "Frog",     emoji: "🐸", price: 15,  levelReq: 0 },
+  { id: "dog",      label: "Dog",      emoji: "🐶", price: 15,  levelReq: 0 },
+  { id: "purple",   label: "Purple",   emoji: "🟣", price: 15,  levelReq: 0 },
+  { id: "yellow",   label: "Yellow",   emoji: "🟡", price: 15,  levelReq: 0 },
+  { id: "orange",   label: "Orange",   emoji: "🟠", price: 15,  levelReq: 0 },
+  { id: "bunny",    label: "Bunny",    emoji: "🐰", price: 20,  levelReq: 0 },
+  { id: "fox",      label: "Fox",      emoji: "🦊", price: 20,  levelReq: 0 },
+  { id: "star",     label: "Star",     emoji: "⭐", price: 30,  levelReq: 0 },
+  { id: "skull",    label: "Skull",    emoji: "💀", price: 40,  levelReq: 0 },
+  { id: "fire",     label: "Fire",     emoji: "🔥", price: 50,  levelReq: 0 },
+  { id: "mushroom", label: "Mushroom", emoji: "🍄", price: 60,  levelReq: 0 },
+  { id: "alien",    label: "Alien",    emoji: "👾", price: 75,  levelReq: 0 },
+  { id: "rainbow",  label: "Rainbow",  emoji: "🌈", price: 100, levelReq: 0 },
+  // Level-exclusive flags (not in shop, awarded automatically)
+  { id: "gem",    label: "Gem",    emoji: "💎", price: 0, levelReq: 5  },
+  { id: "dragon", label: "Dragon", emoji: "🐉", price: 0, levelReq: 10 },
+  { id: "crown",  label: "Crown",  emoji: "👑", price: 0, levelReq: 15 },
 ];
 
 const CONFETTI_COLORS: Record<string, string[]> = {
-  dark:  ["#4caf50", "#81c784", "#ffffff", "#aaaaaa"],
-  light: ["#4caf50", "#81c784", "#888888", "#cccccc"],
-  blue:  ["#4d9fff", "#1a78ff", "#b0d0ff", "#ffffff"],
-  green: ["#00e676", "#00c853", "#b9f6ca", "#69f0ae"],
-  red:   ["#ff4444", "#cc0000", "#ff8888", "#ffcccc"],
-  pink:  ["#ff69b4", "#ff1493", "#ffb6c1", "#ff80c0"],
+  dark:   ["#4caf50", "#81c784", "#ffffff", "#aaaaaa"],
+  light:  ["#4caf50", "#81c784", "#888888", "#cccccc"],
+  blue:   ["#4d9fff", "#1a78ff", "#b0d0ff", "#ffffff"],
+  green:  ["#00e676", "#00c853", "#b9f6ca", "#69f0ae"],
+  red:    ["#ff4444", "#cc0000", "#ff8888", "#ffcccc"],
+  pink:   ["#ff69b4", "#ff1493", "#ffb6c1", "#ff80c0"],
+  cyber:  ["#00ffcc", "#00e5b0", "#80fff0", "#ccffff"],
+  void:   ["#9d4dfa", "#6d28d9", "#c4b5fd", "#e9d5ff"],
+  galaxy: ["#ffd700", "#a78bfa", "#ff69b4", "#ffffff"],
 };
 
 // ── Achievements ───────────────────────────────────────────────────────────────
-
 export const ACHIEVEMENTS = [
-  // Classic wins
-  { id: "first_win",  title: "First Blood",    desc: "Win your first game",          reward: 10,  category: "Classic"   },
-  { id: "wins_10",    title: "Getting Good",   desc: "Win 10 games",                 reward: 25,  category: "Classic"   },
-  { id: "wins_50",    title: "Veteran",        desc: "Win 50 games",                 reward: 75,  category: "Classic"   },
-  { id: "wins_100",   title: "Legend",         desc: "Win 100 games",                reward: 200, category: "Classic"   },
-  { id: "no_flags",   title: "Naked Sweep",    desc: "Win without placing any flags", reward: 50, category: "Classic"   },
-  // Speed
-  { id: "speed_60",   title: "Speed Runner",   desc: "Win in under 60 seconds",      reward: 15,  category: "Speed"     },
-  { id: "speed_30",   title: "Blazing Fast",   desc: "Win in under 30 seconds",      reward: 35,  category: "Speed"     },
-  { id: "speed_15",   title: "Untouchable",    desc: "Win in under 15 seconds",      reward: 75,  category: "Speed"     },
-  // General
-  { id: "games_10",   title: "Newcomer",       desc: "Play 10 games",                reward: 5,   category: "General"   },
-  { id: "games_50",   title: "Dedicated",      desc: "Play 50 games",                reward: 15,  category: "General"   },
-  { id: "games_100",  title: "Obsessed",       desc: "Play 100 games",               reward: 30,  category: "General"   },
-  // Infinite
-  { id: "wave_5",     title: "Wave Surfer",    desc: "Reach Wave 5 in Infinite Mode",  reward: 15,  category: "Infinite" },
-  { id: "wave_10",    title: "Wave Master",    desc: "Reach Wave 10 in Infinite Mode", reward: 35,  category: "Infinite" },
+  { id: "first_win",  title: "First Blood",    desc: "Win your first game",           reward: 10,  category: "Classic"   },
+  { id: "wins_10",    title: "Getting Good",   desc: "Win 10 games",                  reward: 25,  category: "Classic"   },
+  { id: "wins_50",    title: "Veteran",        desc: "Win 50 games",                  reward: 75,  category: "Classic"   },
+  { id: "wins_100",   title: "Legend",         desc: "Win 100 games",                 reward: 200, category: "Classic"   },
+  { id: "no_flags",   title: "Naked Sweep",    desc: "Win without placing any flags",  reward: 50, category: "Classic"   },
+  { id: "speed_60",   title: "Speed Runner",   desc: "Win in under 60 seconds",       reward: 15,  category: "Speed"     },
+  { id: "speed_30",   title: "Blazing Fast",   desc: "Win in under 30 seconds",       reward: 35,  category: "Speed"     },
+  { id: "speed_15",   title: "Untouchable",    desc: "Win in under 15 seconds",       reward: 75,  category: "Speed"     },
+  { id: "games_10",   title: "Newcomer",       desc: "Play 10 games",                 reward: 5,   category: "General"   },
+  { id: "games_50",   title: "Dedicated",      desc: "Play 50 games",                 reward: 15,  category: "General"   },
+  { id: "games_100",  title: "Obsessed",       desc: "Play 100 games",                reward: 30,  category: "General"   },
+  { id: "wave_5",     title: "Wave Surfer",    desc: "Reach Wave 5 in Infinite Mode",  reward: 15, category: "Infinite"  },
+  { id: "wave_10",    title: "Wave Master",    desc: "Reach Wave 10 in Infinite Mode", reward: 35, category: "Infinite"  },
   { id: "wave_25",    title: "Endless",        desc: "Reach Wave 25 in Infinite Mode", reward: 100, category: "Infinite" },
   { id: "wave_50",    title: "Unstoppable",    desc: "Reach Wave 50 in Infinite Mode", reward: 250, category: "Infinite" },
-  // Collector
-  { id: "flags_5",    title: "Flag Collector", desc: "Own 5 different flags",         reward: 20,  category: "Collector" },
-  { id: "flags_all",  title: "Flag Master",    desc: "Own all flags",                 reward: 100, category: "Collector" },
-  { id: "themes_all", title: "Art Director",   desc: "Own all themes",                reward: 75,  category: "Collector" },
+  { id: "flags_5",    title: "Flag Collector", desc: "Own 5 different flags",          reward: 20, category: "Collector" },
+  { id: "flags_all",  title: "Flag Master",    desc: "Own all purchasable flags",      reward: 100, category: "Collector"},
+  { id: "themes_all", title: "Art Director",   desc: "Own all purchasable themes",     reward: 75, category: "Collector" },
 ];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
 type CellState = { mine: boolean; revealed: boolean; flagged: boolean; adjacent: number };
 type GameStatus = "idle" | "playing" | "won" | "lost" | "transitioning";
-
-interface AchievementToastItem { id: string; title: string; reward: number; key: number }
+interface ToastItem {
+  key: number;
+  type: "achievement" | "levelup";
+  title: string;
+  subtitle?: string;
+  reward?: number;
+  coins?: number;
+}
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
-
 function createEmptyBoard(): CellState[][] {
   return Array.from({ length: ROWS }, () =>
     Array.from({ length: COLS }, () => ({ mine: false, revealed: false, flagged: false, adjacent: 0 }))
@@ -104,7 +156,7 @@ function buildBoard(board: CellState[][], safeRow: number, safeCol: number): Cel
       placed++;
     }
   }
-  for (let r = 0; r < ROWS; r++) {
+  for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++) {
       if (next[r][c].mine) continue;
       let count = 0;
@@ -115,7 +167,6 @@ function buildBoard(board: CellState[][], safeRow: number, safeCol: number): Cel
         }
       next[r][c].adjacent = count;
     }
-  }
   return next;
 }
 
@@ -146,7 +197,7 @@ function isSolvable(board: CellState[][], startRow: number, startCol: number): b
   let progress = true;
   while (progress) {
     progress = false;
-    for (let r = 0; r < ROWS; r++) {
+    for (let r = 0; r < ROWS; r++)
       for (let c = 0; c < COLS; c++) {
         const cell = current[r][c];
         if (!cell.revealed || cell.mine || cell.adjacent === 0) continue;
@@ -174,7 +225,6 @@ function isSolvable(board: CellState[][], startRow: number, startCol: number): b
           progress = true;
         }
       }
-    }
   }
   return checkWin(current);
 }
@@ -200,8 +250,7 @@ function fmtTime(s: number | null): string {
   return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
-// ── Coin icon SVG ─────────────────────────────────────────────────────────────
-
+// ── CoinIcon ──────────────────────────────────────────────────────────────────
 function CoinIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -211,25 +260,62 @@ function CoinIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-// ── Achievement Toast ──────────────────────────────────────────────────────────
+// ── XP Bar ────────────────────────────────────────────────────────────────────
+function XPBar({ totalXP }: { totalXP: number }) {
+  const level = computeLevel(totalXP);
+  const isMax = level >= MAX_LEVEL;
+  const xpAtLevel = XP_THRESHOLDS[level];
+  const xpToNext = isMax ? 1 : XP_THRESHOLDS[level + 1] - xpAtLevel;
+  const xpInLevel = isMax ? xpToNext : totalXP - xpAtLevel;
+  const pct = Math.min(100, (xpInLevel / xpToNext) * 100);
 
-function AchievementToastStack({ toasts }: { toasts: AchievementToastItem[] }) {
+  return (
+    <div className="xp-bar-wrap">
+      <span className="xp-lvl-label">
+        LVL <strong className="xp-lvl-num">{level}</strong>
+      </span>
+      <div className="xp-track">
+        <div className="xp-fill" style={{ width: `${pct}%` }} />
+      </div>
+      {isMax
+        ? <span className="xp-right xp-max">MAX</span>
+        : <span className="xp-right">{xpInLevel}<span className="xp-sep">/</span>{xpToNext}</span>
+      }
+    </div>
+  );
+}
+
+// ── Toast stack ───────────────────────────────────────────────────────────────
+function ToastStack({ toasts }: { toasts: ToastItem[] }) {
   if (toasts.length === 0) return null;
   return (
     <div className="toast-stack">
       {toasts.map((t) => (
-        <div key={t.key} className="achievement-toast">
+        <div key={t.key} className={`achievement-toast toast-${t.type}`}>
           <div className="toast-icon">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="8.5" fill="#6d28d9" stroke="#a78bfa" strokeWidth="1"/>
-              <text x="9" y="13" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#fff" fontFamily="Arial, sans-serif">★</text>
-            </svg>
+            {t.type === "achievement" ? (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9.5" fill="#2d1a4a" stroke="#a78bfa" strokeWidth="1.5"/>
+                <text x="10" y="14.5" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#a78bfa" fontFamily="Arial, sans-serif">★</text>
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9.5" fill="#2a1a00" stroke="#ffd700" strokeWidth="1.5"/>
+                <text x="10" y="14.5" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#ffd700" fontFamily="Arial, sans-serif">▲</text>
+              </svg>
+            )}
           </div>
           <div className="toast-body">
-            <span className="toast-label">Achievement Unlocked</span>
+            <span className="toast-label">{t.type === "achievement" ? "Achievement Unlocked" : "Level Up!"}</span>
             <span className="toast-title">{t.title}</span>
+            {t.subtitle && <span className="toast-subtitle">{t.subtitle}</span>}
           </div>
-          <span className="toast-reward"><CoinIcon size={13} />+{t.reward}</span>
+          {t.type === "achievement" && t.reward !== undefined && (
+            <span className="toast-reward"><CoinIcon size={13} />+{t.reward}</span>
+          )}
+          {t.type === "levelup" && t.coins !== undefined && (
+            <span className="toast-reward toast-lvl-coins"><CoinIcon size={13} />+{t.coins}</span>
+          )}
         </div>
       ))}
     </div>
@@ -237,16 +323,8 @@ function AchievementToastStack({ toasts }: { toasts: AchievementToastItem[] }) {
 }
 
 // ── BoardGrid ─────────────────────────────────────────────────────────────────
-
-function BoardGrid({
-  board,
-  flagEmoji,
-  onCellClick,
-  onCellContext,
-  interactive,
-}: {
-  board: CellState[][];
-  flagEmoji: string;
+function BoardGrid({ board, flagEmoji, onCellClick, onCellContext, interactive }: {
+  board: CellState[][]; flagEmoji: string;
   onCellClick?: (r: number, c: number) => void;
   onCellContext?: (e: React.MouseEvent, r: number, c: number) => void;
   interactive: boolean;
@@ -259,22 +337,16 @@ function BoardGrid({
           let cellClass = "cell";
           if (cell.revealed) {
             cellClass += " revealed";
-            if (cell.mine) {
-              content = <span className="mine-marker">✕</span>;
-              cellClass += " mine";
-            } else if (cell.adjacent > 0)
-              content = <span className={`number n${cell.adjacent}`}>{cell.adjacent}</span>;
+            if (cell.mine) { content = <span className="mine-marker">✕</span>; cellClass += " mine"; }
+            else if (cell.adjacent > 0) content = <span className={`number n${cell.adjacent}`}>{cell.adjacent}</span>;
           } else if (cell.flagged) {
             cellClass += " flagged";
             content = <span className="flag-emoji">{flagEmoji}</span>;
           }
           return (
-            <div
-              key={`${r}-${c}`}
-              className={cellClass}
+            <div key={`${r}-${c}`} className={cellClass}
               onClick={() => onCellClick?.(r, c)}
-              onContextMenu={(e) => onCellContext?.(e, r, c)}
-            >
+              onContextMenu={(e) => onCellContext?.(e, r, c)}>
               {content}
             </div>
           );
@@ -284,23 +356,107 @@ function BoardGrid({
   );
 }
 
-// ── Achievements Modal ─────────────────────────────────────────────────────────
+// ── Levels Modal ──────────────────────────────────────────────────────────────
+function LevelsModal({ open, onClose, totalXP }: {
+  open: boolean; onClose: () => void; totalXP: number;
+}) {
+  if (!open) return null;
+  const currentLevel = computeLevel(totalXP);
 
-function AchievementsModal({
-  open, onClose, claimed, pending, onClaim,
-}: {
-  open: boolean;
-  onClose: () => void;
-  claimed: string[];
-  pending: string[];
-  onClaim: (id: string) => void;
+  return (
+    <div className="menu-overlay" onClick={onClose}>
+      <div className="menu-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="menu-handle" />
+        <div className="shop-header">
+          <span className="shop-title">LEVELS</span>
+          <span className="lvl-modal-current">
+            <span className="lvl-modal-lbl">CURRENT</span>
+            <span className="lvl-modal-num">{currentLevel === MAX_LEVEL ? "MAX" : currentLevel}</span>
+          </span>
+        </div>
+
+        {/* XP bar at top of modal */}
+        <div className="lvl-modal-xpbar">
+          <XPBar totalXP={totalXP} />
+        </div>
+
+        <div className="lvl-list">
+          {Array.from({ length: MAX_LEVEL }, (_, i) => {
+            const lvl = i + 1;
+            const reward = LEVEL_REWARDS.find(r => r.level === lvl)!;
+            const unlocked = currentLevel >= lvl;
+            const isCurrent = currentLevel === lvl - 1; // this is the next level to reach
+            const isMaxReached = currentLevel === MAX_LEVEL;
+            const xpNeeded = XP_THRESHOLDS[lvl];
+            const isMilestone = lvl % 5 === 0;
+
+            return (
+              <div
+                key={lvl}
+                className={[
+                  "lvl-row",
+                  unlocked ? "lvl-unlocked" : "",
+                  isCurrent && !isMaxReached ? "lvl-current" : "",
+                  isMilestone ? "lvl-milestone" : "",
+                ].join(" ")}
+              >
+                {/* Level badge */}
+                <div className={`lvl-badge${isMilestone ? " lvl-badge-milestone" : ""}`}>
+                  <span className="lvl-badge-num">{lvl}</span>
+                  {lvl === MAX_LEVEL && <span className="lvl-badge-max-dot" />}
+                </div>
+
+                {/* Rewards list */}
+                <div className="lvl-rewards">
+                  <div className="lvl-reward-row">
+                    <CoinIcon size={12} />
+                    <span className="lvl-reward-text">+{reward.coins} coins</span>
+                  </div>
+                  {reward.flag && (
+                    <div className="lvl-reward-row lvl-exclusive">
+                      <span className="lvl-reward-emoji">{reward.flagEmoji}</span>
+                      <span className="lvl-reward-text">{reward.flagLabel} flag</span>
+                      <span className="lvl-excl-badge">exclusive</span>
+                    </div>
+                  )}
+                  {reward.theme && (
+                    <div className="lvl-reward-row lvl-exclusive">
+                      <span className="lvl-theme-dot" style={{
+                        background: lvl === 5 ? "#00ffcc" : lvl === 10 ? "#9d4dfa" : "#ffd700"
+                      }} />
+                      <span className="lvl-reward-text">{reward.themeLabel} theme</span>
+                      <span className="lvl-excl-badge">exclusive</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* XP + status */}
+                <div className="lvl-meta">
+                  <span className="lvl-xp-req">{xpNeeded >= 1000 ? `${(xpNeeded/1000).toFixed(1)}k` : xpNeeded} XP</span>
+                  {unlocked
+                    ? <span className="lvl-status-done">✓</span>
+                    : isCurrent && !isMaxReached
+                      ? <span className="lvl-status-next">NEXT</span>
+                      : <span className="lvl-status-lock">—</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Achievements Modal ─────────────────────────────────────────────────────────
+function AchievementsModal({ open, onClose, claimed, pending, onClaim }: {
+  open: boolean; onClose: () => void;
+  claimed: string[]; pending: string[]; onClaim: (id: string) => void;
 }) {
   const [tab, setTab] = useState<"Classic" | "Speed" | "Infinite" | "General" | "Collector">("Classic");
   if (!open) return null;
-
   const categories = ["Classic", "Speed", "Infinite", "General", "Collector"] as const;
   const filtered = ACHIEVEMENTS.filter((a) => a.category === tab);
-  const totalPending = pending.length;
 
   return (
     <div className="menu-overlay" onClick={onClose}>
@@ -308,29 +464,18 @@ function AchievementsModal({
         <div className="menu-handle" />
         <div className="shop-header">
           <span className="shop-title">ACHIEVEMENTS</span>
-          {totalPending > 0 && (
-            <span className="ach-claim-badge">{totalPending} to claim</span>
-          )}
+          {pending.length > 0 && <span className="ach-claim-badge">{pending.length} to claim</span>}
         </div>
-
         <div className="ach-cat-tabs">
           {categories.map((cat) => {
-            const catPending = ACHIEVEMENTS.filter(
-              (a) => a.category === cat && pending.includes(a.id)
-            ).length;
+            const catPending = ACHIEVEMENTS.filter(a => a.category === cat && pending.includes(a.id)).length;
             return (
-              <button
-                key={cat}
-                className={`ach-cat-tab${tab === cat ? " active" : ""}`}
-                onClick={() => setTab(cat)}
-              >
-                {cat}
-                {catPending > 0 && <span className="ach-cat-dot" />}
+              <button key={cat} className={`ach-cat-tab${tab === cat ? " active" : ""}`} onClick={() => setTab(cat)}>
+                {cat}{catPending > 0 && <span className="ach-cat-dot" />}
               </button>
             );
           })}
         </div>
-
         <div className="ach-list">
           {filtered.map((a) => {
             const isClaimed = claimed.includes(a.id);
@@ -360,15 +505,13 @@ function AchievementsModal({
                   <span className="ach-desc">{a.desc}</span>
                 </div>
                 <div className="ach-right">
-                  {isClaimed ? (
-                    <span className="ach-done">Claimed</span>
-                  ) : isPending ? (
-                    <button className="ach-claim-btn" onClick={() => onClaim(a.id)}>
-                      <CoinIcon size={12} />&nbsp;+{a.reward}
-                    </button>
-                  ) : (
-                    <span className="ach-reward-label"><CoinIcon size={11} />&nbsp;{a.reward}</span>
-                  )}
+                  {isClaimed ? <span className="ach-done">Claimed</span>
+                    : isPending ? (
+                      <button className="ach-claim-btn" onClick={() => onClaim(a.id)}>
+                        <CoinIcon size={12} />&nbsp;+{a.reward}
+                      </button>
+                    ) : <span className="ach-reward-label"><CoinIcon size={11} />&nbsp;{a.reward}</span>
+                  }
                 </div>
               </div>
             );
@@ -380,27 +523,20 @@ function AchievementsModal({
 }
 
 // ── MenuPanel ─────────────────────────────────────────────────────────────────
-
-function MenuPanel({
-  open, onClose, stats,
-  playerName, onSaveName,
-  infiniteMode, onToggleInfinite, bestInfinite,
-  coins, onOpenShop, onOpenInventory, onOpenAchievements,
-  pendingCount,
-}: {
+function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode, onToggleInfinite,
+  bestInfinite, coins, onOpenShop, onOpenInventory, onOpenAchievements, onOpenLevels,
+  pendingCount, currentLevel, totalXP }: {
   open: boolean; onClose: () => void;
   stats: { wins: number; games: number; best: number | null };
   playerName: string; onSaveName: (name: string) => void;
   infiniteMode: boolean; onToggleInfinite: () => void; bestInfinite: number;
   coins: number; onOpenShop: () => void; onOpenInventory: () => void;
-  onOpenAchievements: () => void;
-  pendingCount: number;
+  onOpenAchievements: () => void; onOpenLevels: () => void;
+  pendingCount: number; currentLevel: number; totalXP: number;
 }) {
   const [nameInput, setNameInput] = useState(playerName);
   const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => { if (open) setNameInput(playerName); }, [open, playerName]);
-
   const winRate = stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0;
   if (!open) return null;
 
@@ -409,14 +545,12 @@ function MenuPanel({
       <div className="menu-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="menu-handle" />
 
-        {/* Quick-access buttons */}
+        {/* Quick-access actions */}
         <div className="menu-actions">
           <button className="menu-action-btn" onClick={() => { onClose(); onOpenShop(); }}>
             <span className="menu-action-icon">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 2h2l1.5 7.5h8l1.5-5H5.5"/>
-                <circle cx="8" cy="15" r="1"/>
-                <circle cx="13" cy="15" r="1"/>
+                <path d="M2 2h2l1.5 7.5h8l1.5-5H5.5"/><circle cx="8" cy="15" r="1"/><circle cx="13" cy="15" r="1"/>
               </svg>
             </span>
             <span className="menu-action-label">SHOP</span>
@@ -426,10 +560,8 @@ function MenuPanel({
           <button className="menu-action-btn" onClick={() => { onClose(); onOpenInventory(); }}>
             <span className="menu-action-icon">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="6" width="14" height="10" rx="2"/>
-                <path d="M6 6V4a3 3 0 0 1 6 0v2"/>
-                <line x1="9" y1="10" x2="9" y2="13"/>
-                <line x1="7.5" y1="11.5" x2="10.5" y2="11.5"/>
+                <rect x="2" y="6" width="14" height="10" rx="2"/><path d="M6 6V4a3 3 0 0 1 6 0v2"/>
+                <line x1="9" y1="10" x2="9" y2="13"/><line x1="7.5" y1="11.5" x2="10.5" y2="11.5"/>
               </svg>
             </span>
             <span className="menu-action-label">INVENTORY</span>
@@ -445,6 +577,18 @@ function MenuPanel({
             {pendingCount > 0 && <span className="menu-action-badge">{pendingCount}</span>}
             <span className="menu-action-arrow">›</span>
           </button>
+          <button className="menu-action-btn" onClick={() => { onClose(); onOpenLevels(); }}>
+            <span className="menu-action-icon" style={{ color: "#ffd700" }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 2L11 7H16.5L12.1 10.3L13.8 16L9 12.7L4.2 16L5.9 10.3L1.5 7H7L9 2Z"/>
+              </svg>
+            </span>
+            <span className="menu-action-label" style={{ color: "#ffd700" }}>LEVELS</span>
+            <span className="menu-action-coins" style={{ color: currentLevel >= MAX_LEVEL ? "#ffd700" : "var(--stat-label-color)" }}>
+              {currentLevel >= MAX_LEVEL ? "MAX" : `LVL ${currentLevel}`}
+            </span>
+            <span className="menu-action-arrow">›</span>
+          </button>
         </div>
 
         <div className="menu-divider" />
@@ -452,8 +596,7 @@ function MenuPanel({
         <div className="menu-name-row">
           <span className="menu-name-label">PLAYER</span>
           <div className="menu-name-field">
-            <input
-              ref={inputRef} className="menu-name-input" value={nameInput}
+            <input ref={inputRef} className="menu-name-input" value={nameInput}
               placeholder="Enter your name" maxLength={16}
               onChange={(e) => setNameInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { onSaveName(nameInput.trim()); inputRef.current?.blur(); } }}
@@ -490,16 +633,16 @@ function MenuPanel({
 }
 
 // ── ShopModal ─────────────────────────────────────────────────────────────────
-
-function ShopModal({
-  open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, onBuyFlag,
-}: {
+function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, onBuyFlag }: {
   open: boolean; onClose: () => void; coins: number;
   ownedThemes: string[]; ownedFlags: string[];
   onBuyTheme: (id: string) => void; onBuyFlag: (id: string) => void;
 }) {
   const [tab, setTab] = useState<"themes" | "flags">("themes");
   if (!open) return null;
+  // Only show shop-purchasable items (levelReq === 0 and price > 0, plus the free defaults)
+  const shopThemes = THEMES.filter(t => t.levelReq === 0);
+  const shopFlags = FLAGS.filter(f => f.levelReq === 0);
 
   return (
     <div className="menu-overlay" onClick={onClose}>
@@ -509,15 +652,13 @@ function ShopModal({
           <span className="shop-title">SHOP</span>
           <span className="shop-coins"><CoinIcon size={18} /><span>{coins}</span></span>
         </div>
-
         <div className="menu-tabs">
           <button className={`menu-tab${tab === "themes" ? " active" : ""}`} onClick={() => setTab("themes")}>THEMES</button>
           <button className={`menu-tab${tab === "flags" ? " active" : ""}`} onClick={() => setTab("flags")}>FLAGS</button>
         </div>
-
         {tab === "themes" && (
           <div className="shop-grid">
-            {THEMES.map((t) => {
+            {shopThemes.map((t) => {
               const owned = ownedThemes.includes(t.id);
               const canAfford = coins >= t.price;
               return (
@@ -528,14 +669,9 @@ function ShopModal({
                     <div className="theme-swatch-accent" style={{ background: t.accent }} />
                   </div>
                   <span className="shop-card-label">{t.label}</span>
-                  {owned ? (
-                    <span className="shop-owned-badge">Owned</span>
-                  ) : (
-                    <button
-                      className={`shop-buy-btn${canAfford ? "" : " cant-afford"}`}
-                      onClick={() => onBuyTheme(t.id)}
-                      disabled={!canAfford}
-                    >
+                  {owned ? <span className="shop-owned-badge">Owned</span> : (
+                    <button className={`shop-buy-btn${canAfford ? "" : " cant-afford"}`}
+                      onClick={() => onBuyTheme(t.id)} disabled={!canAfford}>
                       <CoinIcon size={11} /> {t.price}
                     </button>
                   )}
@@ -544,24 +680,18 @@ function ShopModal({
             })}
           </div>
         )}
-
         {tab === "flags" && (
           <div className="shop-grid">
-            {FLAGS.map((f) => {
+            {shopFlags.map((f) => {
               const owned = ownedFlags.includes(f.id);
               const canAfford = coins >= f.price;
               return (
                 <div key={f.id} className={`shop-card${owned ? " owned" : ""}`}>
                   <div className="flag-preview">{f.emoji}</div>
                   <span className="shop-card-label">{f.label}</span>
-                  {owned ? (
-                    <span className="shop-owned-badge">Owned</span>
-                  ) : (
-                    <button
-                      className={`shop-buy-btn${canAfford ? "" : " cant-afford"}`}
-                      onClick={() => onBuyFlag(f.id)}
-                      disabled={!canAfford}
-                    >
+                  {owned ? <span className="shop-owned-badge">Owned</span> : (
+                    <button className={`shop-buy-btn${canAfford ? "" : " cant-afford"}`}
+                      onClick={() => onBuyFlag(f.id)} disabled={!canAfford}>
                       <CoinIcon size={11} /> {f.price}
                     </button>
                   )}
@@ -576,11 +706,7 @@ function ShopModal({
 }
 
 // ── InventoryModal ────────────────────────────────────────────────────────────
-
-function InventoryModal({
-  open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag,
-  onEquipTheme, onEquipFlag,
-}: {
+function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag, onEquipTheme, onEquipFlag }: {
   open: boolean; onClose: () => void;
   ownedThemes: string[]; ownedFlags: string[];
   activeTheme: string; activeFlag: string;
@@ -593,50 +719,41 @@ function InventoryModal({
     <div className="menu-overlay" onClick={onClose}>
       <div className="menu-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="menu-handle" />
-        <div className="shop-header">
-          <span className="shop-title">INVENTORY</span>
-        </div>
-
+        <div className="shop-header"><span className="shop-title">INVENTORY</span></div>
         <div className="menu-tabs">
           <button className={`menu-tab${tab === "themes" ? " active" : ""}`} onClick={() => setTab("themes")}>THEMES</button>
           <button className={`menu-tab${tab === "flags" ? " active" : ""}`} onClick={() => setTab("flags")}>FLAGS</button>
         </div>
-
         {tab === "themes" && (
           <div className="shop-grid">
-            {THEMES.filter((t) => ownedThemes.includes(t.id)).map((t) => {
+            {THEMES.filter(t => ownedThemes.includes(t.id)).map((t) => {
               const active = activeTheme === t.id;
+              const isExclusive = t.levelReq > 0;
               return (
-                <button
-                  key={t.id}
-                  className={`shop-card inv-card${active ? " inv-active" : ""}`}
-                  onClick={() => onEquipTheme(t.id)}
-                >
+                <button key={t.id} className={`shop-card inv-card${active ? " inv-active" : ""}`} onClick={() => onEquipTheme(t.id)}>
                   <div className="theme-swatch" style={{ background: t.bg }}>
                     <div className="theme-swatch-cell" style={{ background: t.cell }} />
                     <div className="theme-swatch-cell" style={{ background: t.cell }} />
                     <div className="theme-swatch-accent" style={{ background: t.accent }} />
                   </div>
                   <span className="shop-card-label">{t.label}</span>
+                  {isExclusive && <span className="inv-exclusive-dot" />}
                   {active && <span className="inv-check">✓</span>}
                 </button>
               );
             })}
           </div>
         )}
-
         {tab === "flags" && (
           <div className="shop-grid">
-            {FLAGS.filter((f) => ownedFlags.includes(f.id)).map((f) => {
+            {FLAGS.filter(f => ownedFlags.includes(f.id)).map((f) => {
               const active = activeFlag === f.id;
+              const isExclusive = f.levelReq > 0;
               return (
-                <button
-                  key={f.id}
-                  className={`shop-card inv-card${active ? " inv-active" : ""}`}
-                  onClick={() => onEquipFlag(f.id)}
-                >
+                <button key={f.id} className={`shop-card inv-card${active ? " inv-active" : ""}`} onClick={() => onEquipFlag(f.id)}>
                   <div className="flag-preview">{f.emoji}</div>
                   <span className="shop-card-label">{f.label}</span>
+                  {isExclusive && <span className="inv-exclusive-dot" />}
                   {active && <span className="inv-check">✓</span>}
                 </button>
               );
@@ -649,7 +766,6 @@ function InventoryModal({
 }
 
 // ── Main App ──────────────────────────────────────────────────────────────────
-
 export default function App() {
   const [mode, setMode] = useState<"reveal" | "flag">("reveal");
   const [board, setBoard] = useState<CellState[][]>(createEmptyBoard);
@@ -661,8 +777,7 @@ export default function App() {
   const [shopOpen, setShopOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
-
-  // Track if any flag was placed this game (for no_flags achievement)
+  const [levelsOpen, setLevelsOpen] = useState(false);
   const everFlaggedRef = useRef(false);
 
   // Theme
@@ -683,16 +798,75 @@ export default function App() {
     return s ? JSON.parse(s) : ["default"];
   });
   const [activeFlag, setActiveFlag] = useState<string>(() => localStorage.getItem("ms-active-flag") || "default");
-
   useEffect(() => { localStorage.setItem("ms-coins", String(coins)); }, [coins]);
   useEffect(() => { localStorage.setItem("ms-owned-themes", JSON.stringify(ownedThemes)); }, [ownedThemes]);
   useEffect(() => { localStorage.setItem("ms-owned-flags", JSON.stringify(ownedFlags)); }, [ownedFlags]);
   useEffect(() => { localStorage.setItem("ms-active-flag", activeFlag); }, [activeFlag]);
-
   const flagEmoji = FLAGS.find((f) => f.id === activeFlag)?.emoji ?? "🚩";
 
-  // ── Achievements state ──────────────────────────────────────────────────────
+  // XP & Level
+  const [totalXP, setTotalXP] = useState<number>(() => Number(localStorage.getItem("ms-xp") || "0"));
+  const totalXPRef = useRef(totalXP);
+  useEffect(() => { totalXPRef.current = totalXP; localStorage.setItem("ms-xp", String(totalXP)); }, [totalXP]);
+  const currentLevel = computeLevel(totalXP);
 
+  // Toasts
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const toastKeyRef = useRef(0);
+
+  const pushToast = useCallback((toast: Omit<ToastItem, "key">, delayMs = 0) => {
+    const key = ++toastKeyRef.current;
+    setTimeout(() => {
+      setToasts(t => [...t, { ...toast, key }]);
+      setTimeout(() => setToasts(t => t.filter(x => x.key !== key)), 3800);
+    }, delayMs);
+  }, []);
+
+  // Award XP and handle level-ups
+  const awardXP = useCallback((amount: number) => {
+    setTotalXP(prev => {
+      const oldXP = prev;
+      const newXP = oldXP + amount;
+      const oldLevel = computeLevel(oldXP);
+      const newLevel = Math.min(MAX_LEVEL, computeLevel(newXP));
+
+      if (newLevel > oldLevel) {
+        let delay = 400;
+        for (let lvl = oldLevel + 1; lvl <= newLevel; lvl++) {
+          const reward = LEVEL_REWARDS.find(r => r.level === lvl);
+          if (!reward) continue;
+          // Award coins
+          setCoins(c => c + reward.coins);
+          // Award exclusive flag/theme
+          if (reward.flag) setOwnedFlags(prev2 => prev2.includes(reward.flag!) ? prev2 : [...prev2, reward.flag!]);
+          if (reward.theme) setOwnedThemes(prev2 => prev2.includes(reward.theme!) ? prev2 : [...prev2, reward.theme!]);
+
+          // Build subtitle for toast
+          const extras: string[] = [];
+          if (reward.flag) extras.push(`${reward.flagEmoji} ${reward.flagLabel} flag`);
+          if (reward.theme) extras.push(`${reward.themeLabel} theme`);
+          const subtitle = extras.length > 0 ? extras.join(" · ") : undefined;
+
+          const toastPayload: Omit<ToastItem, "key"> = {
+            type: "levelup",
+            title: lvl >= MAX_LEVEL ? "Max Level Reached!" : `Level ${lvl}`,
+            subtitle,
+            coins: reward.coins,
+          };
+          const capturedDelay = delay;
+          setTimeout(() => {
+            const k = ++toastKeyRef.current;
+            setToasts(t => [...t, { ...toastPayload, key: k }]);
+            setTimeout(() => setToasts(t => t.filter(x => x.key !== k)), 4000);
+          }, capturedDelay);
+          delay += 700;
+        }
+      }
+      return newXP;
+    });
+  }, [pushToast]);
+
+  // Achievements state
   const [claimedAchievements, setClaimedAchievements] = useState<string[]>(() => {
     const s = localStorage.getItem("ms-claimed-achievements");
     return s ? JSON.parse(s) : [];
@@ -701,58 +875,41 @@ export default function App() {
     const s = localStorage.getItem("ms-pending-achievements");
     return s ? JSON.parse(s) : [];
   });
-  const [toasts, setToasts] = useState<AchievementToastItem[]>([]);
-  const toastKeyRef = useRef(0);
-
   useEffect(() => { localStorage.setItem("ms-claimed-achievements", JSON.stringify(claimedAchievements)); }, [claimedAchievements]);
   useEffect(() => { localStorage.setItem("ms-pending-achievements", JSON.stringify(pendingAchievements)); }, [pendingAchievements]);
 
-  // Show toast + mark pending for a list of newly unlocked achievement IDs
   const unlockAchievements = useCallback((ids: string[]) => {
     if (ids.length === 0) return;
-    setPendingAchievements((prev) => {
-      const toAdd = ids.filter((id) => !prev.includes(id));
+    setPendingAchievements(prev => {
+      const toAdd = ids.filter(id => !prev.includes(id));
       return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
     });
-    // Queue toasts
     ids.forEach((id, i) => {
-      const def = ACHIEVEMENTS.find((a) => a.id === id);
+      const def = ACHIEVEMENTS.find(a => a.id === id);
       if (!def) return;
-      const key = ++toastKeyRef.current;
-      setTimeout(() => {
-        setToasts((t) => [...t, { id, title: def.title, reward: def.reward, key }]);
-        setTimeout(() => setToasts((t) => t.filter((x) => x.key !== key)), 3500);
-      }, i * 600);
+      pushToast({ type: "achievement", title: def.title, reward: def.reward }, i * 650);
     });
-  }, []);
+  }, [pushToast]);
 
-  // Claim a pending achievement → give coins, move to claimed
   const handleClaimAchievement = useCallback((id: string) => {
-    const def = ACHIEVEMENTS.find((a) => a.id === id);
+    const def = ACHIEVEMENTS.find(a => a.id === id);
     if (!def) return;
-    setPendingAchievements((prev) => prev.filter((x) => x !== id));
-    setClaimedAchievements((prev) => [...prev, id]);
-    setCoins((c) => c + def.reward);
-  }, []);
+    setPendingAchievements(prev => prev.filter(x => x !== id));
+    setClaimedAchievements(prev => [...prev, id]);
+    setCoins(c => c + def.reward);
+    awardXP(10); // small XP bonus for claiming
+  }, [awardXP]);
 
-  // Check achievements given current snapshot of stats + game data
   const checkAchievements = useCallback((opts: {
-    wins?: number;
-    games?: number;
-    time?: number;
-    neverFlagged?: boolean;
-    waveCount?: number;
-    ownedFlagsCount?: number;
-    allFlagsOwned?: boolean;
-    allThemesOwned?: boolean;
+    wins?: number; games?: number; time?: number;
+    neverFlagged?: boolean; waveCount?: number;
+    ownedFlagsCount?: number; allPurchasableFlagsOwned?: boolean; allPurchasableThemesOwned?: boolean;
   }) => {
-    setPendingAchievements((pending) => {
-      setClaimedAchievements((claimed) => {
+    setPendingAchievements(pending => {
+      setClaimedAchievements(claimed => {
         const newIds: string[] = [];
         const has = (id: string) => claimed.includes(id) || pending.includes(id) || newIds.includes(id);
-
-        const { wins, games, time, neverFlagged, waveCount, ownedFlagsCount, allFlagsOwned, allThemesOwned } = opts;
-
+        const { wins, games, time, neverFlagged, waveCount, ownedFlagsCount, allPurchasableFlagsOwned, allPurchasableThemesOwned } = opts;
         if (wins !== undefined) {
           if (wins >= 1   && !has("first_win")) newIds.push("first_win");
           if (wins >= 10  && !has("wins_10"))   newIds.push("wins_10");
@@ -765,7 +922,6 @@ export default function App() {
           if (time < 15 && !has("speed_15")) newIds.push("speed_15");
         }
         if (neverFlagged && !has("no_flags")) newIds.push("no_flags");
-
         if (games !== undefined) {
           if (games >= 10  && !has("games_10"))  newIds.push("games_10");
           if (games >= 50  && !has("games_50"))  newIds.push("games_50");
@@ -777,54 +933,46 @@ export default function App() {
           if (waveCount >= 25 && !has("wave_25")) newIds.push("wave_25");
           if (waveCount >= 50 && !has("wave_50")) newIds.push("wave_50");
         }
-        if (ownedFlagsCount !== undefined) {
-          if (ownedFlagsCount >= 5 && !has("flags_5")) newIds.push("flags_5");
-        }
-        if (allFlagsOwned && !has("flags_all")) newIds.push("flags_all");
-        if (allThemesOwned && !has("themes_all")) newIds.push("themes_all");
-
+        if (ownedFlagsCount !== undefined && ownedFlagsCount >= 5 && !has("flags_5")) newIds.push("flags_5");
+        if (allPurchasableFlagsOwned && !has("flags_all")) newIds.push("flags_all");
+        if (allPurchasableThemesOwned && !has("themes_all")) newIds.push("themes_all");
         if (newIds.length > 0) unlockAchievements(newIds);
-        return claimed; // no change to claimed here
+        return claimed;
       });
-      return pending; // no change to pending here (unlockAchievements handles it)
+      return pending;
     });
   }, [unlockAchievements]);
 
-  // ── Shop handlers ───────────────────────────────────────────────────────────
-
+  // Shop handlers
   const handleBuyTheme = useCallback((id: string) => {
-    const t = THEMES.find((t) => t.id === id);
+    const t = THEMES.find(t => t.id === id);
     if (!t || ownedThemes.includes(id) || coins < t.price) return;
-    setCoins((c) => c - t.price);
-    setOwnedThemes((prev) => {
+    setCoins(c => c - t.price);
+    setOwnedThemes(prev => {
       const next = [...prev, id];
-      const allOwned = THEMES.every((th) => next.includes(th.id));
-      setTimeout(() => checkAchievements({ allThemesOwned: allOwned }), 0);
+      const shopThemes = THEMES.filter(th => th.levelReq === 0 && th.price > 0);
+      const allOwned = shopThemes.every(th => next.includes(th.id));
+      setTimeout(() => checkAchievements({ allPurchasableThemesOwned: allOwned }), 0);
       return next;
     });
   }, [coins, ownedThemes, checkAchievements]);
 
   const handleBuyFlag = useCallback((id: string) => {
-    const f = FLAGS.find((f) => f.id === id);
+    const f = FLAGS.find(f => f.id === id);
     if (!f || ownedFlags.includes(id) || coins < f.price) return;
-    setCoins((c) => c - f.price);
-    setOwnedFlags((prev) => {
+    setCoins(c => c - f.price);
+    setOwnedFlags(prev => {
       const next = [...prev, id];
-      const allOwned = FLAGS.every((fl) => next.includes(fl.id));
-      setTimeout(() => checkAchievements({ ownedFlagsCount: next.length, allFlagsOwned: allOwned }), 0);
+      const shopFlags = FLAGS.filter(fl => fl.levelReq === 0 && fl.price > 0);
+      const allOwned = shopFlags.every(fl => next.includes(fl.id));
+      const purchasableOwned = next.filter(id => FLAGS.find(fl => fl.id === id && fl.levelReq === 0) !== undefined);
+      setTimeout(() => checkAchievements({ ownedFlagsCount: purchasableOwned.length, allPurchasableFlagsOwned: allOwned }), 0);
       return next;
     });
   }, [coins, ownedFlags, checkAchievements]);
 
-  const handleEquipTheme = useCallback((id: string) => {
-    setTheme(id);
-    setInventoryOpen(false);
-  }, []);
-
-  const handleEquipFlag = useCallback((id: string) => {
-    setActiveFlag(id);
-    setInventoryOpen(false);
-  }, []);
+  const handleEquipTheme = useCallback((id: string) => { setTheme(id); setInventoryOpen(false); }, []);
+  const handleEquipFlag = useCallback((id: string) => { setActiveFlag(id); setInventoryOpen(false); }, []);
 
   // Infinite mode
   const [infiniteMode, setInfiniteMode] = useState(() => localStorage.getItem("ms-infinite") === "true");
@@ -836,25 +984,21 @@ export default function App() {
     const s = localStorage.getItem("ms-infinite-lb");
     return s ? JSON.parse(s) : [];
   });
-
   const [playerName, setPlayerName] = useState<string>(() => localStorage.getItem("ms-player") || "");
   const [stats, setStats] = useState(() => {
     const saved = localStorage.getItem("ms-stats");
     return saved ? JSON.parse(saved) : { games: 0, wins: 0, best: null as number | null };
   });
-
   useEffect(() => { localStorage.setItem("ms-stats", JSON.stringify(stats)); }, [stats]);
   useEffect(() => { localStorage.setItem("ms-infinite-lb", JSON.stringify(infiniteLB)); }, [infiniteLB]);
   useEffect(() => { infiniteCountRef.current = infiniteCount; }, [infiniteCount]);
 
-  const bestInfinite = infiniteLB
-    .filter((e) => e.name === (playerName || "Anonymous"))
-    .reduce((m, e) => Math.max(m, e.boards), 0);
+  const bestInfinite = infiniteLB.filter(e => e.name === (playerName || "Anonymous")).reduce((m, e) => Math.max(m, e.boards), 0);
 
   // Timer
   useEffect(() => {
     if (status !== "playing") return;
-    const id = setInterval(() => setElapsed((t) => Math.min(t + 1, 999)), 1000);
+    const id = setInterval(() => setElapsed(t => Math.min(t + 1, 999)), 1000);
     return () => clearInterval(id);
   }, [status]);
 
@@ -870,15 +1014,12 @@ export default function App() {
     };
     frame();
   }, [theme]);
-
-  useEffect(() => {
-    if (status === "won") fireConfetti();
-  }, [status, fireConfetti]);
+  useEffect(() => { if (status === "won") fireConfetti(); }, [status, fireConfetti]);
 
   const saveInfiniteScore = useCallback((name: string, boards: number) => {
     if (!name || boards === 0) return;
     const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
-    setInfiniteLB((lb) => [...lb, { name, boards, date: today }].sort((a, b) => b.boards - a.boards).slice(0, 20));
+    setInfiniteLB(lb => [...lb, { name, boards, date: today }].sort((a, b) => b.boards - a.boards).slice(0, 20));
   }, []);
 
   const endInfiniteRun = useCallback(() => {
@@ -886,7 +1027,6 @@ export default function App() {
       saveInfiniteScore(playerName || "Anonymous", infiniteCountRef.current);
   }, [infiniteMode, playerName, saveInfiniteScore]);
 
-  // Reset
   const reset = useCallback(() => {
     endInfiniteRun();
     setBoard(createEmptyBoard());
@@ -908,10 +1048,7 @@ export default function App() {
   }, [reset]);
 
   const handleToggleInfinite = useCallback(() => {
-    setInfiniteMode((prev) => {
-      localStorage.setItem("ms-infinite", String(!prev));
-      return !prev;
-    });
+    setInfiniteMode(prev => { localStorage.setItem("ms-infinite", String(!prev)); return !prev; });
     endInfiniteRun();
     setBoard(createEmptyBoard());
     setStatus("idle");
@@ -941,36 +1078,31 @@ export default function App() {
     }, 600);
   }, []);
 
-  // Win handler
   const handleWin = useCallback((revealed: CellState[][], time: number) => {
-    const finished = revealed.map((row) => row.map((cell) => (cell.mine ? { ...cell, flagged: true } : cell)));
+    const finished = revealed.map(row => row.map(cell => (cell.mine ? { ...cell, flagged: true } : cell)));
     setBoard(finished);
     setFlagCount(MINES);
     if (infiniteMode) {
       const newCount = infiniteCountRef.current + 1;
       setInfiniteCount(newCount);
       infiniteCountRef.current = newCount;
-      // Check wave achievements
       checkAchievements({ waveCount: newCount });
+      awardXP(15); // XP per infinite wave
       triggerInfiniteTransition(finished);
     } else {
       setStatus("won");
-      setCoins((c) => c + COINS_PER_WIN);
+      setCoins(c => c + COINS_PER_WIN);
+      const xpEarned = getWinXP(time);
+      awardXP(xpEarned);
       setStats((s: typeof stats) => {
         const newWins = s.wins + 1;
         const newBest = s.best === null || time < s.best ? time : s.best;
-        // Check win/speed/no-flags achievements
-        checkAchievements({
-          wins: newWins,
-          time,
-          neverFlagged: !everFlaggedRef.current,
-        });
+        checkAchievements({ wins: newWins, time, neverFlagged: !everFlaggedRef.current });
         return { games: s.games, wins: newWins, best: newBest };
       });
     }
-  }, [infiniteMode, checkAchievements, triggerInfiniteTransition]);
+  }, [infiniteMode, checkAchievements, awardXP, triggerInfiniteTransition]);
 
-  // Handle reveal
   const handleReveal = useCallback((r: number, c: number) => {
     if (status === "won" || status === "lost" || status === "transitioning") return;
     const cell = board[r][c];
@@ -989,7 +1121,7 @@ export default function App() {
       }
     }
     if (currentBoard[r][c].mine) {
-      const exploded = currentBoard.map((row) => row.map((cell) => (cell.mine ? { ...cell, revealed: true } : { ...cell })));
+      const exploded = currentBoard.map(row => row.map(cell => (cell.mine ? { ...cell, revealed: true } : { ...cell })));
       setBoard(exploded);
       setStatus("lost");
       endInfiniteRun();
@@ -998,27 +1130,22 @@ export default function App() {
       return;
     }
     const revealed = floodReveal(currentBoard, r, c);
-    if (checkWin(revealed)) {
-      handleWin(revealed, elapsed);
-    } else {
-      setBoard(revealed);
-    }
+    if (checkWin(revealed)) handleWin(revealed, elapsed);
+    else setBoard(revealed);
   }, [board, status, firstClick, infiniteMode, elapsed, endInfiniteRun, handleWin, checkAchievements]);
 
-  // Handle flag
   const handleFlag = useCallback((e: React.MouseEvent, r: number, c: number) => {
     e.preventDefault();
     if (status === "won" || status === "lost" || status === "transitioning") return;
     const cell = board[r][c];
     if (cell.revealed) return;
-    const next = board.map((row) => row.map((c) => ({ ...c })));
+    const next = board.map(row => row.map(c => ({ ...c })));
     next[r][c].flagged = !next[r][c].flagged;
     setBoard(next);
-    setFlagCount((f) => (cell.flagged ? f - 1 : f + 1));
-    if (!cell.flagged) everFlaggedRef.current = true; // placing a flag
+    setFlagCount(f => (cell.flagged ? f - 1 : f + 1));
+    if (!cell.flagged) everFlaggedRef.current = true;
   }, [board, status]);
 
-  // Handle chord
   const handleChord = useCallback((r: number, c: number) => {
     if (status === "won" || status === "lost" || status === "transitioning") return;
     const cell = board[r][c];
@@ -1038,7 +1165,7 @@ export default function App() {
         const neighbor = currentBoard[nr][nc];
         if (neighbor.revealed || neighbor.flagged) continue;
         if (neighbor.mine) {
-          const boom = currentBoard.map((row) => row.map((c) => (c.mine ? { ...c, revealed: true } : { ...c })));
+          const boom = currentBoard.map(row => row.map(c => (c.mine ? { ...c, revealed: true } : { ...c })));
           setBoard(boom);
           setStatus("lost");
           endInfiniteRun();
@@ -1048,11 +1175,8 @@ export default function App() {
         }
         currentBoard = floodReveal(currentBoard, nr, nc);
       }
-    if (checkWin(currentBoard)) {
-      handleWin(currentBoard, elapsed);
-    } else {
-      setBoard(currentBoard);
-    }
+    if (checkWin(currentBoard)) handleWin(currentBoard, elapsed);
+    else setBoard(currentBoard);
   }, [board, status, elapsed, endInfiniteRun, handleWin]);
 
   const handleSaveName = useCallback((name: string) => {
@@ -1123,11 +1247,14 @@ export default function App() {
         </div>
       </div>
 
+      {/* XP Bar */}
+      <XPBar totalXP={totalXP} />
+
       {/* Banners */}
       {!infiniteMode && (status === "won" || status === "lost") && (
         <div className={`banner ${status}`}>
           {status === "won"
-            ? <><span>YOU WIN!</span><span className="coin-earn"><CoinIcon size={13} />+{COINS_PER_WIN}</span></>
+            ? <><span>YOU WIN!</span><span className="coin-earn"><CoinIcon size={13} />+{COINS_PER_WIN}</span><span className="xp-earn">+{getWinXP(elapsed)} XP</span></>
             : "GAME OVER"}
           <button onClick={reset} className="play-again">Play Again</button>
         </div>
@@ -1148,13 +1275,9 @@ export default function App() {
             </div>
           )}
           <div className={`board-pos ${transitioning ? "board-enter" : ""}`}>
-            <BoardGrid
-              board={board}
-              flagEmoji={flagEmoji}
-              onCellClick={handleCellClick}
-              onCellContext={handleCellContext}
-              interactive={!transitioning}
-            />
+            <BoardGrid board={board} flagEmoji={flagEmoji}
+              onCellClick={handleCellClick} onCellContext={handleCellContext}
+              interactive={!transitioning} />
           </div>
         </div>
       </div>
@@ -1165,39 +1288,33 @@ export default function App() {
         <button className={`mode-btn${mode === "flag" ? " active" : ""}`} onClick={() => setMode("flag")}>FLAG</button>
       </div>
 
-      {/* Achievement toasts */}
-      <AchievementToastStack toasts={toasts} />
+      {/* Toasts */}
+      <ToastStack toasts={toasts} />
 
       {/* Modals */}
       <MenuPanel
         open={menuOpen} onClose={() => setMenuOpen(false)}
-        stats={stats}
-        playerName={playerName} onSaveName={handleSaveName}
+        stats={stats} playerName={playerName} onSaveName={handleSaveName}
         infiniteMode={infiniteMode} onToggleInfinite={handleToggleInfinite}
-        bestInfinite={bestInfinite}
-        coins={coins}
+        bestInfinite={bestInfinite} coins={coins}
         onOpenShop={() => setShopOpen(true)}
         onOpenInventory={() => setInventoryOpen(true)}
         onOpenAchievements={() => setAchievementsOpen(true)}
+        onOpenLevels={() => setLevelsOpen(true)}
         pendingCount={pendingAchievements.length}
+        currentLevel={currentLevel} totalXP={totalXP}
       />
-      <ShopModal
-        open={shopOpen} onClose={() => setShopOpen(false)}
+      <ShopModal open={shopOpen} onClose={() => setShopOpen(false)}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
-        onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag}
-      />
-      <InventoryModal
-        open={inventoryOpen} onClose={() => setInventoryOpen(false)}
+        onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag} />
+      <InventoryModal open={inventoryOpen} onClose={() => setInventoryOpen(false)}
         ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         activeTheme={theme} activeFlag={activeFlag}
-        onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag}
-      />
-      <AchievementsModal
-        open={achievementsOpen} onClose={() => setAchievementsOpen(false)}
-        claimed={claimedAchievements}
-        pending={pendingAchievements}
-        onClaim={handleClaimAchievement}
-      />
+        onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag} />
+      <AchievementsModal open={achievementsOpen} onClose={() => setAchievementsOpen(false)}
+        claimed={claimedAchievements} pending={pendingAchievements}
+        onClaim={handleClaimAchievement} />
+      <LevelsModal open={levelsOpen} onClose={() => setLevelsOpen(false)} totalXP={totalXP} />
     </div>
   );
 }
