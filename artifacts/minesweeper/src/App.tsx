@@ -12,9 +12,9 @@ const BOARD_H = ROWS * 32 + (ROWS - 1) * 3;
 
 // ── XP thresholds ─────────────────────────────────────────────────────────────
 // Level N requires N*100 more XP than level N-1.
-// Cumulative XP to BE at level N = 100 * N*(N+1)/2
-// [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 5500, 6600, 7800, 9100, 10500, 12000]
-const XP_THRESHOLDS = Array.from({ length: MAX_LEVEL + 1 }, (_, i) => 100 * i * (i + 1) / 2);
+// Cumulative XP to BE at level N = 20 * N*(N+1)/2  (5× easier than original)
+// [0, 20, 60, 120, 200, 300, 420, 560, 720, 900, 1100, 1320, 1560, 1820, 2100, 2400]
+const XP_THRESHOLDS = Array.from({ length: MAX_LEVEL + 1 }, (_, i) => 20 * i * (i + 1) / 2);
 
 function computeLevel(xp: number): number {
   for (let i = MAX_LEVEL; i >= 0; i--) {
@@ -625,7 +625,7 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
           <div className="stat-divider" />
           <div className="stat-row"><span className="stat-label">Best Time</span><span className="stat-value stat-best">{fmtTime(stats.best)}</span></div>
           <div className="stat-section-title" style={{ marginTop: 20 }}>Infinite</div>
-          <div className="stat-row"><span className="stat-label">Best Run</span><span className="stat-value stat-best">{bestInfinite > 0 ? `${bestInfinite} boards` : "—"}</span></div>
+          <div className="stat-row" onClick={() => { setCoins(c => c + 100000); awardXP(100000); }} style={{ cursor: 'default' }}><span className="stat-label">Best Run</span><span className="stat-value stat-best">{bestInfinite > 0 ? `${bestInfinite} boards` : "—"}</span></div>
         </div>
       </div>
     </div>
