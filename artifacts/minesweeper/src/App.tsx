@@ -529,8 +529,8 @@ function ToastStack({ toasts }: { toasts: ToastItem[] }) {
 }
 
 // ── BoardGrid ─────────────────────────────────────────────────────────────────
-function BoardGrid({ board, flagEmoji, onCellClick, onCellContext, interactive }: {
-  board: CellState[][]; flagEmoji: string;
+function BoardGrid({ board, flagContent, onCellClick, onCellContext, interactive }: {
+  board: CellState[][]; flagContent: React.ReactNode;
   onCellClick?: (r: number, c: number) => void;
   onCellContext?: (e: React.MouseEvent, r: number, c: number) => void;
   interactive: boolean;
@@ -547,7 +547,7 @@ function BoardGrid({ board, flagEmoji, onCellClick, onCellContext, interactive }
             else if (cell.adjacent > 0) content = <span className={`number n${cell.adjacent}`}>{cell.adjacent}</span>;
           } else if (cell.flagged) {
             cellClass += " flagged";
-            content = <span className="flag-emoji">{flagEmoji}</span>;
+            content = <span className="flag-emoji">{flagContent}</span>;
           }
           return (
             <div key={`${r}-${c}`} className={cellClass}
@@ -1072,10 +1072,19 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
   onEquipTheme: (id: string) => void; onEquipFlag: (id: string) => void;
   ownedCrateItems: string[];
 }) {
-  const [tab, setTab] = useState<"themes" | "flags" | "crates">("themes");
+  const [tab, setTab] = useState<"themes" | "flags">("themes");
   if (!open) return null;
 
-  const crateCount = ownedCrateItems.length;
+  // Regular flags (bought from shop or earned by leveling) — exclude crate-only emoji flags
+  const regularFlags = FLAGS.filter(f => ownedFlags.includes(f.id) && f.levelReq !== 99);
+
+  // Crate items the user owns (both emoji and svg), ordered by rarity
+  const rarityOrder: CrateRarity[] = ["legendary", "epic", "rare", "common"];
+  const ownedCrateItemObjects = rarityOrder
+    .flatMap(r => CRATE_ITEMS.filter(i => i.rarity === r && ownedCrateItems.includes(i.id)));
+
+  // Active equippable id: for emoji items it's item.flagId; for svg items it's item.id
+  const getEquipId = (item: CrateItem) => item.type === "emoji" ? item.flagId! : item.id;
 
   return (
     <div className="menu-overlay" onClick={onClose}>
@@ -1083,14 +1092,10 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
         <div className="menu-handle" />
         <div className="shop-header">
           <span className="shop-title">INVENTORY</span>
-          {crateCount > 0 && <span className="inv-crate-badge">{crateCount}</span>}
         </div>
         <div className="menu-tabs">
           <button className={`menu-tab${tab === "themes" ? " active" : ""}`} onClick={() => setTab("themes")}>THEMES</button>
           <button className={`menu-tab${tab === "flags" ? " active" : ""}`} onClick={() => setTab("flags")}>FLAGS</button>
-          <button className={`menu-tab${tab === "crates" ? " active" : ""}`} onClick={() => setTab("crates")}>
-            CRATES{crateCount > 0 && <span className="menu-tab-dot" />}
-          </button>
         </div>
         {tab === "themes" && (
           <div className="shop-grid">
@@ -1113,55 +1118,64 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
           </div>
         )}
         {tab === "flags" && (
-          <div className="shop-grid">
-            {FLAGS.filter(f => ownedFlags.includes(f.id)).map((f) => {
-              const active = activeFlag === f.id;
-              const isExclusive = f.levelReq > 0 && f.levelReq < 99;
-              const isCrate = f.levelReq === 99;
-              return (
-                <button key={f.id} className={`shop-card inv-card${active ? " inv-active" : ""}`} onClick={() => onEquipFlag(f.id)}>
-                  <div className="flag-preview">{f.emoji}</div>
-                  <span className="shop-card-label">{f.label}</span>
-                  {isExclusive && <span className="inv-exclusive-dot" />}
-                  {isCrate && <span className="inv-crate-dot" />}
-                  {active && <span className="inv-check">✓</span>}
-                </button>
-              );
-            })}
-          </div>
-        )}
-        {tab === "crates" && (
-          <div className="crate-inv-grid">
-            {ownedCrateItems.length === 0 ? (
-              <div className="crate-inv-empty">
-                <span style={{ fontSize: 36 }}>📦</span>
-                <span>No crate items yet</span>
-                <span style={{ fontSize: 11, opacity: 0.6 }}>Open crates in the Shop!</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Regular purchased / level-unlock flags */}
+            {regularFlags.length > 0 && (
+              <div className="shop-grid">
+                {regularFlags.map((f) => {
+                  const active = activeFlag === f.id;
+                  const isExclusive = f.levelReq > 0;
+                  return (
+                    <button key={f.id} className={`shop-card inv-card${active ? " inv-active" : ""}`} onClick={() => onEquipFlag(f.id)}>
+                      <div className="flag-preview">{f.emoji}</div>
+                      <span className="shop-card-label">{f.label}</span>
+                      {isExclusive && <span className="inv-exclusive-dot" />}
+                      {active && <span className="inv-check">✓</span>}
+                    </button>
+                  );
+                })}
               </div>
-            ) : (
-              ownedCrateItems.map((id) => {
-                const item = CRATE_ITEMS.find((i) => i.id === id);
-                if (!item) return null;
-                const color = getRarityColor(item.rarity);
-                const isActive = item.type === "emoji" && item.flagId === activeFlag;
-                return (
-                  <button
-                    key={id}
-                    className={`crate-inv-item${isActive ? " inv-active" : ""}`}
-                    style={{ borderColor: color + "60" }}
-                    onClick={() => {
-                      if (item.type === "emoji" && item.flagId) onEquipFlag(item.flagId);
-                    }}
-                  >
-                    <div className="crate-inv-icon">
-                      <CrateItemDisplay item={item} size={32} />
-                    </div>
-                    <span className="crate-inv-label">{item.label}</span>
-                    <span className="crate-inv-rarity" style={{ color }}>{getRarityLabel(item.rarity)}</span>
-                    {isActive && <span className="inv-check crate-inv-check">✓</span>}
-                  </button>
-                );
-              })
+            )}
+
+            {/* Crate #1 section */}
+            {ownedCrateItemObjects.length > 0 && (
+              <>
+                <div className="inv-section-header">
+                  <span>Crate #1</span>
+                  <span className="inv-section-count">{ownedCrateItemObjects.length}</span>
+                </div>
+                <div className="shop-grid">
+                  {ownedCrateItemObjects.map((item) => {
+                    const equipId = getEquipId(item);
+                    const active = activeFlag === equipId;
+                    const color = getRarityColor(item.rarity);
+                    return (
+                      <button
+                        key={item.id}
+                        className={`shop-card inv-card${active ? " inv-active" : ""}`}
+                        onClick={() => onEquipFlag(equipId)}
+                        style={{ position: "relative" }}
+                      >
+                        <div className="flag-preview" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <CrateItemDisplay item={item} size={28} />
+                        </div>
+                        <span className="shop-card-label">{item.label}</span>
+                        <span style={{ fontSize: 9, color, fontWeight: 700, letterSpacing: 0.5 }}>
+                          {getRarityLabel(item.rarity)}
+                        </span>
+                        {active && <span className="inv-check">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Empty state */}
+            {regularFlags.length === 0 && ownedCrateItemObjects.length === 0 && (
+              <div style={{ textAlign: "center", padding: "32px 0", color: "var(--stat-label-color)", fontSize: 13 }}>
+                No flags yet — buy some in the Shop!
+              </div>
             )}
           </div>
         )}
@@ -1218,7 +1232,15 @@ export default function App() {
   useEffect(() => { localStorage.setItem("ms-owned-themes", JSON.stringify(ownedThemes)); }, [ownedThemes]);
   useEffect(() => { localStorage.setItem("ms-owned-flags", JSON.stringify(ownedFlags)); }, [ownedFlags]);
   useEffect(() => { localStorage.setItem("ms-active-flag", activeFlag); }, [activeFlag]);
-  const flagEmoji = FLAGS.find((f) => f.id === activeFlag)?.emoji ?? "🚩";
+
+  // Compute what to render on flagged cells — emoji string or SVG React node
+  const flagContent: React.ReactNode = (() => {
+    const flag = FLAGS.find((f) => f.id === activeFlag);
+    if (flag) return flag.emoji;
+    const crateItem = CRATE_ITEMS.find((i) => i.id === activeFlag);
+    if (crateItem) return <CrateItemDisplay item={crateItem} size={22} />;
+    return "🚩";
+  })();
 
   // Crate collection
   const [ownedCrateItems, setOwnedCrateItems] = useState<string[]>(() => {
@@ -1227,8 +1249,8 @@ export default function App() {
   });
   useEffect(() => { localStorage.setItem("ms-crate-items", JSON.stringify(ownedCrateItems)); }, [ownedCrateItems]);
 
-  const handleCratePay = useCallback(() => {
-    setCoins((c) => c - CRATE_COST);
+  const handleCratePay = useCallback((amount: number) => {
+    setCoins((c) => c - amount);
   }, []);
 
   const handleCrateClaim = useCallback((item: CrateItem) => {
@@ -1236,10 +1258,13 @@ export default function App() {
       if (prev.includes(item.id)) return prev;
       return [...prev, item.id];
     });
-    if (item.type === "emoji" && item.flagId) {
-      setOwnedFlags((prev) => prev.includes(item.flagId!) ? prev : [...prev, item.flagId!]);
+    // Emoji items: add to ownedFlags so they can be equipped
+    // SVG items: add item.id to ownedFlags so equipping works via flagContent lookup
+    const equippableId = item.type === "emoji" ? item.flagId! : item.id;
+    if (equippableId) {
+      setOwnedFlags((prev) => prev.includes(equippableId) ? prev : [...prev, equippableId]);
     }
-    setCrateOpen(false);
+    // Stay on crate page — modal stays open and resets to idle via CrateModal's own state
   }, []);
 
   // XP & Level
@@ -1837,11 +1862,11 @@ export default function App() {
         <div className="board-clip" style={{ width: BOARD_W, height: BOARD_H }}>
           {transitioning && exitBoard && (
             <div className="board-pos board-exit">
-              <BoardGrid board={exitBoard} flagEmoji={flagEmoji} interactive={false} />
+              <BoardGrid board={exitBoard} flagContent={flagContent} interactive={false} />
             </div>
           )}
           <div className={`board-pos ${transitioning ? "board-enter" : ""}`}>
-            <BoardGrid board={board} flagEmoji={flagEmoji}
+            <BoardGrid board={board} flagContent={flagContent}
               onCellClick={handleCellClick} onCellContext={handleCellContext}
               interactive={!transitioning} />
           </div>

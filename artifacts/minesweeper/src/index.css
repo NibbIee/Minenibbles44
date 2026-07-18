@@ -3405,3 +3405,103 @@ body {
   margin-left: 4px;
   vertical-align: middle;
 }
+
+/* ── Inventory section header ── */
+.inv-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--stat-label-color);
+  padding: 2px 2px 0;
+}
+
+.inv-section-count {
+  background: var(--tab-bg);
+  border: 1px solid var(--tab-border);
+  border-radius: 8px;
+  font-size: 10px;
+  padding: 1px 7px;
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* ── Crate quantity toggle ── */
+.crate-open-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.crate-qty-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--tab-border);
+  border-radius: 6px;
+  overflow: hidden;
+  align-self: center;
+}
+
+.crate-qty-btn {
+  padding: 7px 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--stat-label-color);
+  letter-spacing: 1px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.crate-qty-btn + .crate-qty-btn {
+  border-left: 1px solid var(--tab-border);
+}
+
+.crate-qty-btn.active {
+  background: var(--accent);
+  color: #000;
+}
+
+/* ── Multi-winner list ── */
+.crate-winners-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.crate-winner-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--tab-bg);
+  border: 1px solid;
+  border-radius: 8px;
+}
+
+.crate-claim-all-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 11px;
+  border: 1px solid;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: background 0.15s;
+}
+
+.crate-claim-all-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
