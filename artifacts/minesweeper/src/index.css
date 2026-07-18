@@ -834,77 +834,202 @@ body {
 .lb-rate { color: var(--lb-rate-color, #888); }
 .lb-best { color: var(--accent); font-family: 'Courier New', monospace; }
 
-/* ── Themes tab ── */
-.theme-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+/* ── Topbar right ── */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.theme-card {
+/* ── Coin counter (topbar pill) ── */
+.coin-counter {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--icon-btn-bg);
+  border-radius: 20px;
+  padding: 0 10px;
+  height: 36px;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text);
+  transition: background 0.2s;
+}
+
+.coin-icon-sm { font-size: 14px; line-height: 1; }
+.coin-amount  { font-family: 'Courier New', monospace; min-width: 20px; }
+
+/* ── Win coin earn badge ── */
+.coin-earn {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffd700;
+  background: rgba(255,215,0,0.12);
+  border-radius: 8px;
+  padding: 2px 8px;
+}
+
+/* ── Shop / Inventory header ── */
+.shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.shop-title {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.shop-coins {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  color: var(--text);
+}
+
+.coin-icon { font-size: 20px; }
+
+/* ── Shop / Inventory grid ── */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+/* ── Shop card (display only) ── */
+.shop-card {
   position: relative;
   background: var(--theme-card-bg);
   border: 2px solid var(--theme-card-border);
   border-radius: 14px;
-  padding: 12px;
-  cursor: pointer;
+  padding: 10px 6px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  transition: border-color 0.15s;
+}
+
+.shop-card.owned { border-color: var(--accent); opacity: 0.75; }
+
+/* ── Inventory card (button) ── */
+.inv-card {
+  cursor: pointer;
+  border: none;
+  background: var(--theme-card-bg);
+  border: 2px solid var(--theme-card-border);
+  border-radius: 14px;
+  padding: 10px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   transition: border-color 0.15s, transform 0.1s;
 }
 
-.theme-card:active { transform: scale(0.96); }
+.inv-card:active { transform: scale(0.95); }
+.inv-card.inv-active { border-color: var(--accent); }
+.inv-card.inv-active .shop-card-label { color: var(--accent); }
 
-.theme-card.selected {
-  border-color: var(--accent);
-}
-
+/* ── Theme swatch ── */
 .theme-swatch {
   width: 100%;
-  height: 52px;
+  height: 46px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 8px;
-  position: relative;
-  overflow: hidden;
+  gap: 4px;
+  padding: 6px;
 }
 
 .theme-swatch-cell {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
   flex-shrink: 0;
 }
 
 .theme-swatch-accent {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
   flex-shrink: 0;
 }
 
-.theme-card-label {
-  font-size: 12px;
+/* ── Flag preview ── */
+.flag-preview {
+  font-size: 28px;
+  line-height: 1;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* ── Shared card label ── */
+.shop-card-label {
+  font-size: 10px;
   font-weight: bold;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   color: var(--theme-card-label);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* ── Owned badge ── */
+.shop-owned-badge {
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: var(--accent);
   text-transform: uppercase;
 }
 
-.theme-card.selected .theme-card-label {
+/* ── Buy button ── */
+.shop-buy-btn {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
   color: var(--accent);
+  font-size: 11px;
+  font-weight: bold;
+  padding: 4px 6px;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.15s;
 }
 
-.theme-card-check {
+.shop-buy-btn.cant-afford {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.shop-buy-btn:not(.cant-afford):active { transform: scale(0.95); }
+
+/* ── Inventory check mark ── */
+.inv-check {
   position: absolute;
-  top: 7px;
-  right: 10px;
-  font-size: 14px;
+  top: 6px;
+  right: 8px;
+  font-size: 13px;
   color: var(--accent);
   font-weight: bold;
+}
+
+/* ── Flag emoji in cell ── */
+.flag-emoji {
+  font-size: 16px;
+  line-height: 1;
+  display: block;
+  user-select: none;
 }
