@@ -1857,16 +1857,15 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
 }
 
 // ── InventoryModal ────────────────────────────────────────────────────────────
-function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag, onEquipTheme, onEquipFlag, ownedCrateItems, miscKeys, fishInventory }: {
+function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag, onEquipTheme, onEquipFlag, ownedCrateItems, miscKeys }: {
   open: boolean; onClose: () => void;
   ownedThemes: string[]; ownedFlags: string[];
   activeTheme: string; activeFlag: string;
   onEquipTheme: (id: string) => void; onEquipFlag: (id: string) => void;
   ownedCrateItems: string[];
   miscKeys: number;
-  fishInventory: Record<string, number>;
 }) {
-  const [tab, setTab] = useState<"themes" | "flags" | "misc" | "fish">("themes");
+  const [tab, setTab] = useState<"themes" | "flags" | "misc">("themes");
   if (!open) return null;
 
   // Regular flags (bought from shop or earned by leveling) — exclude crate-only emoji flags
@@ -1892,9 +1891,6 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
           <button className={`menu-tab${tab === "flags" ? " active" : ""}`} onClick={() => setTab("flags")}>FLAGS</button>
           <button className={`menu-tab${tab === "misc" ? " active" : ""}`} onClick={() => setTab("misc")}>
             MISC{miscKeys > 0 ? <span style={{ marginLeft: 4, background: "#ffd700", color: "#000", borderRadius: 8, padding: "0 5px", fontSize: 9, fontWeight: 700 }}>{miscKeys}</span> : null}
-          </button>
-          <button className={`menu-tab${tab === "fish" ? " active" : ""}`} onClick={() => setTab("fish")}>
-            FISH{Object.values(fishInventory).some(v => v > 0) ? <span style={{ marginLeft: 4, background: "#00c8ff", color: "#000", borderRadius: 8, padding: "0 5px", fontSize: 9, fontWeight: 700 }}>🐟</span> : null}
           </button>
         </div>
         {tab === "themes" && (
@@ -2006,35 +2002,6 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
             </div>
           </div>
         )}
-        {tab === "fish" && (
-          <div style={{ padding: "4px 0" }}>
-            {FISH_TYPES.filter(f => (fishInventory[f.id] || 0) > 0).length === 0 ? (
-              <div style={{ textAlign: "center", padding: "32px 0", color: "var(--stat-label-color)", fontSize: 13 }}>
-                No fish yet — go fishing! 🎣
-              </div>
-            ) : (
-              <>
-                <div className="inv-section-header">
-                  <span>Your Catch</span>
-                  <span className="inv-section-count">{Object.values(fishInventory).reduce((a, b) => a + b, 0)}</span>
-                </div>
-                <div className="shop-grid" style={{ marginTop: 8 }}>
-                  {FISH_TYPES.filter(f => (fishInventory[f.id] || 0) > 0).map(f => {
-                    const color = FISH_RARITY_COLOR[f.rarity];
-                    return (
-                      <div key={f.id} className="shop-card" style={{ pointerEvents: "none", textAlign: "center" }}>
-                        <div className="flag-preview" style={{ fontSize: 28 }}>{f.emoji}</div>
-                        <span className="shop-card-label">{f.name}</span>
-                        <span style={{ fontSize: 11, color, fontWeight: 700 }}>×{fishInventory[f.id] || 0}</span>
-                        <span style={{ fontSize: 9, color, fontWeight: 600 }}>{f.rarity}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -2123,7 +2090,8 @@ function FishingModal({ open, onClose, fishInventory, onCatch }: {
     startedRef.current = true;
 
     let lastTime = performance.now();
-    let fishPos = BAR_H / 2;
+    // Start fish at a random edge so it's outside the zone, forcing the player to act
+    let fishPos = Math.random() < 0.5 ? FISH_SZ / 2 + 10 : BAR_H - FISH_SZ / 2 - 10;
     let zonePos = BAR_H / 2 - ZONE_H / 2;
     let vel = 0;
     let prog = 30;
@@ -2144,8 +2112,8 @@ function FishingModal({ open, onClose, fishInventory, onCatch }: {
 
       const inZone = fishPos >= zonePos && fishPos <= zonePos + ZONE_H;
       prog = inZone
-        ? Math.min(100, prog + 20 * dt * 60)
-        : Math.max(0, prog - 13 * dt * 60);
+        ? Math.min(100, prog + 18 * dt)
+        : Math.max(0, prog - 22 * dt);
 
       setFishY(fishPos);
       setZoneY(zonePos);
@@ -3274,8 +3242,7 @@ export default function App() {
         ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         activeTheme={theme} activeFlag={activeFlag}
         onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag}
-        ownedCrateItems={ownedCrateItems} miscKeys={miscKeys}
-        fishInventory={fishInventory} />
+        ownedCrateItems={ownedCrateItems} miscKeys={miscKeys} />
       <FishingModal open={fishingOpen} onClose={() => setFishingOpen(false)}
         fishInventory={fishInventory} onCatch={handleCatchFish} />
       <CrateModal open={crateOpen} onClose={() => { setCrateOpen(false); setCrateAutoOpen(undefined); setCrateKeyOpen(false); setShopInitTab("crates"); setShopOpen(true); }}
