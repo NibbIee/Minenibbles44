@@ -72,6 +72,14 @@ const THEMES = [
   { id: "cyber",     label: "Cyber",      bg: "#001a1a",                                                                                        cell: "#0a3030", accent: "#00ffcc",  price: 0,   levelReq: 5  },
   { id: "void",      label: "Void",       bg: "#060010",                                                                                        cell: "#1a0050", accent: "#9d4dfa",  price: 0,   levelReq: 10 },
   { id: "galaxy",    label: "Galaxy",     bg: "#08001a",                                                                                        cell: "#18003a", accent: "#ffd700",  price: 0,   levelReq: 15 },
+  // Battle Pass exclusive themes (bpReq = tier needed to unlock)
+  { id: "ember",    label: "Ember",    bg: "#100400",                                                                                           cell: "#2a0c00", accent: "#ff8c00",  price: 0,   levelReq: 0, bpReq: 4  },
+  { id: "forest",   label: "Forest",   bg: "#001008",                                                                                           cell: "#0a2010", accent: "#22cc44",  price: 0,   levelReq: 0, bpReq: 9  },
+  { id: "sapphire", label: "Sapphire", bg: "#020018",                                                                                           cell: "#0a0840", accent: "#4488ff",  price: 0,   levelReq: 0, bpReq: 14 },
+  { id: "blossom",  label: "Blossom",  bg: "#120008",                                                                                           cell: "#280018", accent: "#ff2288",  price: 0,   levelReq: 0, bpReq: 19 },
+  { id: "dusk",     label: "Dusk",     bg: "#080012",                                                                                           cell: "#180838", accent: "#aa55ff",  price: 0,   levelReq: 0, bpReq: 24 },
+  { id: "prism",    label: "Prism",    bg: "linear-gradient(135deg,#0a0018 0%,#001818 33%,#180a00 66%,#0a0018 100%)",                           cell: "#1a0828", accent: "#cc44ff",  price: 0,   levelReq: 0, bpReq: 45 },
+  { id: "nebula",   label: "Nebula",   bg: "linear-gradient(135deg,#0d0028 0%,#001a1a 25%,#1a0008 50%,#00081a 75%,#0d0028 100%)",              cell: "#120030", accent: "#ff55cc",  price: 0,   levelReq: 0, bpReq: 50 },
 ];
 
 // ── Level-Exclusive Flag SVGs ──────────────────────────────────────────────────
@@ -295,11 +303,113 @@ function CrownFlagSVG({ size = 48 }: { size?: number }) {
   );
 }
 
-/** Returns an animated SVG node for level-exclusive flags, or null for regular emoji flags. */
+// ── Battle Pass SVG Flags ──────────────────────────────────────────────────────
+
+function SpecterFlagSVG({ size = 48 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="specter-body" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#d8eeff" />
+          <stop offset="100%" stopColor="#5888bb" />
+        </linearGradient>
+        <radialGradient id="specter-glow" cx="50%" cy="40%" r="50%">
+          <stop offset="0%" stopColor="#88bbff" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#88bbff" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* Soft glow behind */}
+      <ellipse cx="24" cy="28" rx="18" ry="16" fill="url(#specter-glow)" />
+      {/* Ghost body */}
+      <path d="M10,22 Q10,6 24,6 Q38,6 38,22 L38,44 Q33,39 29,44 Q24,39 19,44 Q14,39 10,44 Z"
+        fill="url(#specter-body)" stroke="#90c0e8" strokeWidth="1" opacity="0.95" />
+      {/* Inner depth shading */}
+      <path d="M14,22 Q14,10 24,10 Q34,10 34,22 L34,40 Q30,36 26,40 Q22,36 18,40 Q15,37 14,40 Z"
+        fill="#001830" opacity="0.22" />
+      {/* Left eye socket */}
+      <ellipse cx="19" cy="23" rx="4.5" ry="5.5" fill="#001435" />
+      <ellipse cx="19" cy="23" rx="4.5" ry="5.5" fill="none" stroke="#4a80b0" strokeWidth="0.7" opacity="0.7" />
+      <circle cx="17.5" cy="21.5" r="1.4" fill="#3a70a0" opacity="0.75" />
+      {/* Right eye socket */}
+      <ellipse cx="29" cy="23" rx="4.5" ry="5.5" fill="#001435" />
+      <ellipse cx="29" cy="23" rx="4.5" ry="5.5" fill="none" stroke="#4a80b0" strokeWidth="0.7" opacity="0.7" />
+      <circle cx="27.5" cy="21.5" r="1.4" fill="#3a70a0" opacity="0.75" />
+      {/* Outer ghost outline glow */}
+      <path d="M10,22 Q10,6 24,6 Q38,6 38,22 L38,44 Q33,39 29,44 Q24,39 19,44 Q14,39 10,44 Z"
+        fill="none" stroke="#c0ddff" strokeWidth="1.5" opacity="0.35" />
+      {/* Subtle face line */}
+      <path d="M19,32 Q24,35 29,32" fill="none" stroke="#80aad0" strokeWidth="0.8" opacity="0.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function BlazeFlagSVG({ size = 48 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" style={{ overflow: "visible" }}>
+      <defs>
+        <radialGradient id="blaze-ground" cx="50%" cy="100%" r="60%">
+          <stop offset="0%" stopColor="#ff4400" stopOpacity="0.65" />
+          <stop offset="100%" stopColor="#ff0000" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="blaze-core-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor="#ffff00" />
+          <stop offset="40%" stopColor="#ff8800" />
+          <stop offset="100%" stopColor="#ff2200" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {/* Ground glow */}
+      <ellipse cx="24" cy="45" rx="13" ry="4" fill="url(#blaze-ground)">
+        <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.1s" repeatCount="indefinite" />
+      </ellipse>
+      {/* Outer flame – slowest */}
+      <path d="M12,44 Q7,30 15,19 Q18,11 24,5 Q30,11 33,19 Q41,30 36,44 Q30,38 24,41 Q18,38 12,44 Z" fill="#ff1a00">
+        <animate attributeName="d"
+          values="M12,44 Q7,30 15,19 Q18,11 24,5 Q30,11 33,19 Q41,30 36,44 Q30,38 24,41 Q18,38 12,44 Z;M13,44 Q5,28 14,17 Q18,9 24,3 Q30,9 34,17 Q43,28 35,44 Q29,37 24,41 Q19,37 13,44 Z;M12,44 Q7,30 15,19 Q18,11 24,5 Q30,11 33,19 Q41,30 36,44 Q30,38 24,41 Q18,38 12,44 Z"
+          dur="1.4s" repeatCount="indefinite" />
+      </path>
+      {/* Mid flame */}
+      <path d="M15,44 Q11,31 17,22 Q20,14 24,9 Q28,14 31,22 Q37,31 33,44 Q28,38 24,41 Q20,38 15,44 Z" fill="#ff5500">
+        <animate attributeName="d"
+          values="M15,44 Q11,31 17,22 Q20,14 24,9 Q28,14 31,22 Q37,31 33,44 Q28,38 24,41 Q20,38 15,44 Z;M16,44 Q9,29 16,20 Q19,12 24,7 Q29,12 32,20 Q39,29 32,44 Q27,37 24,41 Q21,37 16,44 Z;M15,44 Q11,31 17,22 Q20,14 24,9 Q28,14 31,22 Q37,31 33,44 Q28,38 24,41 Q20,38 15,44 Z"
+          dur="0.9s" repeatCount="indefinite" />
+      </path>
+      {/* Inner flame */}
+      <path d="M18,44 Q15,33 20,25 Q22,18 24,14 Q26,18 28,25 Q33,33 30,44 Q26,39 24,42 Q22,39 18,44 Z" fill="#ff8800">
+        <animate attributeName="d"
+          values="M18,44 Q15,33 20,25 Q22,18 24,14 Q26,18 28,25 Q33,33 30,44 Q26,39 24,42 Q22,39 18,44 Z;M19,44 Q14,32 19,23 Q21,16 24,12 Q27,16 29,23 Q34,32 29,44 Q25,38 24,42 Q23,38 19,44 Z;M18,44 Q15,33 20,25 Q22,18 24,14 Q26,18 28,25 Q33,33 30,44 Q26,39 24,42 Q22,39 18,44 Z"
+          dur="0.7s" repeatCount="indefinite" />
+      </path>
+      {/* Hot core */}
+      <path d="M20,44 Q19,36 22,29 Q23,24 24,21 Q25,24 26,29 Q29,36 28,44 Q25,40 24,43 Q23,40 20,44 Z"
+        fill="url(#blaze-core-grad)">
+        <animate attributeName="opacity" values="0.85;1;0.85" dur="0.55s" repeatCount="indefinite" />
+      </path>
+      {/* Rising sparks */}
+      <circle cx="19" cy="17" r="1.5" fill="#ffee00">
+        <animate attributeName="cy" values="17;3;17" dur="0.78s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="1;0;1" dur="0.78s" repeatCount="indefinite" />
+        <animate attributeName="r" values="1.5;0.2;1.5" dur="0.78s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="29" cy="13" r="1.2" fill="#ffaa00">
+        <animate attributeName="cy" values="13;0;13" dur="1.05s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="1;0;1" dur="1.05s" repeatCount="indefinite" />
+        <animate attributeName="r" values="1.2;0.2;1.2" dur="1.05s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="24" cy="10" r="1" fill="#ffff88">
+        <animate attributeName="cy" values="10;-3;10" dur="0.9s" begin="0.3s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="1;0;1" dur="0.9s" begin="0.3s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  );
+}
+
+/** Returns an SVG node for level-exclusive or battle-pass-exclusive custom flags, or null for emoji flags. */
 function getLevelFlagNode(flagId: string, size: number): React.ReactNode | null {
-  if (flagId === "gem")    return <GemFlagSVG size={size} />;
-  if (flagId === "dragon") return <DragonFlagSVG size={size} />;
-  if (flagId === "crown")  return <CrownFlagSVG size={size} />;
+  if (flagId === "gem")     return <GemFlagSVG size={size} />;
+  if (flagId === "dragon")  return <DragonFlagSVG size={size} />;
+  if (flagId === "crown")   return <CrownFlagSVG size={size} />;
+  if (flagId === "specter") return <SpecterFlagSVG size={size} />;
+  if (flagId === "blaze")   return <BlazeFlagSVG size={size} />;
   return null;
 }
 
@@ -336,6 +446,15 @@ const FLAGS = [
   { id: "gem",       label: "Gem",       emoji: "💎", price: 0,    levelReq: 5  },
   { id: "dragon",    label: "Dragon",    emoji: "🐉", price: 0,    levelReq: 10 },
   { id: "crown",     label: "Crown",     emoji: "👑", price: 0,    levelReq: 15 },
+  // Battle Pass exclusive emoji flags (bpReq = tier needed to unlock)
+  { id: "sakura",       label: "Sakura",       emoji: "🌸", price: 0, levelReq: 0, bpReq: 6  },
+  { id: "paw",          label: "Paw Print",    emoji: "🐾", price: 0, levelReq: 0, bpReq: 11 },
+  { id: "cyclone",      label: "Cyclone",      emoji: "🌀", price: 0, levelReq: 0, bpReq: 17 },
+  { id: "swords",       label: "Swords",       emoji: "⚔️", price: 0, levelReq: 0, bpReq: 22 },
+  { id: "starfall",     label: "Star Fall",    emoji: "🌠", price: 0, levelReq: 0, bpReq: 28 },
+  // Battle Pass SVG flags (no emoji — rendered by getLevelFlagNode)
+  { id: "specter",      label: "Specter",      emoji: "",   price: 0, levelReq: 0, bpReq: 40 },
+  { id: "blaze",        label: "Blaze",        emoji: "",   price: 0, levelReq: 0, bpReq: 50 },
   // Crate-exclusive emoji flags (levelReq 99 = never shown in shop)
   { id: "crate-carrot",   label: "Carrot",    emoji: "🥕", price: 0, levelReq: 99 },
   { id: "crate-broccoli", label: "Broccoli",  emoji: "🥦", price: 0, levelReq: 99 },
@@ -344,6 +463,74 @@ const FLAGS = [
   { id: "crate-wave",     label: "Wave",      emoji: "🌊", price: 0, levelReq: 99 },
   { id: "crate-cherry",   label: "Cherry",    emoji: "🍒", price: 0, levelReq: 99 },
   { id: "crate-target",   label: "Target",    emoji: "🎯", price: 0, levelReq: 99 },
+];
+
+// ── Battle Pass Data ──────────────────────────────────────────────────────────
+const BP_XP_PER_TIER = 50;
+const BP_MAX_TIER = 50;
+
+function computeBPTier(xp: number): number {
+  return Math.min(BP_MAX_TIER, Math.floor(xp / BP_XP_PER_TIER));
+}
+
+interface BPTierData {
+  tier: number;
+  coins?: number;
+  themeId?: string; themeLabel?: string;
+  flagId?: string;  flagLabel?: string; flagEmoji?: string;
+}
+
+const BATTLE_PASS: BPTierData[] = [
+  { tier: 1,  coins: 25 },
+  { tier: 2,  coins: 30 },
+  { tier: 3,  coins: 35 },
+  { tier: 4,  themeId: "ember",    themeLabel: "Ember" },
+  { tier: 5,  coins: 35 },
+  { tier: 6,  flagId: "sakura",    flagLabel: "Sakura",      flagEmoji: "🌸" },
+  { tier: 7,  coins: 40 },
+  { tier: 8,  coins: 40 },
+  { tier: 9,  themeId: "forest",   themeLabel: "Forest" },
+  { tier: 10, coins: 50 },
+  { tier: 11, flagId: "paw",       flagLabel: "Paw Print",   flagEmoji: "🐾" },
+  { tier: 12, coins: 45 },
+  { tier: 13, coins: 50 },
+  { tier: 14, themeId: "sapphire", themeLabel: "Sapphire" },
+  { tier: 15, coins: 55 },
+  { tier: 16, coins: 50 },
+  { tier: 17, flagId: "cyclone",   flagLabel: "Cyclone",     flagEmoji: "🌀" },
+  { tier: 18, coins: 60 },
+  { tier: 19, themeId: "blossom",  themeLabel: "Blossom" },
+  { tier: 20, coins: 75 },
+  { tier: 21, coins: 60 },
+  { tier: 22, flagId: "swords",    flagLabel: "Swords",      flagEmoji: "⚔️" },
+  { tier: 23, coins: 65 },
+  { tier: 24, themeId: "dusk",     themeLabel: "Dusk" },
+  { tier: 25, coins: 100 },
+  { tier: 26, coins: 65 },
+  { tier: 27, coins: 70 },
+  { tier: 28, flagId: "starfall",  flagLabel: "Star Fall",   flagEmoji: "🌠" },
+  { tier: 29, coins: 70 },
+  { tier: 30, coins: 100 },
+  { tier: 31, coins: 75 },
+  { tier: 32, coins: 75 },
+  { tier: 33, coins: 80 },
+  { tier: 34, coins: 80 },
+  { tier: 35, coins: 100 },
+  { tier: 36, coins: 85 },
+  { tier: 37, coins: 85 },
+  { tier: 38, coins: 90 },
+  { tier: 39, coins: 90 },
+  { tier: 40, flagId: "specter",   flagLabel: "Specter" },
+  { tier: 41, coins: 100 },
+  { tier: 42, coins: 95 },
+  { tier: 43, coins: 95 },
+  { tier: 44, coins: 100 },
+  { tier: 45, themeId: "prism",    themeLabel: "Prism" },
+  { tier: 46, coins: 100 },
+  { tier: 47, coins: 100 },
+  { tier: 48, coins: 100 },
+  { tier: 49, coins: 100 },
+  { tier: 50, themeId: "nebula",   themeLabel: "Nebula",   flagId: "blaze", flagLabel: "Blaze" },
 ];
 
 const CONFETTI_COLORS: Record<string, string[]> = {
@@ -559,7 +746,7 @@ type CellState = { mine: boolean; revealed: boolean; flagged: boolean; adjacent:
 type GameStatus = "idle" | "playing" | "won" | "lost" | "transitioning";
 interface ToastItem {
   key: number;
-  type: "achievement" | "levelup" | "daily" | "keydrop";
+  type: "achievement" | "levelup" | "daily" | "keydrop" | "battlepass";
   title: string;
   subtitle?: string;
   reward?: number;
@@ -1060,9 +1247,148 @@ function AchievementsModal({ open, onClose, claimed, pending, onClaim }: {
   );
 }
 
+// ── Battle Pass Modal ─────────────────────────────────────────────────────────
+
+function BPThemeSwatch({ themeId }: { themeId: string }) {
+  const t = THEMES.find(th => th.id === themeId);
+  if (!t) return null;
+  return (
+    <div className="bp-theme-swatch" style={{ background: t.cell }}>
+      <div className="bp-theme-swatch-dot" style={{ background: t.accent }} />
+    </div>
+  );
+}
+
+function BPRewardPreview({ reward }: { reward: BPTierData }) {
+  return (
+    <div className="bp-reward-wrap">
+      {reward.coins != null && (
+        <div className="bp-reward-item bp-ri-coins">
+          <CoinIcon size={13} />
+          <span>+{reward.coins} coins</span>
+        </div>
+      )}
+      {reward.flagId && !reward.flagEmoji && (
+        <div className="bp-reward-item">
+          <span style={{ display: "flex", alignItems: "center" }}>
+            {getLevelFlagNode(reward.flagId, 18)}
+          </span>
+          <span>{reward.flagLabel} Flag</span>
+          {reward.tier === 40 && <span className="bp-excl-badge">CUSTOM</span>}
+          {reward.tier === 50 && <span className="bp-excl-badge">ANIMATED</span>}
+        </div>
+      )}
+      {reward.flagId && reward.flagEmoji && (
+        <div className="bp-reward-item">
+          <span style={{ fontSize: 15, lineHeight: 1 }}>{reward.flagEmoji}</span>
+          <span>{reward.flagLabel} Flag</span>
+        </div>
+      )}
+      {reward.themeId && (
+        <div className="bp-reward-item">
+          <BPThemeSwatch themeId={reward.themeId} />
+          <span>{reward.themeLabel} Theme</span>
+          {reward.tier === 45 && <span className="bp-excl-badge">SPECIAL</span>}
+          {(reward.tier === 50 && reward.themeId) && <span className="bp-excl-badge">ANIMATED</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BattlePassModal({ open, onClose, totalXP, bpClaimed, onClaim }: {
+  open: boolean; onClose: () => void;
+  totalXP: number; bpClaimed: number[];
+  onClaim: (tier: number) => void;
+}) {
+  const bpTier = computeBPTier(totalXP);
+  const xpInTier = bpTier >= BP_MAX_TIER ? BP_XP_PER_TIER : totalXP % BP_XP_PER_TIER;
+  const pct = bpTier >= BP_MAX_TIER ? 100 : (xpInTier / BP_XP_PER_TIER) * 100;
+
+  const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const idx = Math.max(0, bpTier - 1);
+    const rows = listRef.current?.querySelectorAll(".bp-tier-row");
+    if (rows && rows[idx]) {
+      setTimeout(() => (rows[idx] as HTMLElement).scrollIntoView({ block: "center", behavior: "smooth" }), 100);
+    }
+  }, [open, bpTier]);
+
+  if (!open) return null;
+
+  return (
+    <div className="menu-overlay" onClick={onClose}>
+      <div className="menu-sheet bp-sheet" onClick={e => e.stopPropagation()}>
+        <div className="menu-handle" />
+        <div className="shop-header">
+          <span className="shop-title">BATTLE PASS</span>
+          <span className="bp-header-tier">
+            <span className="bp-htier-label">TIER</span>
+            <span className="bp-htier-num">{bpTier >= BP_MAX_TIER ? "MAX" : bpTier}</span>
+            <span className="bp-htier-of">/ {BP_MAX_TIER}</span>
+          </span>
+        </div>
+        <div className="bp-progress-wrap">
+          <div className="bp-progress-track">
+            <div className="bp-progress-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <span className="bp-progress-label">
+            {bpTier >= BP_MAX_TIER
+              ? "COMPLETE ✦ All rewards unlocked"
+              : `${xpInTier} / ${BP_XP_PER_TIER} XP → Tier ${bpTier + 1}`}
+          </span>
+        </div>
+        <div className="bp-tier-list" ref={listRef}>
+          {BATTLE_PASS.map(reward => {
+            const earned = bpTier >= reward.tier;
+            const claimed = bpClaimed.includes(reward.tier);
+            const claimable = earned && !claimed;
+            const isMilestone = reward.tier % 10 === 0 || reward.tier === 45;
+            const isGrand = reward.tier === 50;
+            const isCurrent = bpTier === reward.tier - 1;
+            return (
+              <div
+                key={reward.tier}
+                className={[
+                  "bp-tier-row",
+                  earned   ? "bp-earned"        : "",
+                  claimed  ? "bp-claimed"        : "",
+                  isMilestone ? "bp-milestone-row" : "",
+                  isGrand  ? "bp-grand-row"      : "",
+                  isCurrent ? "bp-current-row"   : "",
+                ].filter(Boolean).join(" ")}
+              >
+                <div className={[
+                  "bp-tier-num-badge",
+                  isMilestone ? "bp-num-milestone" : "",
+                  isGrand     ? "bp-num-grand"     : "",
+                ].filter(Boolean).join(" ")}>
+                  {reward.tier}
+                </div>
+                <BPRewardPreview reward={reward} />
+                <div className="bp-status-col">
+                  {claimed ? (
+                    <span className="bp-status-check">✓</span>
+                  ) : claimable ? (
+                    <button className="bp-claim-btn" onClick={() => onClaim(reward.tier)}>CLAIM</button>
+                  ) : (
+                    <span className="bp-status-lock">—</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── MenuPanel ─────────────────────────────────────────────────────────────────
 function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode, onToggleInfinite,
   bestInfinite, coins, onOpenShop, onOpenInventory, onOpenAchievements, onOpenLevels, onOpenDaily,
+  onOpenBattlePass, bpUnclaimedCount,
   pendingCount, currentLevel, totalXP, dailyIncomplete }: {
   open: boolean; onClose: () => void;
   stats: { wins: number; games: number; best: number | null };
@@ -1070,6 +1396,7 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
   infiniteMode: boolean; onToggleInfinite: () => void; bestInfinite: number;
   coins: number; onOpenShop: () => void; onOpenInventory: () => void;
   onOpenAchievements: () => void; onOpenLevels: () => void; onOpenDaily: () => void;
+  onOpenBattlePass: () => void; bpUnclaimedCount: number;
   pendingCount: number; currentLevel: number; totalXP: number;
   dailyIncomplete: boolean;
 }) {
@@ -1140,6 +1467,19 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
             </span>
             <span className="menu-action-arrow">›</span>
           </button>
+          <button className="menu-action-btn" onClick={() => { onClose(); onOpenBattlePass(); }}>
+            <span className="menu-action-icon" style={{ color: "#f59e0b" }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1" y="7" width="16" height="4" rx="1.5"/>
+                <path d="M5 7V15M13 7V15"/>
+                <path d="M1 11h16"/>
+                <circle cx="5" cy="5" r="2"/><circle cx="13" cy="5" r="2"/>
+              </svg>
+            </span>
+            <span className="menu-action-label" style={{ color: bpUnclaimedCount > 0 ? "#f59e0b" : undefined }}>BATTLE PASS</span>
+            {bpUnclaimedCount > 0 && <span className="menu-action-badge" style={{ background: "#f59e0b", color: "#000" }}>{bpUnclaimedCount}</span>}
+            <span className="menu-action-arrow">›</span>
+          </button>
         </div>
 
         <div className="menu-divider" />
@@ -1196,8 +1536,8 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
   const [tab, setTab] = useState<"themes" | "flags" | "crates">(defaultTab);
   useEffect(() => { if (open) setTab(defaultTab); }, [open, defaultTab]);
   if (!open) return null;
-  const shopThemes = THEMES.filter(t => t.levelReq === 0);
-  const shopFlags = FLAGS.filter(f => f.levelReq === 0);
+  const shopThemes = THEMES.filter(t => t.levelReq === 0 && !('bpReq' in t));
+  const shopFlags  = FLAGS.filter(f => f.levelReq === 0 && !('bpReq' in f));
 
   return (
     <div className="menu-overlay" onClick={onClose}>
@@ -1488,6 +1828,21 @@ export default function App() {
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [dailyOpen, setDailyOpen] = useState(false);
+  const [bpOpen, setBPOpen] = useState(false);
+  const [bpClaimed, setBPClaimed] = useState<number[]>(() => {
+    const s = localStorage.getItem("ms-bp-claimed");
+    return s ? JSON.parse(s) : [];
+  });
+  useEffect(() => { localStorage.setItem("ms-bp-claimed", JSON.stringify(bpClaimed)); }, [bpClaimed]);
+
+  const handleBPClaim = useCallback((tier: number) => {
+    const reward = BATTLE_PASS.find(r => r.tier === tier);
+    if (!reward || bpClaimed.includes(tier)) return;
+    setBPClaimed(prev => [...prev, tier]);
+    if (reward.coins)   setCoins(c => c + reward.coins!);
+    if (reward.themeId) setOwnedThemes(prev => prev.includes(reward.themeId!) ? prev : [...prev, reward.themeId!]);
+    if (reward.flagId)  setOwnedFlags (prev => prev.includes(reward.flagId!)  ? prev : [...prev, reward.flagId!]);
+  }, [bpClaimed]);
   const [crateOpen,     setCrateOpen]     = useState(false);
   const [crateAutoOpen, setCrateAutoOpen] = useState<1 | 3 | undefined>(undefined);
   const [crateKeyOpen,  setCrateKeyOpen]  = useState(false);
@@ -1727,6 +2082,25 @@ export default function App() {
             setTimeout(() => setToasts(t => t.filter(x => x.key !== k)), 4000);
           }, capturedDelay);
           delay += 700;
+        }
+      }
+      // Battle Pass tier notifications
+      const oldBPTier = computeBPTier(oldXP);
+      const newBPTier = computeBPTier(newXP);
+      if (newBPTier > oldBPTier) {
+        for (let bpt = oldBPTier + 1; bpt <= newBPTier; bpt++) {
+          const capturedTier = bpt;
+          const bpDelay = 500 + (capturedTier - oldBPTier - 1) * 500;
+          setTimeout(() => {
+            const k = ++toastKeyRef.current;
+            setToasts(ts => [...ts, {
+              type: "battlepass" as const,
+              title: `Battle Pass — Tier ${capturedTier}${capturedTier === BP_MAX_TIER ? " 🏆" : ""}!`,
+              subtitle: "Open menu → Battle Pass to claim",
+              key: k,
+            }]);
+            setTimeout(() => setToasts(ts => ts.filter(x => x.key !== k)), 4500);
+          }, bpDelay);
         }
       }
       return newXP;
@@ -2209,10 +2583,14 @@ export default function App() {
         onOpenAchievements={() => setAchievementsOpen(true)}
         onOpenLevels={() => setLevelsOpen(true)}
         onOpenDaily={() => setDailyOpen(true)}
+        onOpenBattlePass={() => setBPOpen(true)}
+        bpUnclaimedCount={BATTLE_PASS.filter(r => computeBPTier(totalXP) >= r.tier && !bpClaimed.includes(r.tier)).length}
         pendingCount={pendingAchievements.length}
         currentLevel={currentLevel} totalXP={totalXP}
         dailyIncomplete={dailyBadge}
       />
+      <BattlePassModal open={bpOpen} onClose={() => setBPOpen(false)}
+        totalXP={totalXP} bpClaimed={bpClaimed} onClaim={handleBPClaim} />
       <ShopModal open={shopOpen} onClose={() => { setShopOpen(false); setShopInitTab("themes"); }}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag}
