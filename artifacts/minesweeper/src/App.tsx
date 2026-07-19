@@ -74,6 +74,235 @@ const THEMES = [
   { id: "galaxy",    label: "Galaxy",     bg: "#08001a",                                                                                        cell: "#18003a", accent: "#ffd700",  price: 0,   levelReq: 15 },
 ];
 
+// ── Level-Exclusive Flag SVGs ──────────────────────────────────────────────────
+
+function GemFlagSVG({ size = 48 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" style={{ overflow: "visible" }}>
+      <defs>
+        <radialGradient id="gem-bg-glow" cx="50%" cy="55%" r="55%">
+          <stop offset="0%" stopColor="#80f0ff" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#0088bb" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="gem-top-face" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#c8f8ff" />
+          <stop offset="100%" stopColor="#40c8e8" />
+        </linearGradient>
+        <linearGradient id="gem-left-face" x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#0090cc" />
+          <stop offset="100%" stopColor="#004e70" />
+        </linearGradient>
+        <linearGradient id="gem-right-face" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#00ccee" />
+          <stop offset="100%" stopColor="#007099" />
+        </linearGradient>
+      </defs>
+      {/* Outer glow pulse */}
+      <ellipse cx="24" cy="30" rx="20" ry="17" fill="url(#gem-bg-glow)">
+        <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+      </ellipse>
+      {/* Gem base fill */}
+      <polygon points="16,13 32,13 38,23 24,44 10,23" fill="#0e6080" />
+      {/* Top flat face (table) */}
+      <polygon points="16,13 32,13 34,21 14,21" fill="url(#gem-top-face)" />
+      {/* Upper-left facet */}
+      <polygon points="10,23 16,13 14,21" fill="#006090" />
+      {/* Upper-right facet */}
+      <polygon points="32,13 38,23 34,21" fill="url(#gem-right-face)" />
+      {/* Lower-left facet */}
+      <polygon points="10,23 14,21 24,44" fill="url(#gem-left-face)" />
+      {/* Lower-right facet */}
+      <polygon points="34,21 38,23 24,44" fill="#00b0d8" />
+      {/* Center-bottom facet */}
+      <polygon points="14,21 34,21 24,44" fill="#00a8cc" />
+      {/* Outline */}
+      <polygon points="16,13 32,13 38,23 24,44 10,23" fill="none" stroke="#80eeff" strokeWidth="0.9" opacity="0.75" />
+      {/* Inner facet lines */}
+      <line x1="14" y1="21" x2="24" y2="44" stroke="#80eeff" strokeWidth="0.5" opacity="0.45" />
+      <line x1="34" y1="21" x2="24" y2="44" stroke="#80eeff" strokeWidth="0.5" opacity="0.45" />
+      <line x1="14" y1="21" x2="34" y2="21" stroke="#80eeff" strokeWidth="0.5" opacity="0.3" />
+      {/* Moving light reflection on top face */}
+      <polygon points="18,14 23,14 21,20 17,19" fill="white" opacity="0.35">
+        <animate attributeName="opacity" values="0.1;0.45;0.1" dur="2.8s" repeatCount="indefinite" />
+      </polygon>
+      {/* Blinking sparkle top-right */}
+      <circle cx="30" cy="11" r="1.6" fill="white">
+        <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" />
+        <animate attributeName="r" values="0.6;2.1;0.6" dur="1.5s" repeatCount="indefinite" />
+      </circle>
+      {/* Blinking sparkle top-left */}
+      <circle cx="18" cy="11" r="1.1" fill="#b0f4ff">
+        <animate attributeName="opacity" values="0;0.9;0" dur="2s" begin="0.6s" repeatCount="indefinite" />
+        <animate attributeName="r" values="0.4;1.5;0.4" dur="2s" begin="0.6s" repeatCount="indefinite" />
+      </circle>
+      {/* Tiny bottom sparkle */}
+      <circle cx="24" cy="44" r="1.2" fill="#80eeff">
+        <animate attributeName="opacity" values="0;0.8;0" dur="1.8s" begin="1s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  );
+}
+
+function DragonFlagSVG({ size = 48 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="dragon-bg-glow" cx="50%" cy="45%" r="50%">
+          <stop offset="0%" stopColor="#9d4dfa" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#3b0070" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* Background glow */}
+      <ellipse cx="24" cy="26" rx="20" ry="18" fill="url(#dragon-bg-glow)">
+        <animate attributeName="opacity" values="0.7;1;0.7" dur="2.5s" repeatCount="indefinite" />
+      </ellipse>
+      {/* Dragon head body */}
+      <ellipse cx="24" cy="27" rx="14" ry="12" fill="#3b0764" />
+      <ellipse cx="24" cy="27" rx="14" ry="12" fill="none" stroke="#7c3aed" strokeWidth="1.2" opacity="0.8" />
+      {/* Forehead dome */}
+      <ellipse cx="24" cy="19" rx="11" ry="6" fill="#4c0d8f" />
+      {/* Left horn */}
+      <polygon points="13,17 10,4 18,15" fill="#6b21a8" />
+      <polygon points="13,17 10,4 18,15" fill="none" stroke="#9d4dfa" strokeWidth="0.8" opacity="0.7" />
+      {/* Right horn */}
+      <polygon points="35,17 38,4 30,15" fill="#6b21a8" />
+      <polygon points="35,17 38,4 30,15" fill="none" stroke="#9d4dfa" strokeWidth="0.8" opacity="0.7" />
+      {/* Left eye socket */}
+      <ellipse cx="18" cy="24" rx="4.5" ry="4" fill="#1a003a" />
+      {/* Left iris — animated fire glow */}
+      <ellipse cx="18" cy="24" rx="3" ry="2.8" fill="#ff4500">
+        <animate attributeName="fill" values="#ff4500;#ffaa00;#ff4500" dur="1.8s" repeatCount="indefinite" />
+      </ellipse>
+      {/* Left pupil */}
+      <ellipse cx="18" cy="24" rx="1.2" ry="2.2" fill="#000" />
+      {/* Left eye halo */}
+      <ellipse cx="18" cy="24" rx="4.5" ry="4" fill="none" stroke="#ff6600" strokeWidth="0.6">
+        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1.8s" repeatCount="indefinite" />
+      </ellipse>
+      {/* Right eye socket */}
+      <ellipse cx="30" cy="24" rx="4.5" ry="4" fill="#1a003a" />
+      {/* Right iris */}
+      <ellipse cx="30" cy="24" rx="3" ry="2.8" fill="#ff4500">
+        <animate attributeName="fill" values="#ff4500;#ffaa00;#ff4500" dur="1.8s" repeatCount="indefinite" />
+      </ellipse>
+      {/* Right pupil */}
+      <ellipse cx="30" cy="24" rx="1.2" ry="2.2" fill="#000" />
+      {/* Right eye halo */}
+      <ellipse cx="30" cy="24" rx="4.5" ry="4" fill="none" stroke="#ff6600" strokeWidth="0.6">
+        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1.8s" repeatCount="indefinite" />
+      </ellipse>
+      {/* Snout */}
+      <ellipse cx="24" cy="33" rx="6" ry="3.5" fill="#4c0d8f" />
+      <ellipse cx="24" cy="33" rx="6" ry="3.5" fill="none" stroke="#7c3aed" strokeWidth="0.8" opacity="0.55" />
+      {/* Nostrils */}
+      <ellipse cx="21.5" cy="33" rx="1.3" ry="0.9" fill="#1a003a" />
+      <ellipse cx="26.5" cy="33" rx="1.3" ry="0.9" fill="#1a003a" />
+      {/* Scale arcs on forehead */}
+      <path d="M19,22 Q24,19 29,22" fill="none" stroke="#7c3aed" strokeWidth="0.6" opacity="0.5" />
+      <path d="M20,20 Q24,18 28,20" fill="none" stroke="#7c3aed" strokeWidth="0.6" opacity="0.35" />
+      {/* Left nostril fire wisp */}
+      <circle cx="21.5" cy="32" r="1.5" fill="#ff4500">
+        <animate attributeName="cy" values="32;24;32" dur="0.9s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.85;0;0.85" dur="0.9s" repeatCount="indefinite" />
+        <animate attributeName="r" values="1.5;0.5;1.5" dur="0.9s" repeatCount="indefinite" />
+      </circle>
+      {/* Right nostril fire wisp */}
+      <circle cx="26.5" cy="32" r="1.2" fill="#ffaa00">
+        <animate attributeName="cy" values="32;23;32" dur="1.1s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.85;0;0.85" dur="1.1s" repeatCount="indefinite" />
+        <animate attributeName="r" values="1.2;0.4;1.2" dur="1.1s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  );
+}
+
+function CrownFlagSVG({ size = 48 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" style={{ overflow: "visible" }}>
+      <defs>
+        <linearGradient id="crown-gold-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#ffe566" />
+          <stop offset="100%" stopColor="#b87700" />
+        </linearGradient>
+        <radialGradient id="crown-bg-glow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stopColor="#ffd700" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#ffd700" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* Outer glow */}
+      <ellipse cx="24" cy="32" rx="22" ry="14" fill="url(#crown-bg-glow)">
+        <animate attributeName="opacity" values="0.7;1;0.7" dur="2.2s" repeatCount="indefinite" />
+      </ellipse>
+      {/* Left tall spike */}
+      <polygon points="9,34 13,14 17,34" fill="url(#crown-gold-grad)" />
+      <polygon points="9,34 13,14 17,34" fill="none" stroke="#ffcc00" strokeWidth="0.7" opacity="0.7" />
+      {/* Middle tall spike (highest) */}
+      <polygon points="18,34 24,7 30,34" fill="url(#crown-gold-grad)" />
+      <polygon points="18,34 24,7 30,34" fill="none" stroke="#ffdd00" strokeWidth="0.8" opacity="0.9" />
+      {/* Right tall spike */}
+      <polygon points="31,34 35,14 39,34" fill="url(#crown-gold-grad)" />
+      <polygon points="31,34 35,14 39,34" fill="none" stroke="#ffcc00" strokeWidth="0.7" opacity="0.7" />
+      {/* Crown band */}
+      <rect x="5" y="34" width="38" height="9" rx="2" fill="url(#crown-gold-grad)" />
+      <rect x="5" y="34" width="38" height="9" rx="2" fill="none" stroke="#ffcc00" strokeWidth="0.8" opacity="0.8" />
+      {/* Band jewels */}
+      <circle cx="14" cy="38.5" r="2.2" fill="#cc2200">
+        <animate attributeName="opacity" values="0.65;1;0.65" dur="1.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="24" cy="38.5" r="2.8" fill="#00ccee">
+        <animate attributeName="opacity" values="0.65;1;0.65" dur="1.7s" begin="0.3s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="34" cy="38.5" r="2.2" fill="#00cc66">
+        <animate attributeName="opacity" values="0.65;1;0.65" dur="1.5s" begin="0.6s" repeatCount="indefinite" />
+      </circle>
+      {/* Left spike jewel */}
+      <circle cx="13" cy="14" r="3.8" fill="#ff2200">
+        <animate attributeName="opacity" values="0.8;1;0.8" dur="1.2s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="13" cy="14" r="3.8" fill="none" stroke="#ff8866" strokeWidth="0.8">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="1.2s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="12" cy="12.8" r="1.2" fill="white" opacity="0.65" />
+      {/* Middle spike jewel (biggest) */}
+      <circle cx="24" cy="7" r="5" fill="#00ddff">
+        <animate attributeName="opacity" values="0.8;1;0.8" dur="1.7s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="24" cy="7" r="5" fill="none" stroke="#88eeff" strokeWidth="0.9">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="1.7s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="22.5" cy="5.5" r="1.8" fill="white" opacity="0.7" />
+      {/* Right spike jewel */}
+      <circle cx="35" cy="14" r="3.8" fill="#00dd44">
+        <animate attributeName="opacity" values="0.8;1;0.8" dur="1.4s" begin="0.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="35" cy="14" r="3.8" fill="none" stroke="#44ff88" strokeWidth="0.8">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="1.4s" begin="0.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="34" cy="12.8" r="1.2" fill="white" opacity="0.65" />
+      {/* Floating sparkle particles */}
+      <circle cx="6" cy="28" r="1.1" fill="#ffd700">
+        <animate attributeName="opacity" values="0;0.9;0" dur="2.2s" begin="0.2s" repeatCount="indefinite" />
+        <animate attributeName="cy" values="34;20;34" dur="2.2s" begin="0.2s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="42" cy="28" r="1.1" fill="#ffd700">
+        <animate attributeName="opacity" values="0;0.9;0" dur="2.6s" begin="1s" repeatCount="indefinite" />
+        <animate attributeName="cy" values="34;18;34" dur="2.6s" begin="1s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="24" cy="3" r="0.9" fill="white">
+        <animate attributeName="opacity" values="0;1;0" dur="1.6s" begin="0.5s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  );
+}
+
+/** Returns an animated SVG node for level-exclusive flags, or null for regular emoji flags. */
+function getLevelFlagNode(flagId: string, size: number): React.ReactNode | null {
+  if (flagId === "gem")    return <GemFlagSVG size={size} />;
+  if (flagId === "dragon") return <DragonFlagSVG size={size} />;
+  if (flagId === "crown")  return <CrownFlagSVG size={size} />;
+  return null;
+}
+
 const FLAGS = [
   // Free
   { id: "default",   label: "Classic",   emoji: "🚩", price: 0,    levelReq: 0 },
@@ -722,7 +951,9 @@ function LevelsModal({ open, onClose, totalXP }: {
                   </div>
                   {reward.flag && (
                     <div className="lvl-reward-row lvl-exclusive">
-                      <span className="lvl-reward-emoji">{reward.flagEmoji}</span>
+                      <span className="lvl-reward-emoji" style={{ display: "flex", alignItems: "center" }}>
+                        {getLevelFlagNode(reward.flag, 18) ?? reward.flagEmoji}
+                      </span>
                       <span className="lvl-reward-text">{reward.flagLabel} flag</span>
                       <span className="lvl-excl-badge">exclusive</span>
                     </div>
@@ -1015,7 +1246,9 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
               const canAfford = coins >= f.price;
               return (
                 <div key={f.id} className={`shop-card${owned ? " owned" : ""}`}>
-                  <div className="flag-preview">{f.emoji}</div>
+                  <div className="flag-preview" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {getLevelFlagNode(f.id, 28) ?? f.emoji}
+                  </div>
                   <span className="shop-card-label">{f.label}</span>
                   {f.price >= 500 && !owned && <span className="shop-price-tier" style={{ color: "#ffd700" }}>★ LEGENDARY</span>}
                   {f.price >= 200 && f.price < 500 && !owned && <span className="shop-price-tier" style={{ color: "#c084fc" }}>● EPIC</span>}
@@ -1157,7 +1390,9 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
                   const isExclusive = f.levelReq > 0;
                   return (
                     <button key={f.id} className={`shop-card inv-card${active ? " inv-active" : ""}`} onClick={() => onEquipFlag(f.id)}>
-                      <div className="flag-preview">{f.emoji}</div>
+                      <div className="flag-preview" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {getLevelFlagNode(f.id, 28) ?? f.emoji}
+                      </div>
                       <span className="shop-card-label">{f.label}</span>
                       {isExclusive && <span className="inv-exclusive-dot" />}
                       {active && <span className="inv-check">✓</span>}
@@ -1293,6 +1528,8 @@ export default function App() {
 
   // Compute what to render on flagged cells — emoji string or SVG React node
   const flagContent: React.ReactNode = (() => {
+    const lvlSvg = getLevelFlagNode(activeFlag, 22);
+    if (lvlSvg) return lvlSvg;
     const flag = FLAGS.find((f) => f.id === activeFlag);
     if (flag) return flag.emoji;
     const crateItem = CRATE_ITEMS.find((i) => i.id === activeFlag);
