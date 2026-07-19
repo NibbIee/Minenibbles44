@@ -542,6 +542,16 @@ const BATTLE_PASS: BPTierData[] = [
 ];
 
 // ── Battle Pass Quests ────────────────────────────────────────────────────────
+const BP_QUEST_PERIOD_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+
+function getBPQuestPeriod(): number {
+  return Math.floor(Date.now() / BP_QUEST_PERIOD_MS);
+}
+
+function getNextBPQuestReset(): Date {
+  return new Date((getBPQuestPeriod() + 1) * BP_QUEST_PERIOD_MS);
+}
+
 interface BPQuestData {
   id: string;
   title: string;
@@ -552,16 +562,16 @@ interface BPQuestData {
 }
 
 const BP_QUESTS: BPQuestData[] = [
-  { id: "bpq_win1",    title: "First Victory",    desc: "Win 1 game",                    type: "wins",     target: 1,  bxpReward: 25  },
-  { id: "bpq_win5",    title: "On a Roll",         desc: "Win 5 games",                   type: "wins",     target: 5,  bxpReward: 50  },
-  { id: "bpq_win10",   title: "Seasoned Sweeper",  desc: "Win 10 games",                  type: "wins",     target: 10, bxpReward: 75  },
-  { id: "bpq_win25",   title: "Battle Hardened",   desc: "Win 25 games",                  type: "wins",     target: 25, bxpReward: 125 },
-  { id: "bpq_win50",   title: "Elite Sweeper",     desc: "Win 50 games",                  type: "wins",     target: 50, bxpReward: 150 },
-  { id: "bpq_speed60", title: "Quick Clear",       desc: "Win a game in under 60s",       type: "speed",    target: 60, bxpReward: 35  },
-  { id: "bpq_speed30", title: "Lightning Sweep",   desc: "Win a game in under 30s",       type: "speed",    target: 30, bxpReward: 60  },
-  { id: "bpq_play20",  title: "Dedicated Player",  desc: "Play 20 games",                 type: "games",    target: 20, bxpReward: 50  },
-  { id: "bpq_noflag",  title: "Bare Hands",        desc: "Win without placing any flags", type: "no_flags", target: 1,  bxpReward: 40  },
-  { id: "bpq_wave5",   title: "Wave Rider",        desc: "Reach Wave 5 in Infinite Mode", type: "wave",     target: 5,  bxpReward: 100 },
+  { id: "bpq_win1",    title: "First Win",        desc: "Win 1 game",                    type: "wins",     target: 1, bxpReward: 25 },
+  { id: "bpq_win3",    title: "Hat Trick",         desc: "Win 3 games",                   type: "wins",     target: 3, bxpReward: 50 },
+  { id: "bpq_win5",    title: "High Five",         desc: "Win 5 games",                   type: "wins",     target: 5, bxpReward: 75 },
+  { id: "bpq_play3",   title: "Warm Up",           desc: "Play 3 games",                  type: "games",    target: 3, bxpReward: 30 },
+  { id: "bpq_play5",   title: "Five Rounds",       desc: "Play 5 games",                  type: "games",    target: 5, bxpReward: 50 },
+  { id: "bpq_speed90", title: "Quick Clear",       desc: "Win a game in under 90s",       type: "speed",    target: 90, bxpReward: 35 },
+  { id: "bpq_speed60", title: "Speed Sweep",       desc: "Win a game in under 60s",       type: "speed",    target: 60, bxpReward: 55 },
+  { id: "bpq_noflag",  title: "Bare Hands",        desc: "Win without placing any flags", type: "no_flags", target: 1, bxpReward: 40 },
+  { id: "bpq_wave2",   title: "Wave Watcher",      desc: "Reach Wave 2 in Infinite Mode", type: "wave",     target: 2, bxpReward: 55 },
+  { id: "bpq_wave3",   title: "Wave Chaser",       desc: "Reach Wave 3 in Infinite Mode", type: "wave",     target: 3, bxpReward: 80 },
 ];
 
 const CONFETTI_COLORS: Record<string, string[]> = {
@@ -1339,13 +1349,34 @@ function BPRewardPreview({ reward }: { reward: BPTierData }) {
   );
 }
 
-function BPQuestsPanel({ bpQuestProgress, bpQuestCompleted, onClaimQuest }: {
+function BPQuestsPanel({ bpQuestProgress, bpQuestCompleted, onClaimQuest, resetAt }: {
   bpQuestProgress: Record<string, number>;
   bpQuestCompleted: string[];
   onClaimQuest: (id: string) => void;
+  resetAt: Date;
 }) {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const update = () => {
+      const ms = resetAt.getTime() - Date.now();
+      if (ms <= 0) { setTimeLeft("Resetting…"); return; }
+      const h = Math.floor(ms / 3_600_000);
+      const m = Math.floor((ms % 3_600_000) / 60_000);
+      const s = Math.floor((ms % 60_000) / 1_000);
+      setTimeLeft(`${h}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`);
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [resetAt]);
+
   return (
     <div className="bp-quest-list">
+      <div className="bp-quest-reset-bar">
+        <span className="bp-quest-reset-label">🔄 Resets in</span>
+        <span className="bp-quest-reset-timer">{timeLeft}</span>
+      </div>
       {BP_QUESTS.map(q => {
         const prog = bpQuestProgress[q.id] ?? 0;
         const isDone = bpQuestCompleted.includes(q.id);
@@ -1378,15 +1409,16 @@ function BPQuestsPanel({ bpQuestProgress, bpQuestCompleted, onClaimQuest }: {
   );
 }
 
-function BattlePassModal({ open, onClose, totalBXP, bpClaimed, onClaim, bpQuestProgress, bpQuestCompleted, onClaimQuest }: {
+function BattlePassModal({ open, onClose, totalBXP, bpClaimed, onClaim, bpQuestProgress, bpQuestCompleted, onClaimQuest, questResetAt }: {
   open: boolean; onClose: () => void;
   totalBXP: number; bpClaimed: number[];
   onClaim: (tier: number) => void;
   bpQuestProgress: Record<string, number>;
   bpQuestCompleted: string[];
   onClaimQuest: (id: string) => void;
+  questResetAt: Date;
 }) {
-  const [tab, setTab] = useState<"tiers" | "quests">("tiers");
+  const [tab, setTab] = useState<"rewards" | "quests">("rewards");
   const bpTier = computeBPTier(totalBXP);
   const bxpInTier = bpTier >= BP_MAX_TIER ? BP_BXP_PER_TIER : totalBXP % BP_BXP_PER_TIER;
   const pct = bpTier >= BP_MAX_TIER ? 100 : (bxpInTier / BP_BXP_PER_TIER) * 100;
@@ -1401,7 +1433,7 @@ function BattlePassModal({ open, onClose, totalBXP, bpClaimed, onClaim, bpQuestP
     }
   }, [open, bpTier, tab]);
 
-  useEffect(() => { if (open) setTab("tiers"); }, [open]);
+  useEffect(() => { if (open) setTab("rewards"); }, [open]);
 
   if (!open) return null;
 
@@ -1433,13 +1465,13 @@ function BattlePassModal({ open, onClose, totalBXP, bpClaimed, onClaim, bpQuestP
         </div>
         {/* Tabs */}
         <div className="bp-tabs">
-          <button className={`bp-tab${tab === "tiers" ? " active" : ""}`} onClick={() => setTab("tiers")}>TIERS</button>
+          <button className={`bp-tab${tab === "rewards" ? " active" : ""}`} onClick={() => setTab("rewards")}>REWARDS</button>
           <button className={`bp-tab${tab === "quests" ? " active" : ""}`} onClick={() => setTab("quests")}>
             QUESTS{questsPendingClaim > 0 && <span className="bp-tab-dot" />}
           </button>
         </div>
 
-        {tab === "tiers" && (
+        {tab === "rewards" && (
           <div className="bp-tier-list" ref={listRef}>
             {BATTLE_PASS.map(reward => {
               const earned = bpTier >= reward.tier;
@@ -1492,6 +1524,7 @@ function BattlePassModal({ open, onClose, totalBXP, bpClaimed, onClaim, bpQuestP
             bpQuestProgress={bpQuestProgress}
             bpQuestCompleted={bpQuestCompleted}
             onClaimQuest={onClaimQuest}
+            resetAt={questResetAt}
           />
         )}
       </div>
@@ -2050,8 +2083,16 @@ export default function App() {
   const [totalBXP, setTotalBXP] = useState<number>(() => Number(localStorage.getItem("ms-bxp") || "0"));
   useEffect(() => { localStorage.setItem("ms-bxp", String(totalBXP)); }, [totalBXP]);
 
-  // BP Quests
+  // BP Quests — period-based reset every 3 days
   const [bpQuestProgress, setBPQuestProgress] = useState<Record<string, number>>(() => {
+    // Check if the stored period is still current; if not, wipe quest data
+    const currentPeriod = getBPQuestPeriod();
+    const storedPeriod = localStorage.getItem("ms-bpq-period");
+    if (storedPeriod === null || Number(storedPeriod) !== currentPeriod) {
+      localStorage.setItem("ms-bpq-period", String(currentPeriod));
+      localStorage.setItem("ms-bpq-progress", "{}");
+      localStorage.setItem("ms-bpq-completed", "[]");
+    }
     const s = localStorage.getItem("ms-bpq-progress");
     return s ? JSON.parse(s) : {};
   });
@@ -2061,6 +2102,21 @@ export default function App() {
   });
   useEffect(() => { localStorage.setItem("ms-bpq-progress", JSON.stringify(bpQuestProgress)); }, [bpQuestProgress]);
   useEffect(() => { localStorage.setItem("ms-bpq-completed", JSON.stringify(bpQuestCompleted)); }, [bpQuestCompleted]);
+
+  // Watch for period rollover while the app is open
+  const [questResetAt] = useState<Date>(() => getNextBPQuestReset());
+  useEffect(() => {
+    const id = setInterval(() => {
+      const currentPeriod = getBPQuestPeriod();
+      const storedPeriod = Number(localStorage.getItem("ms-bpq-period") || "-1");
+      if (currentPeriod !== storedPeriod) {
+        localStorage.setItem("ms-bpq-period", String(currentPeriod));
+        setBPQuestProgress({});
+        setBPQuestCompleted([]);
+      }
+    }, 10_000); // check every 10 s
+    return () => clearInterval(id);
+  }, []);
 
   // Toasts
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -2773,7 +2829,7 @@ export default function App() {
       <BattlePassModal open={bpOpen} onClose={() => setBPOpen(false)}
         totalBXP={totalBXP} bpClaimed={bpClaimed} onClaim={handleBPClaim}
         bpQuestProgress={bpQuestProgress} bpQuestCompleted={bpQuestCompleted}
-        onClaimQuest={handleClaimBPQuest} />
+        onClaimQuest={handleClaimBPQuest} questResetAt={questResetAt} />
       <ShopModal open={shopOpen} onClose={() => { setShopOpen(false); setShopInitTab("themes"); }}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag}

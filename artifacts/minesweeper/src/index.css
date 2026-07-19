@@ -4098,3 +4098,32 @@ body {
   color: #4ade80;
   font-weight: 800;
 }
+
+/* ── BP Quest Reset Bar ──────────────────────────────────────────────────── */
+.bp-quest-reset-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--toggle-row-bg);
+  border: 1.5px solid var(--menu-handle-bg);
+  border-radius: 9px;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.bp-quest-reset-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--stat-label-color);
+  text-transform: uppercase;
+}
+
+.bp-quest-reset-timer {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
