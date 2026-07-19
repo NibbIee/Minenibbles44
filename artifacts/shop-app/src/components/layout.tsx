@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'wouter';
 import { useStore } from '../lib/store';
-import { Store, ShoppingCart, Package, Grid, Icon } from 'lucide-react';
+import { Store, ShoppingCart, Package, Fish } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,6 +17,7 @@ export function Layout({ children }: LayoutProps) {
     { name: 'Home', path: '/', icon: Store },
     { name: 'Shop', path: '/shop', icon: ShoppingCart },
     { name: 'Inventory', path: '/inventory', icon: Package },
+    { name: 'Fishing (WIP)', path: '/fishing', icon: Fish, wip: true },
   ];
 
   return (
@@ -30,7 +31,7 @@ export function Layout({ children }: LayoutProps) {
             <span className="font-bold text-xl tracking-tight hidden sm:inline-block text-foreground">NibbleStore</span>
           </div>
 
-          <nav className="flex items-center space-x-1 sm:space-x-4">
+          <nav className="flex items-center space-x-1 sm:space-x-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = location === tab.path || (tab.path !== '/' && location.startsWith(tab.path));
@@ -38,14 +39,19 @@ export function Layout({ children }: LayoutProps) {
                 <Link
                   key={tab.path}
                   href={tab.path}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ease-out ${
-                    isActive 
-                      ? 'bg-secondary text-primary shadow-sm' 
+                  className={`relative flex items-center gap-1.5 px-2.5 py-2 rounded-md text-sm font-medium transition-all duration-200 ease-out ${
+                    isActive
+                      ? 'bg-secondary text-primary shadow-sm'
                       : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className={`w-4 h-4 ${tab.wip && isActive ? 'text-blue-400' : ''}`} />
                   <span className="hidden sm:inline-block">{tab.name}</span>
+                  {tab.wip && (
+                    <span className="hidden sm:inline-flex text-[9px] font-bold px-1 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase tracking-wide leading-none">
+                      WIP
+                    </span>
+                  )}
                 </Link>
               );
             })}

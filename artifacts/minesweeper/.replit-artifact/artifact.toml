@@ -1,5 +1,5 @@
 kind = "web"
-previewPath = "/"
+previewPath = "/minesweeper/"
 title = "Minesweeper"
 version = "1.0.0"
 id = "minesweeper-game-001"
@@ -7,7 +7,7 @@ id = "minesweeper-game-001"
 [[services]]
 localPort = 18718
 name = "web"
-paths = ["/"]
+paths = ["/minesweeper/"]
 
 [services.development]
-run = "PORT=18718 BASE_PATH=/ pnpm --filter @workspace/minesweeper run dev"
+run = "PORT=18718 BASE_PATH=/minesweeper/ pnpm --filter @workspace/minesweeper run dev"

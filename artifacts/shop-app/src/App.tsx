@@ -2,6 +2,7 @@ import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { Home } from './pages/home';
 import { Shop } from './pages/shop';
 import { Inventory } from './pages/inventory';
+import { Fishing } from './pages/fishing';
 import { Layout } from './components/layout';
 
 function NotFound() {
@@ -20,6 +21,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/shop" component={Shop} />
         <Route path="/inventory" component={Inventory} />
+        <Route path="/fishing" component={Fishing} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

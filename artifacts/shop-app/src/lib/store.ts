@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { FishType } from './fish';
 
 export type Rarity = 'Common' | 'Rare' | 'Epic' | 'Legendary';
 
@@ -48,6 +49,8 @@ export function useStore() {
   const [coins, setCoinsState] = useState<number>(1000);
   const [inventory, setInventoryState] = useState<InventoryItem[]>([]);
   const [cratesOpened, setCratesOpenedState] = useState<number>(0);
+  // fishInventory: { [fishId]: count } — stacking
+  const [fishInventory, setFishInventory] = useState<Record<string, number>>({});
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -70,6 +73,15 @@ export function useStore() {
     const co = localStorage.getItem('nibble_cratesOpened');
     if (co !== null) {
       setCratesOpenedState(parseInt(co, 10));
+    }
+
+    const fi = localStorage.getItem('nibble_fish');
+    if (fi !== null) {
+      try {
+        setFishInventory(JSON.parse(fi));
+      } catch (e) {
+        setFishInventory({});
+      }
     }
     
     setIsLoaded(true);
@@ -104,6 +116,14 @@ export function useStore() {
     });
   }, []);
 
+  const addFish = useCallback((fish: FishType) => {
+    setFishInventory(prev => {
+      const next = { ...prev, [fish.id]: (prev[fish.id] || 0) + 1 };
+      localStorage.setItem('nibble_fish', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   return {
     coins,
     setCoins,
@@ -111,6 +131,8 @@ export function useStore() {
     addInventoryItem,
     cratesOpened,
     incrementCratesOpened,
+    fishInventory,
+    addFish,
     isLoaded
   };
 }
