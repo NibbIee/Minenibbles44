@@ -4127,3 +4127,283 @@ body {
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Fishing Modal ──────────────────────────────────────────────────────────── */
+.fish-modal-sheet {
+  max-height: 88vh;
+}
+
+.fish-stats-row {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0 4px;
+}
+.fish-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.fish-stat-num {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--cell-text);
+}
+.fish-stat-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--stat-label-color);
+}
+
+.fish-cast-btn {
+  display: block;
+  width: calc(100% - 0px);
+  margin: 14px 0 0;
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid #00c8ff;
+  background: transparent;
+  color: #00c8ff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.fish-cast-btn:hover { background: rgba(0, 200, 255, 0.12); }
+.fish-cast-btn:active { transform: scale(0.97); }
+
+.fish-empty {
+  text-align: center;
+  padding: 28px 0;
+  color: var(--stat-label-color);
+  font-size: 13px;
+}
+
+.fish-bucket-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 0 0 12px;
+}
+.fish-bucket-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 6px;
+  background: var(--cell-bg);
+  border-radius: 10px;
+  border: 1.5px solid var(--cell-border);
+  text-align: center;
+}
+.fish-bucket-card.fish-undiscovered { opacity: 0.45; }
+.fish-bucket-emoji { font-size: 28px; line-height: 1; }
+.fish-bucket-name { font-size: 11px; font-weight: 700; color: var(--cell-text); letter-spacing: 0.3px; }
+.fish-bucket-count { font-size: 13px; font-weight: 800; }
+.fish-bucket-rarity { font-size: 9px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
+
+/* Phase transitions */
+.fish-phase-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
+  min-height: 260px;
+  gap: 8px;
+}
+.fish-phase-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--stat-label-color);
+  letter-spacing: 0.5px;
+  min-height: 22px;
+}
+
+/* Cast animation */
+@keyframes fish-cast-swing {
+  0%   { transform: rotate(-20deg); }
+  40%  { transform: rotate(35deg) translateX(6px); }
+  70%  { transform: rotate(10deg); }
+  100% { transform: rotate(-20deg); }
+}
+.fish-cast-anim {
+  font-size: 52px;
+  animation: fish-cast-swing 1s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Water scene */
+.fish-water-scene {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@keyframes fish-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-7px); }
+}
+.fish-bobber {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff6b6b, #cc0000);
+  border: 2px solid #fff;
+  animation: fish-bob 1.2s ease-in-out infinite;
+  transition: transform 0.1s;
+}
+.fish-bobber.fish-bobber-bite {
+  animation: none;
+  transform: translateY(10px);
+  background: radial-gradient(circle at 35% 35%, #ffd700, #ff9900);
+}
+@keyframes fish-ripple-out {
+  0%   { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+.fish-ripple {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ffd700;
+  animation: fish-ripple-out 0.7s ease-out forwards;
+}
+
+/* Minigame */
+.fish-minigame-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 8px;
+}
+.fish-minigame-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 0 auto;
+}
+.fish-bar {
+  position: relative;
+  width: 68px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.12);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.fish-zone {
+  position: absolute;
+  left: 0; right: 0;
+  border-radius: 6px;
+  background: rgba(76, 175, 80, 0.35);
+  border-top: 2px solid #4caf50;
+  border-bottom: 2px solid #4caf50;
+  pointer-events: none;
+}
+.fish-icon-in-bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  line-height: 1;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.3));
+  pointer-events: none;
+  user-select: none;
+}
+
+.fish-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.fish-progress-track {
+  width: 18px;
+  height: 100%;
+  background: rgba(255,255,255,0.08);
+  border-radius: 9px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column-reverse;
+  border: 1.5px solid rgba(255,255,255,0.1);
+}
+.fish-progress-fill {
+  width: 100%;
+  border-radius: 9px;
+  transition: none;
+}
+.fish-progress-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--stat-label-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.fish-hold-btn {
+  margin-top: 16px;
+  padding: 14px 40px;
+  border-radius: 12px;
+  border: 2px solid #00c8ff;
+  background: transparent;
+  color: #00c8ff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transition: background 0.08s, transform 0.08s;
+}
+.fish-hold-btn.fish-hold-active {
+  background: rgba(0, 200, 255, 0.2);
+  transform: scale(0.95);
+}
+.fish-hint {
+  font-size: 11px;
+  color: var(--stat-label-color);
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* Caught / escaped */
+@keyframes fish-pop-in {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.fish-caught-emoji {
+  font-size: 64px;
+  animation: fish-pop-in 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
+  line-height: 1;
+}
+.fish-caught-label {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.fish-caught-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--cell-text);
+  text-align: center;
+}
+.fish-caught-weight {
+  font-size: 13px;
+  color: var(--stat-label-color);
+  font-weight: 600;
+}
+.fish-caught-desc {
+  font-size: 12px;
+  color: var(--stat-label-color);
+  font-style: italic;
+  text-align: center;
+}

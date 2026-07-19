@@ -465,6 +465,42 @@ const FLAGS = [
   { id: "crate-target",   label: "Target",    emoji: "🎯", price: 0, levelReq: 99 },
 ];
 
+// ── Fish Data ─────────────────────────────────────────────────────────────────
+type FishRarity = "Common" | "Rare" | "Epic" | "Legendary";
+interface FishType {
+  id: string; name: string; emoji: string; rarity: FishRarity;
+  weight: [number, number]; description: string;
+}
+const FISH_TYPES: FishType[] = [
+  { id: "sardine",    name: "Sardine",         emoji: "🐟", rarity: "Common",    weight: [0.05, 0.2],   description: "Tiny but plentiful." },
+  { id: "carp",       name: "Carp",            emoji: "🐠", rarity: "Common",    weight: [0.5, 3],      description: "A pond classic." },
+  { id: "bluegill",   name: "Bluegill",        emoji: "🐡", rarity: "Common",    weight: [0.1, 0.8],    description: "Common lake fish." },
+  { id: "catfish",    name: "Catfish",         emoji: "🐟", rarity: "Common",    weight: [0.5, 5],      description: "Bottom feeder." },
+  { id: "bass",       name: "Largemouth Bass", emoji: "🐠", rarity: "Rare",      weight: [0.5, 4],      description: "Fighter of the lake." },
+  { id: "trout",      name: "Rainbow Trout",   emoji: "🐠", rarity: "Rare",      weight: [0.3, 3],      description: "Colorful and quick." },
+  { id: "tuna",       name: "Bluefin Tuna",    emoji: "🐟", rarity: "Rare",      weight: [50, 300],     description: "Ocean powerhouse." },
+  { id: "swordfish",  name: "Swordfish",       emoji: "🐡", rarity: "Epic",      weight: [40, 200],     description: "Blades through water." },
+  { id: "pufferfish", name: "Pufferfish",      emoji: "🐡", rarity: "Epic",      weight: [0.3, 5],      description: "Danger in disguise." },
+  { id: "shark",      name: "Great White",     emoji: "🦈", rarity: "Legendary", weight: [500, 2000],   description: "King of the ocean." },
+];
+function rollFish(): FishType {
+  const rand = Math.random() * 100;
+  let rarity: FishRarity;
+  if (rand < 2) rarity = "Legendary";
+  else if (rand < 10) rarity = "Epic";
+  else if (rand < 35) rarity = "Rare";
+  else rarity = "Common";
+  const pool = FISH_TYPES.filter(f => f.rarity === rarity);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+const FISH_RARITY_COLOR: Record<FishRarity, string> = {
+  Common: "#8a9bb0", Rare: "#4d9fff", Epic: "#c084fc", Legendary: "#ffd700",
+};
+function formatFishWeight(fish: FishType): string {
+  const w = fish.weight[0] + Math.random() * (fish.weight[1] - fish.weight[0]);
+  return w >= 1 ? `${w.toFixed(1)} kg` : `${Math.round(w * 1000)} g`;
+}
+
 // ── Battle Pass Data ──────────────────────────────────────────────────────────
 const BP_BXP_PER_TIER = 100;
 const BP_MAX_TIER = 50;
@@ -1536,7 +1572,7 @@ function BattlePassModal({ open, onClose, totalBXP, bpClaimed, onClaim, bpQuestP
 function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode, onToggleInfinite,
   bestInfinite, coins, onOpenShop, onOpenInventory, onOpenAchievements, onOpenLevels, onOpenDaily,
   onOpenBattlePass, bpUnclaimedCount,
-  pendingCount, currentLevel, totalXP, dailyIncomplete }: {
+  pendingCount, currentLevel, totalXP, dailyIncomplete, onOpenFishing }: {
   open: boolean; onClose: () => void;
   stats: { wins: number; games: number; best: number | null };
   playerName: string; onSaveName: (name: string) => void;
@@ -1545,7 +1581,7 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
   onOpenAchievements: () => void; onOpenLevels: () => void; onOpenDaily: () => void;
   onOpenBattlePass: () => void; bpUnclaimedCount: number;
   pendingCount: number; currentLevel: number; totalXP: number;
-  dailyIncomplete: boolean;
+  dailyIncomplete: boolean; onOpenFishing: () => void;
 }) {
   const [nameInput, setNameInput] = useState(playerName);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -1625,6 +1661,16 @@ function MenuPanel({ open, onClose, stats, playerName, onSaveName, infiniteMode,
             </span>
             <span className="menu-action-label" style={{ color: bpUnclaimedCount > 0 ? "#f59e0b" : undefined }}>BATTLE PASS</span>
             {bpUnclaimedCount > 0 && <span className="menu-action-badge" style={{ background: "#f59e0b", color: "#000" }}>{bpUnclaimedCount}</span>}
+            <span className="menu-action-arrow">›</span>
+          </button>
+          <button className="menu-action-btn" onClick={() => { onClose(); onOpenFishing(); }}>
+            <span className="menu-action-icon" style={{ color: "#00c8ff" }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 16c2-4 6-4 8 0"/><path d="M12 4c0 0-1 3 1 5s5 1 5 1"/>
+                <path d="M12 4L8 8"/><circle cx="7" cy="9" r="1.5"/>
+              </svg>
+            </span>
+            <span className="menu-action-label" style={{ color: "#00c8ff" }}>FISHING</span>
             <span className="menu-action-arrow">›</span>
           </button>
         </div>
@@ -1811,15 +1857,16 @@ function ShopModal({ open, onClose, coins, ownedThemes, ownedFlags, onBuyTheme, 
 }
 
 // ── InventoryModal ────────────────────────────────────────────────────────────
-function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag, onEquipTheme, onEquipFlag, ownedCrateItems, miscKeys }: {
+function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, activeFlag, onEquipTheme, onEquipFlag, ownedCrateItems, miscKeys, fishInventory }: {
   open: boolean; onClose: () => void;
   ownedThemes: string[]; ownedFlags: string[];
   activeTheme: string; activeFlag: string;
   onEquipTheme: (id: string) => void; onEquipFlag: (id: string) => void;
   ownedCrateItems: string[];
   miscKeys: number;
+  fishInventory: Record<string, number>;
 }) {
-  const [tab, setTab] = useState<"themes" | "flags" | "misc">("themes");
+  const [tab, setTab] = useState<"themes" | "flags" | "misc" | "fish">("themes");
   if (!open) return null;
 
   // Regular flags (bought from shop or earned by leveling) — exclude crate-only emoji flags
@@ -1845,6 +1892,9 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
           <button className={`menu-tab${tab === "flags" ? " active" : ""}`} onClick={() => setTab("flags")}>FLAGS</button>
           <button className={`menu-tab${tab === "misc" ? " active" : ""}`} onClick={() => setTab("misc")}>
             MISC{miscKeys > 0 ? <span style={{ marginLeft: 4, background: "#ffd700", color: "#000", borderRadius: 8, padding: "0 5px", fontSize: 9, fontWeight: 700 }}>{miscKeys}</span> : null}
+          </button>
+          <button className={`menu-tab${tab === "fish" ? " active" : ""}`} onClick={() => setTab("fish")}>
+            FISH{Object.values(fishInventory).some(v => v > 0) ? <span style={{ marginLeft: 4, background: "#00c8ff", color: "#000", borderRadius: 8, padding: "0 5px", fontSize: 9, fontWeight: 700 }}>🐟</span> : null}
           </button>
         </div>
         {tab === "themes" && (
@@ -1956,6 +2006,375 @@ function InventoryModal({ open, onClose, ownedThemes, ownedFlags, activeTheme, a
             </div>
           </div>
         )}
+        {tab === "fish" && (
+          <div style={{ padding: "4px 0" }}>
+            {FISH_TYPES.filter(f => (fishInventory[f.id] || 0) > 0).length === 0 ? (
+              <div style={{ textAlign: "center", padding: "32px 0", color: "var(--stat-label-color)", fontSize: 13 }}>
+                No fish yet — go fishing! 🎣
+              </div>
+            ) : (
+              <>
+                <div className="inv-section-header">
+                  <span>Your Catch</span>
+                  <span className="inv-section-count">{Object.values(fishInventory).reduce((a, b) => a + b, 0)}</span>
+                </div>
+                <div className="shop-grid" style={{ marginTop: 8 }}>
+                  {FISH_TYPES.filter(f => (fishInventory[f.id] || 0) > 0).map(f => {
+                    const color = FISH_RARITY_COLOR[f.rarity];
+                    return (
+                      <div key={f.id} className="shop-card" style={{ pointerEvents: "none", textAlign: "center" }}>
+                        <div className="flag-preview" style={{ fontSize: 28 }}>{f.emoji}</div>
+                        <span className="shop-card-label">{f.name}</span>
+                        <span style={{ fontSize: 11, color, fontWeight: 700 }}>×{fishInventory[f.id] || 0}</span>
+                        <span style={{ fontSize: 9, color, fontWeight: 600 }}>{f.rarity}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── FishingModal ──────────────────────────────────────────────────────────────
+type FishPhase = "idle" | "cast" | "waiting" | "minigame" | "caught" | "escaped";
+
+function FishingModal({ open, onClose, fishInventory, onCatch }: {
+  open: boolean; onClose: () => void;
+  fishInventory: Record<string, number>;
+  onCatch: (fish: FishType) => void;
+}) {
+  const [phase, setPhase] = useState<FishPhase>("idle");
+  const [rolledFish, setRolledFish] = useState<FishType | null>(null);
+  const [caughtWeight, setCaughtWeight] = useState("");
+  const [fishY, setFishY] = useState(120);
+  const [zoneY, setZoneY] = useState(85);
+  const [progress, setProgress] = useState(30);
+  const [holdingDown, setHoldingDown] = useState(false);
+  const [biteFlash, setBiteFlash] = useState(false);
+  const [waitDots, setWaitDots] = useState(0);
+  const [tab, setTab] = useState<"fish" | "bestiary">("fish");
+
+  const holdingRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
+  const startedRef = useRef(false);
+
+  const BAR_H = 240;
+  const ZONE_H = 68;
+  const FISH_SZ = 32;
+
+  // Reset when closing
+  useEffect(() => {
+    if (!open) {
+      setPhase("idle");
+      setRolledFish(null);
+      setBiteFlash(false);
+      setWaitDots(0);
+      setProgress(30);
+      setFishY(BAR_H / 2);
+      setZoneY(BAR_H / 2 - ZONE_H / 2);
+      holdingRef.current = false;
+      startedRef.current = false;
+      if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    }
+  }, [open]);
+
+  // Cast → waiting
+  useEffect(() => {
+    if (phase !== "cast") return undefined;
+    const t = setTimeout(() => setPhase("waiting"), 1100);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  // Waiting dots animation
+  useEffect(() => {
+    if (phase !== "waiting") return undefined;
+    const id = setInterval(() => setWaitDots(d => (d + 1) % 4), 500);
+    return () => clearInterval(id);
+  }, [phase]);
+
+  // Random bite timer
+  useEffect(() => {
+    if (phase !== "waiting") return undefined;
+    const delay = 2500 + Math.random() * 3500;
+    const t = setTimeout(() => {
+      const fish = rollFish();
+      setRolledFish(fish);
+      setBiteFlash(true);
+      setTimeout(() => setBiteFlash(false), 700);
+      setTimeout(() => {
+        setProgress(30);
+        setFishY(BAR_H / 2);
+        setZoneY(BAR_H / 2 - ZONE_H / 2);
+        setPhase("minigame");
+      }, 1300);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  // Minigame RAF loop
+  useEffect(() => {
+    if (phase !== "minigame") return undefined;
+    if (startedRef.current) return undefined;
+    startedRef.current = true;
+
+    let lastTime = performance.now();
+    let fishPos = BAR_H / 2;
+    let zonePos = BAR_H / 2 - ZONE_H / 2;
+    let vel = 0;
+    let prog = 30;
+
+    const loop = (now: number): void => {
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      const targetY = Math.random() < 0.02
+        ? Math.random() * (BAR_H - FISH_SZ) + FISH_SZ / 2
+        : fishPos;
+      const accel = (targetY - fishPos) * 3 + (Math.random() - 0.5) * 200;
+      vel = (vel + accel * dt) * 0.92;
+      fishPos = Math.max(FISH_SZ / 2, Math.min(BAR_H - FISH_SZ / 2, fishPos + vel * dt));
+
+      const zoneSpeed = holdingRef.current ? -270 : 170;
+      zonePos = Math.max(0, Math.min(BAR_H - ZONE_H, zonePos + zoneSpeed * dt));
+
+      const inZone = fishPos >= zonePos && fishPos <= zonePos + ZONE_H;
+      prog = inZone
+        ? Math.min(100, prog + 20 * dt * 60)
+        : Math.max(0, prog - 13 * dt * 60);
+
+      setFishY(fishPos);
+      setZoneY(zonePos);
+      setProgress(prog);
+
+      if (prog >= 100) { setPhase("caught"); return; }
+      if (prog <= 0)   { setPhase("escaped"); return; }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    rafRef.current = requestAnimationFrame(loop);
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      startedRef.current = false;
+    };
+  }, [phase]);
+
+  // Outcome callbacks
+  useEffect(() => {
+    if (phase === "caught" && rolledFish) {
+      const w = formatFishWeight(rolledFish);
+      setCaughtWeight(w);
+      const t = setTimeout(() => {
+        onCatch(rolledFish);
+        setPhase("idle");
+        setRolledFish(null);
+        startedRef.current = false;
+      }, 2500);
+      return () => clearTimeout(t);
+    }
+    if (phase === "escaped") {
+      const t = setTimeout(() => {
+        setPhase("idle");
+        startedRef.current = false;
+      }, 1600);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [phase, rolledFish, onCatch]);
+
+  const handleHoldStart = useCallback((e: React.PointerEvent | React.TouchEvent) => {
+    e.preventDefault();
+    holdingRef.current = true;
+    setHoldingDown(true);
+  }, []);
+
+  const handleHoldEnd = useCallback(() => {
+    holdingRef.current = false;
+    setHoldingDown(false);
+  }, []);
+
+  if (!open) return null;
+
+  const totalFish = Object.values(fishInventory).reduce((a, b) => a + b, 0);
+  const totalCaught = Number(localStorage.getItem("ms-fish-total") || "0");
+  const legendaryCount = FISH_TYPES.filter(f => f.rarity === "Legendary")
+    .reduce((a, f) => a + (fishInventory[f.id] || 0), 0);
+
+  const progressColor = progress > 70 ? "#4caf50" : progress > 30 ? "#ffd700" : "#ff4444";
+
+  return (
+    <div className="menu-overlay" onClick={() => { if (phase === "idle") onClose(); }}>
+      <div className="menu-sheet fish-modal-sheet" onClick={e => e.stopPropagation()}>
+        <div className="menu-handle" />
+        <div className="shop-header">
+          <span className="shop-title">FISHING 🎣</span>
+          <span className="shop-coins" style={{ fontSize: 13 }}>
+            {totalFish} in bucket
+          </span>
+        </div>
+
+        {/* IDLE PHASE */}
+        {phase === "idle" && (
+          <>
+            {/* Stats row */}
+            <div className="fish-stats-row">
+              <div className="fish-stat"><span className="fish-stat-num">{totalCaught}</span><span className="fish-stat-lbl">Caught</span></div>
+              <div className="fish-stat"><span className="fish-stat-num" style={{ color: "#4d9fff" }}>{totalFish}</span><span className="fish-stat-lbl">In Bucket</span></div>
+              <div className="fish-stat"><span className="fish-stat-num" style={{ color: "#ffd700" }}>{legendaryCount}</span><span className="fish-stat-lbl">Legendary</span></div>
+            </div>
+
+            <button className="fish-cast-btn" onClick={() => setPhase("cast")}>
+              🎣 Cast Rod
+            </button>
+
+            {/* Tab: bucket / bestiary */}
+            <div className="menu-tabs" style={{ marginTop: 16 }}>
+              <button className={`menu-tab${tab === "fish" ? " active" : ""}`} onClick={() => setTab("fish")}>BUCKET</button>
+              <button className={`menu-tab${tab === "bestiary" ? " active" : ""}`} onClick={() => setTab("bestiary")}>BESTIARY</button>
+            </div>
+
+            {tab === "fish" && (
+              <div style={{ padding: "8px 0" }}>
+                {totalFish === 0 ? (
+                  <div className="fish-empty">No fish yet — cast your rod!</div>
+                ) : (
+                  <div className="fish-bucket-grid">
+                    {FISH_TYPES.filter(f => (fishInventory[f.id] || 0) > 0).map(f => {
+                      const color = FISH_RARITY_COLOR[f.rarity];
+                      const count = fishInventory[f.id] || 0;
+                      return (
+                        <div key={f.id} className="fish-bucket-card" style={{ borderColor: color + "60" }}>
+                          <span className="fish-bucket-emoji">{f.emoji}</span>
+                          <span className="fish-bucket-name">{f.name}</span>
+                          <span className="fish-bucket-count" style={{ color }}>×{count}</span>
+                          <span className="fish-bucket-rarity" style={{ color }}>{f.rarity}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === "bestiary" && (
+              <div className="fish-bucket-grid" style={{ paddingTop: 8 }}>
+                {FISH_TYPES.map(f => {
+                  const owned = (fishInventory[f.id] || 0) > 0;
+                  const color = FISH_RARITY_COLOR[f.rarity];
+                  return (
+                    <div key={f.id} className={`fish-bucket-card${owned ? "" : " fish-undiscovered"}`}
+                      style={{ borderColor: owned ? color + "60" : undefined }}>
+                      <span className="fish-bucket-emoji">{owned ? f.emoji : "❓"}</span>
+                      <span className="fish-bucket-name">{owned ? f.name : "???"}</span>
+                      <span className="fish-bucket-rarity" style={{ color }}>{f.rarity}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* CAST PHASE */}
+        {phase === "cast" && (
+          <div className="fish-phase-center">
+            <div className="fish-cast-anim">🎣</div>
+            <p className="fish-phase-label">Casting…</p>
+          </div>
+        )}
+
+        {/* WAITING PHASE */}
+        {phase === "waiting" && (
+          <div className="fish-phase-center">
+            <div className="fish-water-scene">
+              <div className={`fish-bobber${biteFlash ? " fish-bobber-bite" : ""}`} />
+              {biteFlash && <div className="fish-ripple" />}
+            </div>
+            {biteFlash
+              ? <p className="fish-phase-label" style={{ color: "#ffd700", fontWeight: 700 }}>!! BITE !!</p>
+              : <p className="fish-phase-label">Waiting{".".repeat(waitDots)}</p>
+            }
+          </div>
+        )}
+
+        {/* MINIGAME PHASE */}
+        {phase === "minigame" && rolledFish && (
+          <div className="fish-minigame-wrap">
+            <p className="fish-phase-label" style={{ marginBottom: 8 }}>Reel it in!</p>
+            <div className="fish-minigame-row">
+              {/* Vertical catch bar */}
+              <div className="fish-bar" style={{ height: BAR_H }}>
+                {/* Green zone */}
+                <div className="fish-zone" style={{
+                  top: zoneY,
+                  height: ZONE_H,
+                  transition: "none",
+                }} />
+                {/* Fish icon */}
+                <div className="fish-icon-in-bar" style={{
+                  top: fishY - FISH_SZ / 2,
+                  fontSize: FISH_SZ,
+                  transition: "none",
+                }}>
+                  {rolledFish.emoji}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="fish-progress-wrap" style={{ height: BAR_H }}>
+                <div className="fish-progress-track">
+                  <div className="fish-progress-fill" style={{
+                    height: `${progress}%`,
+                    background: progressColor,
+                    transition: "none",
+                  }} />
+                </div>
+                <span className="fish-progress-pct">{Math.round(progress)}%</span>
+              </div>
+            </div>
+
+            {/* Hold button */}
+            <button
+              className={`fish-hold-btn${holdingDown ? " fish-hold-active" : ""}`}
+              onPointerDown={handleHoldStart}
+              onPointerUp={handleHoldEnd}
+              onPointerLeave={handleHoldEnd}
+              onTouchStart={handleHoldStart}
+              onTouchEnd={handleHoldEnd}
+              style={{ touchAction: "none" }}
+            >
+              {holdingDown ? "🎣 Reeling!" : "Hold to Reel"}
+            </button>
+            <p className="fish-hint">Keep the fish inside the green zone</p>
+          </div>
+        )}
+
+        {/* CAUGHT PHASE */}
+        {phase === "caught" && rolledFish && (() => {
+          const color = FISH_RARITY_COLOR[rolledFish.rarity];
+          return (
+            <div className="fish-phase-center">
+              <div className="fish-caught-emoji">{rolledFish.emoji}</div>
+              <p className="fish-caught-label" style={{ color }}>You caught a {rolledFish.rarity}!</p>
+              <p className="fish-caught-name">{rolledFish.name}</p>
+              <p className="fish-caught-weight">{caughtWeight}</p>
+              <p className="fish-caught-desc">"{rolledFish.description}"</p>
+            </div>
+          );
+        })()}
+
+        {/* ESCAPED PHASE */}
+        {phase === "escaped" && (
+          <div className="fish-phase-center">
+            <div style={{ fontSize: 56, marginBottom: 8 }}>💨</div>
+            <p className="fish-caught-name">It got away!</p>
+            <p className="fish-caught-desc">Better luck next time…</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1995,6 +2414,12 @@ export default function App() {
   const [crateAutoOpen, setCrateAutoOpen] = useState<1 | 3 | undefined>(undefined);
   const [crateKeyOpen,  setCrateKeyOpen]  = useState(false);
   const [shopInitTab,   setShopInitTab]   = useState<"themes" | "flags" | "crates">("themes");
+  const [fishingOpen,   setFishingOpen]   = useState(false);
+  const [fishInventory, setFishInventory] = useState<Record<string, number>>(() => {
+    const s = localStorage.getItem("ms-fish");
+    return s ? JSON.parse(s) : {};
+  });
+  useEffect(() => { localStorage.setItem("ms-fish", JSON.stringify(fishInventory)); }, [fishInventory]);
   const [shaking, setShaking] = useState(false);
   const everFlaggedRef = useRef(false);
 
@@ -2129,6 +2554,13 @@ export default function App() {
       setTimeout(() => setToasts(t => t.filter(x => x.key !== key)), 3800);
     }, delayMs);
   }, []);
+
+  const handleCatchFish = useCallback((fish: FishType) => {
+    setFishInventory(prev => ({ ...prev, [fish.id]: (prev[fish.id] || 0) + 1 }));
+    const total = Number(localStorage.getItem("ms-fish-total") || "0") + 1;
+    localStorage.setItem("ms-fish-total", String(total));
+    pushToast({ type: "keydrop", title: `Caught ${fish.name}! ${fish.emoji}`, subtitle: fish.rarity + " fish" });
+  }, [pushToast]);
 
   // ── Daily Challenges ─────────────────────────────────────────────────────────
   const todayKey = getTodayKey();
@@ -2821,6 +3253,7 @@ export default function App() {
         onOpenLevels={() => setLevelsOpen(true)}
         onOpenDaily={() => setDailyOpen(true)}
         onOpenBattlePass={() => setBPOpen(true)}
+        onOpenFishing={() => setFishingOpen(true)}
         bpUnclaimedCount={BATTLE_PASS.filter(r => computeBPTier(totalBXP) >= r.tier && !bpClaimed.includes(r.tier) && (r.coins != null || r.keys != null || r.flagId != null || r.themeId != null)).length}
         pendingCount={pendingAchievements.length}
         currentLevel={currentLevel} totalXP={totalXP}
@@ -2841,7 +3274,10 @@ export default function App() {
         ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         activeTheme={theme} activeFlag={activeFlag}
         onEquipTheme={handleEquipTheme} onEquipFlag={handleEquipFlag}
-        ownedCrateItems={ownedCrateItems} miscKeys={miscKeys} />
+        ownedCrateItems={ownedCrateItems} miscKeys={miscKeys}
+        fishInventory={fishInventory} />
+      <FishingModal open={fishingOpen} onClose={() => setFishingOpen(false)}
+        fishInventory={fishInventory} onCatch={handleCatchFish} />
       <CrateModal open={crateOpen} onClose={() => { setCrateOpen(false); setCrateAutoOpen(undefined); setCrateKeyOpen(false); setShopInitTab("crates"); setShopOpen(true); }}
         coins={coins} ownedCrateItems={ownedCrateItems}
         onPay={handleCratePay} onClaim={handleCrateClaim}
