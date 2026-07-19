@@ -466,71 +466,102 @@ const FLAGS = [
 ];
 
 // ── Battle Pass Data ──────────────────────────────────────────────────────────
-const BP_XP_PER_TIER = 50;
+const BP_BXP_PER_TIER = 100;
 const BP_MAX_TIER = 50;
 
-function computeBPTier(xp: number): number {
-  return Math.min(BP_MAX_TIER, Math.floor(xp / BP_XP_PER_TIER));
+function computeBPTier(bxp: number): number {
+  return Math.min(BP_MAX_TIER, Math.floor(bxp / BP_BXP_PER_TIER));
+}
+
+function getWinBXP(time: number): number {
+  if (time < 30) return 50;
+  if (time < 60) return 40;
+  if (time < 90) return 32;
+  return 25;
 }
 
 interface BPTierData {
   tier: number;
   coins?: number;
+  keys?: number;
   themeId?: string; themeLabel?: string;
   flagId?: string;  flagLabel?: string; flagEmoji?: string;
 }
 
 const BATTLE_PASS: BPTierData[] = [
   { tier: 1,  coins: 25 },
-  { tier: 2,  coins: 30 },
+  { tier: 2  },                                                                 // empty
   { tier: 3,  coins: 35 },
   { tier: 4,  themeId: "ember",    themeLabel: "Ember" },
   { tier: 5,  coins: 35 },
   { tier: 6,  flagId: "sakura",    flagLabel: "Sakura",      flagEmoji: "🌸" },
-  { tier: 7,  coins: 40 },
-  { tier: 8,  coins: 40 },
+  { tier: 7  },                                                                 // empty
+  { tier: 8,  keys: 1 },
   { tier: 9,  themeId: "forest",   themeLabel: "Forest" },
   { tier: 10, coins: 50 },
   { tier: 11, flagId: "paw",       flagLabel: "Paw Print",   flagEmoji: "🐾" },
-  { tier: 12, coins: 45 },
+  { tier: 12 },                                                                 // empty
   { tier: 13, coins: 50 },
   { tier: 14, themeId: "sapphire", themeLabel: "Sapphire" },
   { tier: 15, coins: 55 },
-  { tier: 16, coins: 50 },
+  { tier: 16 },                                                                 // empty
   { tier: 17, flagId: "cyclone",   flagLabel: "Cyclone",     flagEmoji: "🌀" },
-  { tier: 18, coins: 60 },
+  { tier: 18, keys: 1 },
   { tier: 19, themeId: "blossom",  themeLabel: "Blossom" },
   { tier: 20, coins: 75 },
-  { tier: 21, coins: 60 },
+  { tier: 21 },                                                                 // empty
   { tier: 22, flagId: "swords",    flagLabel: "Swords",      flagEmoji: "⚔️" },
   { tier: 23, coins: 65 },
   { tier: 24, themeId: "dusk",     themeLabel: "Dusk" },
   { tier: 25, coins: 100 },
-  { tier: 26, coins: 65 },
+  { tier: 26 },                                                                 // empty
   { tier: 27, coins: 70 },
   { tier: 28, flagId: "starfall",  flagLabel: "Star Fall",   flagEmoji: "🌠" },
-  { tier: 29, coins: 70 },
+  { tier: 29, keys: 1 },
   { tier: 30, coins: 100 },
-  { tier: 31, coins: 75 },
+  { tier: 31 },                                                                 // empty
   { tier: 32, coins: 75 },
-  { tier: 33, coins: 80 },
+  { tier: 33 },                                                                 // empty
   { tier: 34, coins: 80 },
   { tier: 35, coins: 100 },
   { tier: 36, coins: 85 },
-  { tier: 37, coins: 85 },
+  { tier: 37, keys: 1 },
   { tier: 38, coins: 90 },
-  { tier: 39, coins: 90 },
+  { tier: 39 },                                                                 // empty
   { tier: 40, flagId: "specter",   flagLabel: "Specter" },
   { tier: 41, coins: 100 },
   { tier: 42, coins: 95 },
-  { tier: 43, coins: 95 },
+  { tier: 43 },                                                                 // empty
   { tier: 44, coins: 100 },
   { tier: 45, themeId: "prism",    themeLabel: "Prism" },
   { tier: 46, coins: 100 },
-  { tier: 47, coins: 100 },
+  { tier: 47, keys: 1 },
   { tier: 48, coins: 100 },
   { tier: 49, coins: 100 },
   { tier: 50, themeId: "nebula",   themeLabel: "Nebula",   flagId: "blaze", flagLabel: "Blaze" },
+];
+
+// ── Battle Pass Quests ────────────────────────────────────────────────────────
+interface BPQuestData {
+  id: string;
+  title: string;
+  desc: string;
+  type: "wins" | "games" | "speed" | "no_flags" | "wave";
+  target: number;
+  bxpReward: number;
+}
+
+const BP_QUESTS: BPQuestData[] = [
+  { id: "bpq_win1",    title: "First Victory",    desc: "Win 1 game",                    type: "wins",     target: 1,  bxpReward: 25  },
+  { id: "bpq_win5",    title: "On a Roll",         desc: "Win 5 games",                   type: "wins",     target: 5,  bxpReward: 50  },
+  { id: "bpq_win10",   title: "Seasoned Sweeper",  desc: "Win 10 games",                  type: "wins",     target: 10, bxpReward: 75  },
+  { id: "bpq_win25",   title: "Battle Hardened",   desc: "Win 25 games",                  type: "wins",     target: 25, bxpReward: 125 },
+  { id: "bpq_win50",   title: "Elite Sweeper",     desc: "Win 50 games",                  type: "wins",     target: 50, bxpReward: 150 },
+  { id: "bpq_speed60", title: "Quick Clear",       desc: "Win a game in under 60s",       type: "speed",    target: 60, bxpReward: 35  },
+  { id: "bpq_speed30", title: "Lightning Sweep",   desc: "Win a game in under 30s",       type: "speed",    target: 30, bxpReward: 60  },
+  { id: "bpq_play20",  title: "Dedicated Player",  desc: "Play 20 games",                 type: "games",    target: 20, bxpReward: 50  },
+  { id: "bpq_noflag",  title: "Bare Hands",        desc: "Win without placing any flags", type: "no_flags", target: 1,  bxpReward: 40  },
+  { id: "bpq_wave5",   title: "Wave Rider",        desc: "Reach Wave 5 in Infinite Mode", type: "wave",     target: 5,  bxpReward: 100 },
 ];
 
 const CONFETTI_COLORS: Record<string, string[]> = {
@@ -1260,12 +1291,24 @@ function BPThemeSwatch({ themeId }: { themeId: string }) {
 }
 
 function BPRewardPreview({ reward }: { reward: BPTierData }) {
+  const isEmpty = reward.coins == null && !reward.flagId && !reward.themeId && !reward.keys;
   return (
     <div className="bp-reward-wrap">
+      {isEmpty && (
+        <div className="bp-reward-item bp-ri-empty">
+          <span>—</span>
+        </div>
+      )}
       {reward.coins != null && (
         <div className="bp-reward-item bp-ri-coins">
           <CoinIcon size={13} />
           <span>+{reward.coins} coins</span>
+        </div>
+      )}
+      {reward.keys != null && (
+        <div className="bp-reward-item bp-ri-key">
+          <span style={{ fontSize: 14, lineHeight: 1 }}>🗝️</span>
+          <span>×{reward.keys} Crate Key</span>
         </div>
       )}
       {reward.flagId && !reward.flagEmoji && (
@@ -1296,26 +1339,75 @@ function BPRewardPreview({ reward }: { reward: BPTierData }) {
   );
 }
 
-function BattlePassModal({ open, onClose, totalXP, bpClaimed, onClaim }: {
-  open: boolean; onClose: () => void;
-  totalXP: number; bpClaimed: number[];
-  onClaim: (tier: number) => void;
+function BPQuestsPanel({ bpQuestProgress, bpQuestCompleted, onClaimQuest }: {
+  bpQuestProgress: Record<string, number>;
+  bpQuestCompleted: string[];
+  onClaimQuest: (id: string) => void;
 }) {
-  const bpTier = computeBPTier(totalXP);
-  const xpInTier = bpTier >= BP_MAX_TIER ? BP_XP_PER_TIER : totalXP % BP_XP_PER_TIER;
-  const pct = bpTier >= BP_MAX_TIER ? 100 : (xpInTier / BP_XP_PER_TIER) * 100;
+  return (
+    <div className="bp-quest-list">
+      {BP_QUESTS.map(q => {
+        const prog = bpQuestProgress[q.id] ?? 0;
+        const isDone = bpQuestCompleted.includes(q.id);
+        const pct = Math.min(100, (prog / q.target) * 100);
+        return (
+          <div key={q.id} className={`bp-quest-row${isDone ? " bp-quest-done" : ""}`}>
+            <div className="bp-quest-info">
+              <span className="bp-quest-title">{q.title}</span>
+              <span className="bp-quest-desc">{q.desc}</span>
+              {!isDone && (
+                <div className="bp-quest-bar">
+                  <div className="bp-quest-bar-fill" style={{ width: `${pct}%` }} />
+                </div>
+              )}
+            </div>
+            <div className="bp-quest-right">
+              <span className="bp-quest-reward">+{q.bxpReward} BXP</span>
+              {isDone ? (
+                <span className="bp-quest-claimed">✓</span>
+              ) : prog >= q.target ? (
+                <button className="bp-claim-btn" onClick={() => onClaimQuest(q.id)}>CLAIM</button>
+              ) : (
+                <span className="bp-quest-prog">{prog}/{q.target}</span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function BattlePassModal({ open, onClose, totalBXP, bpClaimed, onClaim, bpQuestProgress, bpQuestCompleted, onClaimQuest }: {
+  open: boolean; onClose: () => void;
+  totalBXP: number; bpClaimed: number[];
+  onClaim: (tier: number) => void;
+  bpQuestProgress: Record<string, number>;
+  bpQuestCompleted: string[];
+  onClaimQuest: (id: string) => void;
+}) {
+  const [tab, setTab] = useState<"tiers" | "quests">("tiers");
+  const bpTier = computeBPTier(totalBXP);
+  const bxpInTier = bpTier >= BP_MAX_TIER ? BP_BXP_PER_TIER : totalBXP % BP_BXP_PER_TIER;
+  const pct = bpTier >= BP_MAX_TIER ? 100 : (bxpInTier / BP_BXP_PER_TIER) * 100;
 
   const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!open) return;
+    if (!open || tab !== "tiers") return;
     const idx = Math.max(0, bpTier - 1);
     const rows = listRef.current?.querySelectorAll(".bp-tier-row");
     if (rows && rows[idx]) {
       setTimeout(() => (rows[idx] as HTMLElement).scrollIntoView({ block: "center", behavior: "smooth" }), 100);
     }
-  }, [open, bpTier]);
+  }, [open, bpTier, tab]);
+
+  useEffect(() => { if (open) setTab("tiers"); }, [open]);
 
   if (!open) return null;
+
+  const questsPendingClaim = BP_QUESTS.filter(q =>
+    !bpQuestCompleted.includes(q.id) && (bpQuestProgress[q.id] ?? 0) >= q.target
+  ).length;
 
   return (
     <div className="menu-overlay" onClick={onClose}>
@@ -1336,50 +1428,72 @@ function BattlePassModal({ open, onClose, totalXP, bpClaimed, onClaim }: {
           <span className="bp-progress-label">
             {bpTier >= BP_MAX_TIER
               ? "COMPLETE ✦ All rewards unlocked"
-              : `${xpInTier} / ${BP_XP_PER_TIER} XP → Tier ${bpTier + 1}`}
+              : `${bxpInTier} / ${BP_BXP_PER_TIER} BXP → Tier ${bpTier + 1}`}
           </span>
         </div>
-        <div className="bp-tier-list" ref={listRef}>
-          {BATTLE_PASS.map(reward => {
-            const earned = bpTier >= reward.tier;
-            const claimed = bpClaimed.includes(reward.tier);
-            const claimable = earned && !claimed;
-            const isMilestone = reward.tier % 10 === 0 || reward.tier === 45;
-            const isGrand = reward.tier === 50;
-            const isCurrent = bpTier === reward.tier - 1;
-            return (
-              <div
-                key={reward.tier}
-                className={[
-                  "bp-tier-row",
-                  earned   ? "bp-earned"        : "",
-                  claimed  ? "bp-claimed"        : "",
-                  isMilestone ? "bp-milestone-row" : "",
-                  isGrand  ? "bp-grand-row"      : "",
-                  isCurrent ? "bp-current-row"   : "",
-                ].filter(Boolean).join(" ")}
-              >
-                <div className={[
-                  "bp-tier-num-badge",
-                  isMilestone ? "bp-num-milestone" : "",
-                  isGrand     ? "bp-num-grand"     : "",
-                ].filter(Boolean).join(" ")}>
-                  {reward.tier}
-                </div>
-                <BPRewardPreview reward={reward} />
-                <div className="bp-status-col">
-                  {claimed ? (
-                    <span className="bp-status-check">✓</span>
-                  ) : claimable ? (
-                    <button className="bp-claim-btn" onClick={() => onClaim(reward.tier)}>CLAIM</button>
-                  ) : (
-                    <span className="bp-status-lock">—</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+        {/* Tabs */}
+        <div className="bp-tabs">
+          <button className={`bp-tab${tab === "tiers" ? " active" : ""}`} onClick={() => setTab("tiers")}>TIERS</button>
+          <button className={`bp-tab${tab === "quests" ? " active" : ""}`} onClick={() => setTab("quests")}>
+            QUESTS{questsPendingClaim > 0 && <span className="bp-tab-dot" />}
+          </button>
         </div>
+
+        {tab === "tiers" && (
+          <div className="bp-tier-list" ref={listRef}>
+            {BATTLE_PASS.map(reward => {
+              const earned = bpTier >= reward.tier;
+              const claimed = bpClaimed.includes(reward.tier);
+              const claimable = earned && !claimed;
+              const isEmpty = reward.coins == null && !reward.flagId && !reward.themeId && !reward.keys;
+              const isMilestone = reward.tier % 10 === 0 || reward.tier === 45;
+              const isGrand = reward.tier === 50;
+              const isCurrent = bpTier === reward.tier - 1;
+              return (
+                <div
+                  key={reward.tier}
+                  className={[
+                    "bp-tier-row",
+                    earned      ? "bp-earned"        : "",
+                    claimed     ? "bp-claimed"        : "",
+                    isMilestone ? "bp-milestone-row"  : "",
+                    isGrand     ? "bp-grand-row"      : "",
+                    isCurrent   ? "bp-current-row"    : "",
+                    isEmpty     ? "bp-empty-row"      : "",
+                  ].filter(Boolean).join(" ")}
+                >
+                  <div className={[
+                    "bp-tier-num-badge",
+                    isMilestone ? "bp-num-milestone" : "",
+                    isGrand     ? "bp-num-grand"     : "",
+                  ].filter(Boolean).join(" ")}>
+                    {reward.tier}
+                  </div>
+                  <BPRewardPreview reward={reward} />
+                  <div className="bp-status-col">
+                    {isEmpty ? (
+                      <span className="bp-status-lock" style={{ opacity: 0.3 }}>—</span>
+                    ) : claimed ? (
+                      <span className="bp-status-check">✓</span>
+                    ) : claimable ? (
+                      <button className="bp-claim-btn" onClick={() => onClaim(reward.tier)}>CLAIM</button>
+                    ) : (
+                      <span className="bp-status-lock">—</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {tab === "quests" && (
+          <BPQuestsPanel
+            bpQuestProgress={bpQuestProgress}
+            bpQuestCompleted={bpQuestCompleted}
+            onClaimQuest={onClaimQuest}
+          />
+        )}
       </div>
     </div>
   );
@@ -1840,6 +1954,7 @@ export default function App() {
     if (!reward || bpClaimed.includes(tier)) return;
     setBPClaimed(prev => [...prev, tier]);
     if (reward.coins)   setCoins(c => c + reward.coins!);
+    if (reward.keys)    setMiscKeys(k => k + reward.keys!);
     if (reward.themeId) setOwnedThemes(prev => prev.includes(reward.themeId!) ? prev : [...prev, reward.themeId!]);
     if (reward.flagId)  setOwnedFlags (prev => prev.includes(reward.flagId!)  ? prev : [...prev, reward.flagId!]);
   }, [bpClaimed]);
@@ -1931,6 +2046,22 @@ export default function App() {
   useEffect(() => { totalXPRef.current = totalXP; localStorage.setItem("ms-xp", String(totalXP)); }, [totalXP]);
   const currentLevel = computeLevel(totalXP);
 
+  // BXP (Battle Pass XP — separate from regular XP)
+  const [totalBXP, setTotalBXP] = useState<number>(() => Number(localStorage.getItem("ms-bxp") || "0"));
+  useEffect(() => { localStorage.setItem("ms-bxp", String(totalBXP)); }, [totalBXP]);
+
+  // BP Quests
+  const [bpQuestProgress, setBPQuestProgress] = useState<Record<string, number>>(() => {
+    const s = localStorage.getItem("ms-bpq-progress");
+    return s ? JSON.parse(s) : {};
+  });
+  const [bpQuestCompleted, setBPQuestCompleted] = useState<string[]>(() => {
+    const s = localStorage.getItem("ms-bpq-completed");
+    return s ? JSON.parse(s) : [];
+  });
+  useEffect(() => { localStorage.setItem("ms-bpq-progress", JSON.stringify(bpQuestProgress)); }, [bpQuestProgress]);
+  useEffect(() => { localStorage.setItem("ms-bpq-completed", JSON.stringify(bpQuestCompleted)); }, [bpQuestCompleted]);
+
   // Toasts
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const toastKeyRef = useRef(0);
@@ -2020,7 +2151,9 @@ export default function App() {
           if (newProgress[c.id] >= c.target && !newCompleted.includes(c.id)) {
             newCompleted.push(c.id);
             anyNewlyCompleted = true;
-            setTimeout(() => pushToast({ type: "daily", title: c.title, subtitle: c.desc }), 200);
+            // Award 20 BXP per completed daily quest
+            setTotalBXP(prev => prev + 20);
+            setTimeout(() => pushToast({ type: "daily", title: c.title, subtitle: `${c.desc} · +20 BXP` }), 200);
           }
         }
 
@@ -2032,7 +2165,8 @@ export default function App() {
               if (!prev) {
                 setCoins(c => c + 25);
                 setTotalXP(prev2 => prev2 + 20);
-                setTimeout(() => pushToast({ type: "daily", title: "All Dailies Complete!", subtitle: "+25 coins · +20 XP", reward: 25 }), 600);
+                setTotalBXP(prev2 => prev2 + 25);
+                setTimeout(() => pushToast({ type: "daily", title: "All Dailies Complete!", subtitle: "+25 coins · +20 XP · +25 BXP", reward: 25 }), 600);
                 return true;
               }
               return prev;
@@ -2046,6 +2180,53 @@ export default function App() {
       return completed;
     });
   }, [dailyChallenges, pushToast]);
+
+  // Advance BP Quest progress (permanent one-time quests)
+  const advanceBPQuest = useCallback((type: string, value: number) => {
+    setBPQuestProgress(progress => {
+      const newProgress = { ...progress };
+      for (const q of BP_QUESTS) {
+        if (q.type !== type) continue;
+        let newVal: number;
+        if (type === "speed") {
+          newVal = value <= q.target ? q.target : (progress[q.id] ?? 0);
+        } else if (type === "no_flags") {
+          newVal = value >= 1 ? q.target : (progress[q.id] ?? 0);
+        } else {
+          newVal = Math.min((progress[q.id] ?? 0) + value, q.target);
+        }
+        newProgress[q.id] = newVal;
+      }
+      return newProgress;
+    });
+  }, []);
+
+  // Award BXP and handle Battle Pass tier notifications
+  const awardBXP = useCallback((amount: number) => {
+    setTotalBXP(prev => {
+      const oldBXP = prev;
+      const newBXP = oldBXP + amount;
+      const oldBPTier = computeBPTier(oldBXP);
+      const newBPTier = computeBPTier(newBXP);
+      if (newBPTier > oldBPTier) {
+        for (let bpt = oldBPTier + 1; bpt <= newBPTier; bpt++) {
+          const capturedTier = bpt;
+          const bpDelay = 500 + (capturedTier - oldBPTier - 1) * 500;
+          setTimeout(() => {
+            const k = ++toastKeyRef.current;
+            setToasts(ts => [...ts, {
+              type: "battlepass" as const,
+              title: `Battle Pass — Tier ${capturedTier}${capturedTier === BP_MAX_TIER ? " 🏆" : ""}!`,
+              subtitle: "Open menu → Battle Pass to claim",
+              key: k,
+            }]);
+            setTimeout(() => setToasts(ts => ts.filter(x => x.key !== k)), 4500);
+          }, bpDelay);
+        }
+      }
+      return newBXP;
+    });
+  }, []);
 
   // Award XP and handle level-ups
   const awardXP = useCallback((amount: number) => {
@@ -2084,28 +2265,9 @@ export default function App() {
           delay += 700;
         }
       }
-      // Battle Pass tier notifications
-      const oldBPTier = computeBPTier(oldXP);
-      const newBPTier = computeBPTier(newXP);
-      if (newBPTier > oldBPTier) {
-        for (let bpt = oldBPTier + 1; bpt <= newBPTier; bpt++) {
-          const capturedTier = bpt;
-          const bpDelay = 500 + (capturedTier - oldBPTier - 1) * 500;
-          setTimeout(() => {
-            const k = ++toastKeyRef.current;
-            setToasts(ts => [...ts, {
-              type: "battlepass" as const,
-              title: `Battle Pass — Tier ${capturedTier}${capturedTier === BP_MAX_TIER ? " 🏆" : ""}!`,
-              subtitle: "Open menu → Battle Pass to claim",
-              key: k,
-            }]);
-            setTimeout(() => setToasts(ts => ts.filter(x => x.key !== k)), 4500);
-          }, bpDelay);
-        }
-      }
       return newXP;
     });
-  }, [pushToast]);
+  }, []);
 
   // Achievements state
   const [claimedAchievements, setClaimedAchievements] = useState<string[]>(() => {
@@ -2140,6 +2302,15 @@ export default function App() {
     setCoins(c => c + def.reward);
     awardXP(10);
   }, [awardXP]);
+
+  const handleClaimBPQuest = useCallback((id: string) => {
+    const q = BP_QUESTS.find(q => q.id === id);
+    if (!q || bpQuestCompleted.includes(id)) return;
+    if ((bpQuestProgress[id] ?? 0) < q.target) return;
+    setBPQuestCompleted(prev => [...prev, id]);
+    awardBXP(q.bxpReward);
+    pushToast({ type: "battlepass", title: `Quest: ${q.title}`, subtitle: `+${q.bxpReward} BXP earned!` });
+  }, [bpQuestCompleted, bpQuestProgress, awardBXP, pushToast]);
 
   const checkAchievements = useCallback((opts: {
     wins?: number; games?: number; time?: number;
@@ -2335,26 +2506,35 @@ export default function App() {
       infiniteCountRef.current = newCount;
       checkAchievements({ waveCount: newCount });
       awardXP(15);
+      awardBXP(25);
       // Daily: wave challenges
       advanceDailyChallenge("wave", 1);
+      advanceBPQuest("wave", 1);
       triggerInfiniteTransition(finished);
     } else {
       setStatus("won");
       setCoins(c => c + COINS_PER_WIN);
       const xpEarned = getWinXP(time);
+      const bxpEarned = getWinBXP(time);
       awardXP(xpEarned);
+      awardBXP(bxpEarned);
       setStats((s: typeof stats) => {
         const newWins = s.wins + 1;
         const newBest = s.best === null || time < s.best ? time : s.best;
         checkAchievements({ wins: newWins, time, neverFlagged: !everFlaggedRef.current });
         return { games: s.games, wins: newWins, best: newBest };
       });
-      // Daily challenges for wins and speed
+      // Daily & BP quest challenges for wins, speed, no_flags
       advanceDailyChallenge("wins", 1);
-      if (time < 60) advanceDailyChallenge("speed", time);
-      if (!everFlaggedRef.current) advanceDailyChallenge("no_flags", 1);
+      advanceBPQuest("wins", 1);
+      advanceDailyChallenge("speed", time);
+      advanceBPQuest("speed", time);
+      if (!everFlaggedRef.current) {
+        advanceDailyChallenge("no_flags", 1);
+        advanceBPQuest("no_flags", 1);
+      }
     }
-  }, [infiniteMode, checkAchievements, awardXP, triggerInfiniteTransition, advanceDailyChallenge]);
+  }, [infiniteMode, checkAchievements, awardXP, awardBXP, triggerInfiniteTransition, advanceDailyChallenge, advanceBPQuest]);
 
   const handleReveal = useCallback((r: number, c: number) => {
     if (status === "won" || status === "lost" || status === "transitioning") return;
@@ -2369,8 +2549,9 @@ export default function App() {
         setStats((s: typeof stats) => {
           const newGames = s.games + 1;
           checkAchievements({ games: newGames });
-          // Daily: games played
+          // Daily & BP quest: games played
           advanceDailyChallenge("games", 1);
+          advanceBPQuest("games", 1);
           return { ...s, games: newGames };
         });
       }
@@ -2535,7 +2716,7 @@ export default function App() {
       {!infiniteMode && (status === "won" || status === "lost") && (
         <div className={`banner ${status}`}>
           {status === "won"
-            ? <><span>YOU WIN!</span><span className="coin-earn"><CoinIcon size={13} />+{COINS_PER_WIN}</span><span className="xp-earn">+{getWinXP(elapsed)} XP</span></>
+            ? <><span>YOU WIN!</span><span className="coin-earn"><CoinIcon size={13} />+{COINS_PER_WIN}</span><span className="xp-earn">+{getWinXP(elapsed)} XP</span><span className="xp-earn" style={{ color: "#f59e0b" }}>+{getWinBXP(elapsed)} BXP</span></>
             : "GAME OVER"}
           <button onClick={reset} className="play-again">Play Again</button>
         </div>
@@ -2584,13 +2765,15 @@ export default function App() {
         onOpenLevels={() => setLevelsOpen(true)}
         onOpenDaily={() => setDailyOpen(true)}
         onOpenBattlePass={() => setBPOpen(true)}
-        bpUnclaimedCount={BATTLE_PASS.filter(r => computeBPTier(totalXP) >= r.tier && !bpClaimed.includes(r.tier)).length}
+        bpUnclaimedCount={BATTLE_PASS.filter(r => computeBPTier(totalBXP) >= r.tier && !bpClaimed.includes(r.tier) && (r.coins != null || r.keys != null || r.flagId != null || r.themeId != null)).length}
         pendingCount={pendingAchievements.length}
         currentLevel={currentLevel} totalXP={totalXP}
         dailyIncomplete={dailyBadge}
       />
       <BattlePassModal open={bpOpen} onClose={() => setBPOpen(false)}
-        totalXP={totalXP} bpClaimed={bpClaimed} onClaim={handleBPClaim} />
+        totalBXP={totalBXP} bpClaimed={bpClaimed} onClaim={handleBPClaim}
+        bpQuestProgress={bpQuestProgress} bpQuestCompleted={bpQuestCompleted}
+        onClaimQuest={handleClaimBPQuest} />
       <ShopModal open={shopOpen} onClose={() => { setShopOpen(false); setShopInitTab("themes"); }}
         coins={coins} ownedThemes={ownedThemes} ownedFlags={ownedFlags}
         onBuyTheme={handleBuyTheme} onBuyFlag={handleBuyFlag}
